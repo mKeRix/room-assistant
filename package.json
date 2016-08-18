@@ -1,0 +1,23 @@
+{
+  "name": "room-assistant",
+  "version": "1.0.0",
+  "description": "A companion client for Home Assistant to handle sensors in multiple rooms.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "make test"
+  },
+  "author": "Heiko Rothe <heikorothe@msn.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.0.2"
+  },
+  "dependencies": {
+    "config": "^1.21.0",
+    "kalmanjs": "^1.0.0-beta",
+    "mqtt": "^1.14.0",
+    "noble": "^1.6.0",
+    "scribe-js": "^2.0.4"
+  }
+}

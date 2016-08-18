@@ -1,0 +1,11 @@
+{
+  "mqtt": {
+    "enabled": false,
+    "url": "mqtt://localhost",
+    "username": "",
+    "password": ""
+  },
+  "ble": {
+    "channel": "blescanner"
+  }
+}
