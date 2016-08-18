@@ -12,6 +12,7 @@ function BLEScanner(callback) {
     this.kalmanManager = {};
 
     this._init();
+    console.info('BLE scanner was initialized');
 }
 
 BLEScanner.prototype._init = function () {

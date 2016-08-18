@@ -13,6 +13,8 @@
   "temper": {
     "enabled": false,
     "channel": "temper",
-    "interval": 60000
+    "interval": 60000,
+    "scale": 1,
+    "offset": 0
   }
 }

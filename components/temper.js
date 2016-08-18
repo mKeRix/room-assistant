@@ -3,6 +3,8 @@ var temper = require('temper1');
 var console = process.console;
 
 var channel = config.get('temper.channel');
+var scale = config.get('temper.scale');
+var offset = config.get('temper.offset');
 
 function Temper(callback) {
     // constructor
@@ -14,6 +16,7 @@ function Temper(callback) {
 Temper.prototype._init = function () {
     var interval = config.get('temper.interval');
     setInterval(this.readTemperatures.bind(this), interval);
+    console.info('Temper component was initialized')
 };
 
 Temper.prototype.readTemperatures = function () {
@@ -28,7 +31,7 @@ Temper.prototype.readTemperatures = function () {
             else {
                 var payload = {
                     id: index,
-                    temperature: value,
+                    temperature: scale * value + offset,
                     unit: 'C'
                 };
 

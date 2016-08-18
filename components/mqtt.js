@@ -9,6 +9,7 @@ function MQTTPublisher() {
     };
 
     this.client = mqtt.connect(config.get('mqtt.url'), options);
+    console.info('Connected to MQTT server');
 }
 
 MQTTPublisher.prototype.publish = function (channel, payload) {
