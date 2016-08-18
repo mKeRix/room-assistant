@@ -3,9 +3,16 @@
     "enabled": false,
     "url": "mqtt://localhost",
     "username": "",
-    "password": ""
+    "password": "",
+    "topic": "room-name"
   },
   "ble": {
+    "enabled": false,
     "channel": "blescanner"
+  },
+  "temper": {
+    "enabled": false,
+    "channel": "temper",
+    "interval": 60000
   }
 }
