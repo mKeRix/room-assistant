@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "make test"
+    "test": "./node_modules/.bin/mocha --reporter spec"
   },
   "author": "Heiko Rothe <heikorothe@msn.com>",
   "license": "MIT",
