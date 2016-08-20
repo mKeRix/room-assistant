@@ -8,7 +8,7 @@
   },
   "ble": {
     "enabled": false,
-    "channel": "blescanner"
+    "channel": "room_presence"
   },
   "temper": {
     "enabled": false,
