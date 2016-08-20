@@ -13,7 +13,7 @@ function MQTTPublisher() {
 }
 
 MQTTPublisher.prototype.publish = function (channel, payload) {
-    var topic = config.get('mqtt.topic') + '/' + channel;
+    var topic = channel + '/' + config.get('mqtt.topic');
     this.client.publish(topic, JSON.stringify(payload));
 };
 
