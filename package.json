@@ -1,6 +1,6 @@
 {
   "name": "room-assistant",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A companion client for Home Assistant to handle sensors in multiple rooms.",
   "main": "index.js",
   "scripts": {
@@ -9,6 +9,7 @@
   },
   "author": "Heiko Rothe <heikorothe@msn.com>",
   "license": "MIT",
+  "repository": "mkerix/room-assistant",
   "devDependencies": {
     "chai": "^3.5.0",
     "mocha": "^3.0.2"
