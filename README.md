@@ -82,7 +82,9 @@ On Linux this component will have to run as root [unless you set the correct per
     "enabled": true,
     "channel": "room_presence",
     "max_distance": 0,
-    "whitelist": ["id1", "id2"]
+    "whitelist": ["id1", "id2"],
+    "system_noise": 0.01,
+    "measurement_noise": 3
   }
 }
 ```
@@ -93,6 +95,8 @@ Options:
 - **channel** - channel for the announcements about found beacons
 - **max_distance** - maximum distance where the scanner will still send the data to a publisher, 0 means unlimited
 - **whitelist** - array of Bluetooth IDs as whitelist for updates that should be sent to the publisher, an empty list disables the whitelist
+- **system_noise** - describes how noisy the system is and should be kept relatively low (used for the Kalman filter)
+- **measurement_noise** - describes how noisy the measurements are (used for the Kalman filter)
 
 #### Temper USB Sensors ####
 

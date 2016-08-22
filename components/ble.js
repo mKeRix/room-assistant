@@ -61,9 +61,9 @@ BLEScanner.prototype._calculateDistance = function (rssi, txPower) {
         return -1.0;
     }
 
-    var ratio = rssi*1.0/txPower;
+    var ratio = rssi * 1.0 / txPower;
     if (ratio < 1.0) {
-        return Math.pow(ratio,10);
+        return Math.pow(ratio, 10);
     }
     else {
         return (0.89976) * Math.pow(ratio, 7.7095) + 0.111;
@@ -72,7 +72,10 @@ BLEScanner.prototype._calculateDistance = function (rssi, txPower) {
 
 BLEScanner.prototype._filter = function (id, distance) {
     if (!this.kalmanManager.hasOwnProperty(id)) {
-        this.kalmanManager[id] = new KalmanFilter({R: 0.01, Q: 3});
+        this.kalmanManager[id] = new KalmanFilter({
+            R: config.get('ble.system_noise') || 0.01,
+            Q: config.get('ble.measurement_noise') || 3
+        });
     }
 
     return this.kalmanManager[id].filter(distance);
