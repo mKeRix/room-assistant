@@ -80,7 +80,9 @@ On Linux this component will have to run as root [unless you set the correct per
 {
   "ble": {
     "enabled": true,
-    "channel": "room_presence"
+    "channel": "room_presence",
+    "max_distance": 0,
+    "whitelist": ["id1", "id2"]
   }
 }
 ```
@@ -89,6 +91,8 @@ Options:
 
 - **enabled** - enable or disable component
 - **channel** - channel for the announcements about found beacons
+- **max_distance** - maximum distance where the scanner will still send the data to a publisher, 0 means unlimited
+- **whitelist** - array of Bluetooth IDs as whitelist for updates that should be sent to the publisher, an empty list disables the whitelist
 
 #### Temper USB Sensors ####
 

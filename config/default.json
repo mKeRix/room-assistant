@@ -8,7 +8,9 @@
   },
   "ble": {
     "enabled": false,
-    "channel": "room_presence"
+    "channel": "room_presence",
+    "max_distance": 0,
+    "whitelist": []
   },
   "temper": {
     "enabled": false,
