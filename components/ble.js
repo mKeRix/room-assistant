@@ -39,11 +39,11 @@ BLEScanner.prototype._handlePacket = function (peripheral) {
         // default hardcoded value for beacon tx power
         var txPower = advertisement.txPowerLevel || -59;
         var distance = this._calculateDistance(peripheral.rssi, txPower);
-        var filteredDistance = this._filter(peripheral.id, distance);
 
         // max distance parameter checking
         var maxDistance = config.get('ble.max_distance') || 0;
-        if (maxDistance == 0 || filteredDistance <= maxDistance) {
+        if (maxDistance == 0 || distance <= maxDistance) {
+            var filteredDistance = this._filter(peripheral.id, distance);
             var payload = {
                 id: peripheral.id,
                 name: advertisement.localName,
