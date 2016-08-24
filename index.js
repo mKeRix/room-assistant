@@ -6,6 +6,7 @@ var console = process.console;
 var MQTTPublisher = require('./components/mqtt');
 var BLEScanner = require('./components/ble');
 var Temper = require('./components/temper');
+var GPIO = require('./components/gpio');
 
 function RoomAssistantApp() {
     console.info('Starting Room Assistant...');
@@ -25,6 +26,9 @@ RoomAssistantApp.prototype._init = function () {
     if (config.get('temper.enabled')) {
         this._setupTemper();
     }
+    if (config.get('gpio.enabled')) {
+        this._setupGPIO();
+    }
 };
 
 RoomAssistantApp.prototype._setupMQTT = function () {
@@ -37,6 +41,10 @@ RoomAssistantApp.prototype._setupBLE = function () {
 
 RoomAssistantApp.prototype._setupTemper = function () {
     return new Temper(this.publisher.publish.bind(this.publisher));
+};
+
+RoomAssistantApp.prototype._setupGPIO = function () {
+    return new GPIO(this.publisher.publisher.bind(this.publisher));
 };
 
 // start the app

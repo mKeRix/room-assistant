@@ -20,5 +20,9 @@
     "interval": 60000,
     "scale": 1,
     "offset": 0
+  },
+  "gpio": {
+    "enabled": false,
+    "ports": []
   }
 }
