@@ -5,6 +5,8 @@ var console = process.console;
 function GPIO(callback) {
     // constructor
     this.callback = callback;
+
+    this._init();
 }
 
 GPIO.prototype._init = function () {
@@ -13,6 +15,7 @@ GPIO.prototype._init = function () {
     var ports = config.get('gpio.ports');
     ports.forEach(function (port) {
         that._initRead(port.port, port.interval, port.channel);
+        console.info('Initialized GPIO scanning on port %s', port.port);
     })
 };
 
@@ -24,7 +27,9 @@ GPIO.prototype._initRead = function (port, interval, channel) {
             console.error(err);
         }
         else {
-            setInterval(that.read(port, channel), interval)
+            setInterval(function () {
+                that.read(port, channel);
+            }, interval)
         }
     })
 };
@@ -44,3 +49,13 @@ GPIO.prototype.read = function (port, channel) {
         }
     });
 };
+
+process.on('exit', function () {
+    var ports = config.get('gpio.ports');
+    ports.forEach(function (port) {
+        gpio.close(port.port);
+        console.info('Closed GPIO port %s', port.port);
+    })
+});
+
+module.exports = GPIO;

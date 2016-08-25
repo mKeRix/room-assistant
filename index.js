@@ -44,7 +44,7 @@ RoomAssistantApp.prototype._setupTemper = function () {
 };
 
 RoomAssistantApp.prototype._setupGPIO = function () {
-    return new GPIO(this.publisher.publisher.bind(this.publisher));
+    return new GPIO(this.publisher.publish.bind(this.publisher));
 };
 
 // start the app
