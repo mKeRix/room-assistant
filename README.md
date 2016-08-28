@@ -124,6 +124,46 @@ Options:
 - **scale** - the temperature output is calculated as `scale * value + offset`, this allows you to fine-tune the sensor
 - **offset** - see scale
 
+#### Raspberry Pi GPIO ####
+
+This a very generic component for grabbing data off the GPIO pins on the Raspberry Pi.
+For example you could install a PIR motion sensor to augment the BLE presence tracking.
+
+This component relies on a tool that you need to install with the following commands:
+
+```
+git clone -b fixpath https://github.com/rexington/quick2wire-gpio-admin.git
+cd quick2wire-gpio-admin
+make
+sudo make install
+sudo adduser $USER gpio
+```
+
+Please note that we are using a fork of the actual tool. Unfortunately the official repository has a severe bug that is not being fixed despite multiple issues and a pull request with the fix.
+
+```json
+{
+  "gpio": {
+    "enabled": true,
+    "ports": [
+      {
+        "port": 7,
+        "interval": 1000,
+        "channel": "motion_sensor"
+      }
+    ]
+  }
+}
+```
+
+Options:
+
+- **enabled** - enable or disable component
+- **ports** - an array of ports to be checked
+  - **port** - the actual physical port number to be tracked ([reference](https://github.com/rakeshpai/pi-gpio#about-the-pin-configuration))
+  - **interval** - the interval in which the port should be checked in milliseconds
+  - **channel** - channel for value updates
+
 ## Running as a service ##
 
 To make sure your room-assistant is always running you should setup a service for it. Luckily there are two cool packages that help us do this:
@@ -144,5 +184,5 @@ sudo forever-service install -s index.js -e "ENV=prod" --start room-assistant
 I started this project mainly to augment my own home automation with Raspberry Pi 3 beacons in each room.
 This was my solution for being too lazy for turning on the lights and heating per room as I come and go.
 If this is of any use to you - cool! If you want to add some code - even cooler! Just create a ticket or a pull request.
-There currently are no specific criteria to meet as long as you follow the basic principles demonstrated in the exiisting components.
-And if you can add unit tests too, even if my work on that hasn't gotten far yet.
+There currently are no specific criteria to meet as long as you follow the basic principles demonstrated in the existing components.
+And if you can: add unit tests too, even if my work on that has not gotten far yet.
