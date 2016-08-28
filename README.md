@@ -26,6 +26,15 @@ And run it to see if everything went fine:
 npm start
 ```
 
+## Updating ##
+
+Updating is easy, just pull the new version from Github and check if the dependencies are uptodate:
+
+```
+git pull
+npm install
+```
+
 ## Configuration ##
 
 To configure room-assistant you should make a copy of the `config/default.json` file and name it `local.json`.
