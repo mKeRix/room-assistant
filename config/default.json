@@ -4,6 +4,7 @@
     "url": "mqtt://localhost",
     "username": "",
     "password": "",
+    "reject_unauthorized": true,
     "topic": "room-name"
   },
   "ble": {

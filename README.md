@@ -63,6 +63,7 @@ You need to have a valid MQTT server for this component to work.
     "url": "mqtts://mqttserver:1234",
     "username": "",
     "password": "",
+    "reject_unauthorized": true,
     "topic": "room-name"
   }
 }
@@ -74,7 +75,9 @@ Options:
 - **url** - URL to your MQTT server, this works with the protocols 'mqtt', 'mqtts', 'tcp', 'tls', 'ws', 'wss'
 - **username** - username (please create a new user for each client/room)
 - **password** - password
+- **reject_unauthorized** - set this to `false` to allow self signed certificates
 - **topic** - a topic name to uniquely identify each client/room
+
 
 ### Trackers ###
 
