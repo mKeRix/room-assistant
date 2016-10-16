@@ -7,6 +7,9 @@
     "reject_unauthorized": true,
     "topic": "room-name"
   },
+  "console": {
+    "enabled": false
+  },
   "ble": {
     "enabled": false,
     "channel": "room_presence",
