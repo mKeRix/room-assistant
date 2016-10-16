@@ -78,6 +78,22 @@ Options:
 - **reject_unauthorized** - set this to `false` to allow self signed certificates
 - **topic** - a topic name to uniquely identify each client/room
 
+#### Console ####
+
+This component is meant to be used for testing and just outputs everything to the console.
+
+```json
+{
+  "console": {
+    "enabled": true
+  }
+}
+```
+
+Options:
+
+- **enabled** - enable or disable the component
+
 
 ### Trackers ###
 
@@ -85,6 +101,8 @@ Options:
 
 This component tracks all BLE beacons it finds and posts updates about them including a calculated their id, name, signal strength and a calculated distance.
 The distance calculation is optimized for the iBeacon standard. To avoid faulty data through noise the distance values are smoothed using the [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter).
+
+In additional the list of supported devices found [here](https://github.com/sandeepmistry/noble/wiki/Compatible-Devices) I have also tested this component with a variety of virtual iBeacon apps and the [RadBeacon Dot](http://store.radiusnetworks.com/collections/all/products/radbeacon-dot).
 
 On Linux this component will have to run as root [unless you set the correct permissions](https://github.com/sandeepmistry/noble#running-on-linux).
 
@@ -95,6 +113,7 @@ On Linux this component will have to run as root [unless you set the correct per
     "channel": "room_presence",
     "max_distance": 0,
     "whitelist": ["id1", "id2"],
+    "use_mac": false,
     "system_noise": 0.01,
     "measurement_noise": 3
   }
@@ -107,6 +126,7 @@ Options:
 - **channel** - channel for the announcements about found beacons
 - **max_distance** - maximum distance where the scanner will still send the data to a publisher, 0 means unlimited
 - **whitelist** - array of Bluetooth IDs as whitelist for updates that should be sent to the publisher, an empty list disables the whitelist
+- **use_mac** - publish the Bluetooth MAC address instead of the UUID (for devices without a consistent UUID)
 - **system_noise** - describes how noisy the system is and should be kept relatively low (used for the Kalman filter)
 - **measurement_noise** - describes how noisy the measurements are (used for the Kalman filter)
 
