@@ -177,6 +177,7 @@ Please note that we are using a fork of the actual tool. Unfortunately the offic
 {
   "gpio": {
     "enabled": true,
+    "only_send_updates": false,
     "ports": [
       {
         "port": 7,
@@ -191,6 +192,7 @@ Please note that we are using a fork of the actual tool. Unfortunately the offic
 Options:
 
 - **enabled** - enable or disable component
+- **only_send_updates** - only post to the publisher if the value changed
 - **ports** - an array of ports to be checked
   - **port** - the actual physical port number to be tracked ([reference](https://github.com/rakeshpai/pi-gpio#about-the-pin-configuration))
   - **interval** - the interval in which the port should be checked in milliseconds

@@ -11,6 +11,7 @@ function GPIO(callback) {
 
 GPIO.prototype._init = function () {
     var that = this;
+    this.portCache = [];
 
     var ports = config.get('gpio.ports');
     ports.forEach(function (port) {
@@ -42,10 +43,18 @@ GPIO.prototype.read = function (port, channel) {
             console.error(err);
         }
         else {
-            var payload = {
-                value: val
-            };
-            that.callback(channel, payload);
+            if (
+              !config.get('gpio.only_send_updates') ||
+              !(port in that.portCache) ||
+              that.portCache[port] != val
+            ) {
+                that.portCache[port] = val;
+
+                var payload = {
+                    value: val
+                };
+                that.callback(channel, payload);
+            }
         }
     });
 };

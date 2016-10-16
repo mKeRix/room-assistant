@@ -28,6 +28,7 @@
   },
   "gpio": {
     "enabled": false,
+    "only_send_updates": false,
     "ports": []
   }
 }
