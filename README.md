@@ -26,6 +26,15 @@ And run it to see if everything went fine:
 npm start
 ```
 
+## Updating ##
+
+Updating is easy, just pull the new version from Github and check if the dependencies are uptodate:
+
+```
+git pull
+npm install
+```
+
 ## Configuration ##
 
 To configure room-assistant you should make a copy of the `config/default.json` file and name it `local.json`.
@@ -54,6 +63,7 @@ You need to have a valid MQTT server for this component to work.
     "url": "mqtts://mqttserver:1234",
     "username": "",
     "password": "",
+    "reject_unauthorized": true,
     "topic": "room-name"
   }
 }
@@ -65,7 +75,25 @@ Options:
 - **url** - URL to your MQTT server, this works with the protocols 'mqtt', 'mqtts', 'tcp', 'tls', 'ws', 'wss'
 - **username** - username (please create a new user for each client/room)
 - **password** - password
+- **reject_unauthorized** - set this to `false` to allow self signed certificates
 - **topic** - a topic name to uniquely identify each client/room
+
+#### Console ####
+
+This component is meant to be used for testing and just outputs everything to the console.
+
+```json
+{
+  "console": {
+    "enabled": true
+  }
+}
+```
+
+Options:
+
+- **enabled** - enable or disable the component
+
 
 ### Trackers ###
 
@@ -73,6 +101,8 @@ Options:
 
 This component tracks all BLE beacons it finds and posts updates about them including a calculated their id, name, signal strength and a calculated distance.
 The distance calculation is optimized for the iBeacon standard. To avoid faulty data through noise the distance values are smoothed using the [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter).
+
+In additional the list of supported devices found [here](https://github.com/sandeepmistry/noble/wiki/Compatible-Devices) I have also tested this component with a variety of virtual iBeacon apps and the [RadBeacon Dot](http://store.radiusnetworks.com/collections/all/products/radbeacon-dot).
 
 On Linux this component will have to run as root [unless you set the correct permissions](https://github.com/sandeepmistry/noble#running-on-linux).
 
@@ -83,6 +113,7 @@ On Linux this component will have to run as root [unless you set the correct per
     "channel": "room_presence",
     "max_distance": 0,
     "whitelist": ["id1", "id2"],
+    "use_mac": false,
     "system_noise": 0.01,
     "measurement_noise": 3
   }
@@ -95,6 +126,7 @@ Options:
 - **channel** - channel for the announcements about found beacons
 - **max_distance** - maximum distance where the scanner will still send the data to a publisher, 0 means unlimited
 - **whitelist** - array of Bluetooth IDs as whitelist for updates that should be sent to the publisher, an empty list disables the whitelist
+- **use_mac** - publish the Bluetooth MAC address instead of the UUID (for devices without a consistent UUID)
 - **system_noise** - describes how noisy the system is and should be kept relatively low (used for the Kalman filter)
 - **measurement_noise** - describes how noisy the measurements are (used for the Kalman filter)
 
@@ -124,6 +156,48 @@ Options:
 - **scale** - the temperature output is calculated as `scale * value + offset`, this allows you to fine-tune the sensor
 - **offset** - see scale
 
+#### Raspberry Pi GPIO ####
+
+This a very generic component for grabbing data off the GPIO pins on the Raspberry Pi.
+For example you could install a PIR motion sensor to augment the BLE presence tracking.
+
+This component relies on a tool that you need to install with the following commands:
+
+```
+git clone -b fixpath https://github.com/rexington/quick2wire-gpio-admin.git
+cd quick2wire-gpio-admin
+make
+sudo make install
+sudo adduser $USER gpio
+```
+
+Please note that we are using a fork of the actual tool. Unfortunately the official repository has a severe bug that is not being fixed despite multiple issues and a pull request with the fix.
+
+```json
+{
+  "gpio": {
+    "enabled": true,
+    "only_send_updates": false,
+    "ports": [
+      {
+        "port": 7,
+        "interval": 1000,
+        "channel": "motion_sensor"
+      }
+    ]
+  }
+}
+```
+
+Options:
+
+- **enabled** - enable or disable component
+- **only_send_updates** - only post to the publisher if the value changed
+- **ports** - an array of ports to be checked
+  - **port** - the actual physical port number to be tracked ([reference](https://github.com/rakeshpai/pi-gpio#about-the-pin-configuration))
+  - **interval** - the interval in which the port should be checked in milliseconds
+  - **channel** - channel for value updates
+
 ## Running as a service ##
 
 To make sure your room-assistant is always running you should setup a service for it. Luckily there are two cool packages that help us do this:
@@ -144,5 +218,5 @@ sudo forever-service install -s index.js -e "ENV=prod" --start room-assistant
 I started this project mainly to augment my own home automation with Raspberry Pi 3 beacons in each room.
 This was my solution for being too lazy for turning on the lights and heating per room as I come and go.
 If this is of any use to you - cool! If you want to add some code - even cooler! Just create a ticket or a pull request.
-There currently are no specific criteria to meet as long as you follow the basic principles demonstrated in the exiisting components.
-And if you can add unit tests too, even if my work on that hasn't gotten far yet.
+There currently are no specific criteria to meet as long as you follow the basic principles demonstrated in the existing components.
+And if you can: add unit tests too, even if my work on that has not gotten far yet.

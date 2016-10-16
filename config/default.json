@@ -4,13 +4,18 @@
     "url": "mqtt://localhost",
     "username": "",
     "password": "",
+    "reject_unauthorized": true,
     "topic": "room-name"
+  },
+  "console": {
+    "enabled": false
   },
   "ble": {
     "enabled": false,
     "channel": "room_presence",
     "max_distance": 0,
     "whitelist": [],
+    "use_mac": false,
     "system_noise": 0.01,
     "measurement_noise": 3
   },
@@ -20,5 +25,10 @@
     "interval": 60000,
     "scale": 1,
     "offset": 0
+  },
+  "gpio": {
+    "enabled": false,
+    "only_send_updates": true,
+    "ports": []
   }
 }

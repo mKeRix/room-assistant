@@ -5,7 +5,8 @@ var console = process.console;
 function MQTTPublisher() {
     var options = {
         username: config.get('mqtt.username'),
-        password: config.get('mqtt.password')
+        password: config.get('mqtt.password'),
+        rejectUnauthorized: config.get('mqtt.reject_unauthorized')
     };
 
     this.client = mqtt.connect(config.get('mqtt.url'), options);

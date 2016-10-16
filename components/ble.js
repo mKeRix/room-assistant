@@ -44,8 +44,16 @@ BLEScanner.prototype._handlePacket = function (peripheral) {
         var maxDistance = config.get('ble.max_distance') || 0;
         if (maxDistance == 0 || distance <= maxDistance) {
             var filteredDistance = this._filter(peripheral.id, distance);
+            var id;
+
+            if (config.get('ble.use_mac')) {
+                id = peripheral.address;
+            } else {
+                id = peripheral.id;
+            }
+
             var payload = {
-                id: peripheral.id,
+                id: id,
                 name: advertisement.localName,
                 rssi: peripheral.rssi,
                 distance: filteredDistance
