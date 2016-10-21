@@ -24,20 +24,20 @@ iBeaconScanner.prototype._handlePacket = function (ibeacon) {
     var whitelist = config.get('ibeacon.whitelist') || [];
     if (whitelist.length == 0 || whitelist.indexOf(ibeacon.uuid) > -1) {
 
-	id = ibeacon.uuid + '-' + ibeacon.major + '-' + ibeacon.minor
+    id = ibeacon.uuid + '-' + ibeacon.major + '-' + ibeacon.minor
         // max distance parameter checking
         var maxDistance = config.get('ibeacon.max_distance') || 0;
         if (maxDistance == 0 || ibeacon.accuracy <= maxDistance) {
 
             var payload = {
-		id: id,
+        id: id,
                 uuid: ibeacon.uuid,
                 major: ibeacon.major,
-		minor: ibeacon.minor,
+        minor: ibeacon.minor,
                 rssi: ibeacon.rssi,
-		distance: ibeacon.accuracy,
-		measuredpower: ibeacon.measuredPower,
-		proximity: ibeacon.proximity
+        distance: ibeacon.accuracy,
+        measuredpower: ibeacon.measuredPower,
+        proximity: ibeacon.proximity
             };
 
             this.callback(channel, payload);
