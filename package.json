@@ -19,6 +19,7 @@
     "kalmanjs": "^1.0.0-beta",
     "mqtt": "^1.14.0",
     "noble": "^1.6.0",
+    "bleacon": "^0.5.1",
     "scribe-js": "^2.0.4",
     "temper1": "0.0.7",
     "pi-gpio": "^0.0.8"
