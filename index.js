@@ -7,6 +7,9 @@ var Publisher = require('./components/publisher');
 if (config.get('ble.enabled')) {
     var BLEScanner = require('./components/ble');
 }
+if (config.get('ibeacon.enabled')) {
+    var iBeaconScanner = require('./components/ibeacon');
+}
 if (config.get('temper.enabled')) {
     var Temper = require('./components/temper');
 }
@@ -27,6 +30,9 @@ RoomAssistantApp.prototype._init = function () {
     if (config.get('ble.enabled')) {
         this._setupBLE();
     }
+    if (config.get('ibeacon.enabled')) {
+        this._setupiBeacon();
+    }
     if (config.get('temper.enabled')) {
         this._setupTemper();
     }
@@ -37,6 +43,10 @@ RoomAssistantApp.prototype._init = function () {
 
 RoomAssistantApp.prototype._setupBLE = function () {
     return new BLEScanner(this.publisher.publish.bind(this.publisher));
+};
+
+RoomAssistantApp.prototype._setupiBeacon = function () {
+    return new iBeaconScanner(this.publisher.publish.bind(this.publisher));
 };
 
 RoomAssistantApp.prototype._setupTemper = function () {
