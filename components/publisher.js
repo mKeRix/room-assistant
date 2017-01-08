@@ -8,9 +8,9 @@ function Publisher() {
   this._init();
 }
 
-Publisher.prototype.publish = function (channel, payload) {
+Publisher.prototype.publish = function (channel, payload, options) {
   if (this.mqttPublish) {
-    this.mqttPublish(channel, payload);
+    this.mqttPublish(channel, payload, options);
   }
   if (this.consolePublish) {
     this.consolePublish(channel, payload);

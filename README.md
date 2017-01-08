@@ -184,7 +184,9 @@ Please note that we are using a fork of the actual tool. Unfortunately the offic
         "interval": 1000,
         "channel": "motion_sensor"
       }
-    ]
+    ],
+    "qos": 1,
+    "retain": true
   }
 }
 ```
@@ -197,6 +199,8 @@ Options:
   - **port** - the actual physical port number to be tracked ([reference](https://github.com/rakeshpai/pi-gpio#about-the-pin-configuration))
   - **interval** - the interval in which the port should be checked in milliseconds
   - **channel** - channel for value updates
+- **qos** - quality of service level for the message (for MQTT)
+- **retain** - whether the message should be retained or not (for MQTT)
 
 ## Running as a service ##
 

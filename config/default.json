@@ -37,6 +37,8 @@
   "gpio": {
     "enabled": false,
     "only_send_updates": true,
-    "ports": []
+    "ports": [],
+    "qos": 1,
+    "retain": true
   }
 }
