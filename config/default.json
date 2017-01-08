@@ -40,5 +40,11 @@
     "ports": [],
     "qos": 1,
     "retain": true
+  },
+  "shell": {
+    "enabled": false,
+    "commands": [],
+    "qos": 0,
+    "retain": false
   }
 }

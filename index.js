@@ -16,6 +16,9 @@ if (config.get('temper.enabled')) {
 if (config.get('gpio.enabled')) {
     var GPIO = require('./components/gpio');
 }
+if (config.get('shell.enabled')) {
+    var Shell = require('./components/shell');
+}
 
 function RoomAssistantApp() {
     console.info('Starting Room Assistant...');
@@ -39,6 +42,9 @@ RoomAssistantApp.prototype._init = function () {
     if (config.get('gpio.enabled')) {
         this._setupGPIO();
     }
+    if (config.get('shell.enabled')) {
+        this._setupShell();
+    }
 };
 
 RoomAssistantApp.prototype._setupBLE = function () {
@@ -55,6 +61,10 @@ RoomAssistantApp.prototype._setupTemper = function () {
 
 RoomAssistantApp.prototype._setupGPIO = function () {
     return new GPIO(this.publisher.publish.bind(this.publisher));
+};
+
+RoomAssistantApp.prototype._setupShell = function () {
+    return new Shell(this.publisher.publish.bind(this.publisher));
 };
 
 // start the app

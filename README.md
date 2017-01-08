@@ -202,6 +202,41 @@ Options:
 - **qos** - quality of service level for the message (for MQTT)
 - **retain** - whether the message should be retained or not (for MQTT)
 
+#### Shell Commands ####
+
+This component executes any given shell command regularly and reports the stdout output to your publisher.
+
+```json
+{
+  "shell": {
+      "enabled": true,
+      "commands": [
+        {
+          "command": "/home/pi/airsensor/airsensor -o",
+          "regexp": "(.*)",
+          "float": false,
+          "interval": 60000,
+          "channel": "air_quality"
+        }
+      ],
+      "qos": 0,
+      "retain": false
+    }
+}
+```
+
+Options:
+
+- **enabled** - enable or disable component
+- **commands** - an array of commands to be executed
+  - **command** - any bash command, make sure the user executing room-assistant has the needed permissions
+  - **regexp** - regular expression string to tune your output, the first matched group will be used
+  - **float** - whether to convert to the output to a float or not
+  - **interval** - the interval in which the command should be executed in milliseconds
+  - **channel** - channel for value updates
+- **qos** - quality of service level for the message (for MQTT)
+- **retain** - whether the message should be retained or not (for MQTT)
+
 ## Running as a service ##
 
 To make sure your room-assistant is always running you should setup a service for it. Luckily there are two cool packages that help us do this:
