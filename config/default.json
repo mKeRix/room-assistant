@@ -38,8 +38,8 @@
     "enabled": false,
     "only_send_updates": true,
     "ports": [],
-    "qos": 1,
-    "retain": true
+    "qos": 0,
+    "retain": false
   },
   "shell": {
     "enabled": false,
