@@ -5,6 +5,9 @@ var console = process.console;
 var KalmanFilter = require('kalmanjs').default;
 
 var channel = config.get('ble.channel');
+var updateFreq = parseInt(config.get('ble.update_frequency'), 10);
+
+var lastUpdateTime = new Date();
 
 function BLEScanner(callback) {
     // constructor
@@ -30,6 +33,14 @@ BLEScanner.prototype._startScanning = function (state) {
 };
 
 BLEScanner.prototype._handlePacket = function (peripheral) {
+    if (updateFreq > 0) {
+        var currTime = new Date();
+        if ((currTime - lastUpdateTime) < updateFreq) {
+            return;
+        }
+        lastUpdateTime = currTime;
+    }
+
     var advertisement = peripheral.advertisement;
 
     // check if we have a whitelist

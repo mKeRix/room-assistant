@@ -17,7 +17,8 @@
     "whitelist": [],
     "use_mac": false,
     "system_noise": 0.01,
-    "measurement_noise": 3
+    "measurement_noise": 3,
+    "update_frequency": 0
   },
   "ibeacon": {
     "enabled": false,
