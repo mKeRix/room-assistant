@@ -1,4 +1,7 @@
 {
+  "app": {
+    "unsafe": false
+  },
   "mqtt": {
     "enabled": false,
     "url": "mqtt://localhost",

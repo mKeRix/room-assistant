@@ -23,11 +23,13 @@ if (config.get('shell.enabled')) {
 function RoomAssistantApp() {
     console.info('Starting Room Assistant...');
 
-    // catch the uncaught errors that weren't wrapped in a domain or try catch statement
-    process.on('uncaughtException', function(err) {
-        // handle the error safely
-        console.error(err);
-    });
+    if (config.get('app.unsafe')) {
+        // catch the uncaught errors that weren't wrapped in a domain or try catch statement
+        process.on('uncaughtException', function(err) {
+            // handle the error safely
+            console.error(err);
+        });
+    }
 
     this._init();
 }
