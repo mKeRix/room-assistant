@@ -21,32 +21,33 @@ iBeaconScanner.prototype._init = function () {
 };
 
 iBeaconScanner.prototype._handlePacket = function (ibeacon) {
-
     // check if we have a whitelist
     // and if we do, if this id is listed there
     var whitelist = config.get('ibeacon.whitelist') || [];
-    if (whitelist.length == 0 || whitelist.indexOf(ibeacon.uuid) > -1) {
+
+    var id = ibeacon.uuid + '-' + ibeacon.major + '-' + ibeacon.minor;
+
+    if (whitelist.length == 0 || whitelist.indexOf(id) > -1) {
 
         // default hardcoded value for beacon tx power
         var txPower = ibeacon.measuredPower || -59;
         var distance = this._calculateDistance(ibeacon.rssi, txPower);
 
-        id = ibeacon.uuid + '-' + ibeacon.major + '-' + ibeacon.minor
         // max distance parameter checking
         var maxDistance = config.get('ibeacon.max_distance') || 0;
         if (maxDistance == 0 || ibeacon.accuracy <= maxDistance) {
             var filteredDistance = this._filter(id, distance);
 
             var payload = {
-		id: id,
+		        id: id,
                 uuid: ibeacon.uuid,
                 major: ibeacon.major,
-		minor: ibeacon.minor,
+		        minor: ibeacon.minor,
                 rssi: ibeacon.rssi,
-		distance: filteredDistance,
-		accuracy: ibeacon.accuracy,
-		measuredpower: ibeacon.measuredPower,
-		proximity: ibeacon.proximity
+		        distance: filteredDistance,
+		        accuracy: ibeacon.accuracy,
+		        measuredpower: ibeacon.measuredPower,
+		        proximity: ibeacon.proximity
             };
 
             this.callback(channel, payload);
