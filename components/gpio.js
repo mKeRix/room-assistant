@@ -6,6 +6,11 @@ function GPIO(callback) {
     // constructor
     this.callback = callback;
 
+    this.options = {
+        qos: config.get('gpio.qos'),
+        retain: config.get('gpio.retain')
+    };
+
     this._init();
 }
 
@@ -53,7 +58,7 @@ GPIO.prototype.read = function (port, channel) {
                 var payload = {
                     value: val
                 };
-                that.callback(channel, payload);
+                that.callback(channel, payload, that.options);
             }
         }
     });

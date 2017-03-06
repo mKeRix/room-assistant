@@ -13,9 +13,10 @@ function MQTTPublisher() {
     console.info('Connected to MQTT server');
 }
 
-MQTTPublisher.prototype.publish = function (channel, payload) {
+MQTTPublisher.prototype.publish = function (channel, payload, options) {
     var topic = channel + '/' + config.get('mqtt.topic');
-    this.client.publish(topic, JSON.stringify(payload));
+
+    this.client.publish(topic, JSON.stringify(payload), options);
 };
 
 module.exports = MQTTPublisher;
