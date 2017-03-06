@@ -5,7 +5,7 @@ var console = process.console;
 var KalmanFilter = require('kalmanjs').default;
 
 var channel = config.get('ble.channel');
-var updateFreq = parseInt(config.get('ble.update_frequency'), 10);
+var updateFreq = parseInt(config.get('ble.update_frequency'), 0);
 
 var lastUpdateTime = new Date();
 
