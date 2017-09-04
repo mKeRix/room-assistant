@@ -24,8 +24,10 @@ iBeaconScanner.prototype._handlePacket = function (ibeacon) {
     // check if we have a whitelist
     // and if we do, if this id is listed there
     var whitelist = config.get('ibeacon.whitelist') || [];
+    var major_mask = config.has('ibeacon.major_mask') ? parseInt(config.get('ibeacon.major_mask')) : 0xFFFF;
+    var minor_mask = config.has('ibeacon.minor_mask') ? parseInt(config.get('ibeacon.minor_mask')) : 0xFFFF;
 
-    var id = ibeacon.uuid + '-' + ibeacon.major + '-' + ibeacon.minor;
+    var id = ibeacon.uuid + '-' + (ibeacon.major & major_mask) + '-' + (ibeacon.minor & minor_mask);
 
     if (whitelist.length == 0 || whitelist.indexOf(id) > -1) {
 
