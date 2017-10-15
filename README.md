@@ -149,7 +149,9 @@ On Linux this component will have to run as root [unless you set the correct per
     "whitelist": ["id1", "id2"],
     "use_mac": false,
     "system_noise": 0.01,
-    "measurement_noise": 3
+    "measurement_noise": 3,
+    "major_mask": "0xFFFF",
+    "minor_mask": "0xFFFF"
   }
 }
 ```
@@ -163,6 +165,8 @@ Options:
 - **use_mac** - publish the Bluetooth MAC address instead of the UUID (for devices without a consistent UUID)
 - **system_noise** - describes how noisy the system is and should be kept relatively low (used for the Kalman filter)
 - **measurement_noise** - describes how noisy the measurements are (used for the Kalman filter)
+- **major_mask** - filters out bits of the major id to make dynamic values with encoded information consistent for filtering (for more information see [#20](https://github.com/mKeRix/room-assistant/pull/20))
+- **minor_mask** - filters out bits of the minor id to make dynamic values with encoded information consistent for filtering (for more information see [#20](https://github.com/mKeRix/room-assistant/pull/20))
 
 #### Temper USB Sensors ####
 
