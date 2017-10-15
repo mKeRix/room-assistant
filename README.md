@@ -277,18 +277,42 @@ Options:
 
 ## Running as a service ##
 
-To make sure your room-assistant is always running you should setup a service for it. Luckily there are two cool packages that help us do this:
+To make sure your room-assistant is always running you should setup a service for it. This can be done easily on newer systems using systemd.
+
+Create the file `/etc/systemd/system/room-assistant.service` with your favorite editor:
 
 ```
-sudo npm install -g forever forever-service
+sudo nano /etc/systemd/system/room-assistant.service
 ```
 
-From your room-assistant directory you can then simply run the following command to register a new service:
+Fill the file with the following data, adjusting the values as needed:
 
 ```
-sudo forever-service install -s index.js -e "ENV=prod" --start room-assistant
+[Unit]
+Description=Room Assistant service
+
+[Service]
+ExecStart=/usr/bin/npm start
+WorkingDirectory=/home/pi/room-assistant
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
 ```
 
+Save the file, then enable and start the service using the following commands:
+
+```
+sudo systemctl enable room-assistant.service
+sudo systemctl start room-assistant.service
+```
+
+You can now check the service status by running:
+
+```
+systemctl status room-assistant.service
+```
 
 ## Contributing ##
 
