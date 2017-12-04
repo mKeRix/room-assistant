@@ -35,6 +35,10 @@ git pull
 npm install
 ```
 
+## Docker ##
+
+There is also docker container available [here](https://hub.docker.com/r/grantbey/room-assistant-docker/). See instructions at the repository for installation and use.
+
 ## Configuration ##
 
 To configure room-assistant you should make a copy of the `config/default.json` file and name it `local.json`.
