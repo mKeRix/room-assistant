@@ -1,6 +1,6 @@
 var config = require('config');
 var noble = require('noble');
-var console = process.console;
+//var console = process.console;
 
 var KalmanFilter = require('kalmanjs').default;
 
