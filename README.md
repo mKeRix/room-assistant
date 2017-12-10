@@ -1,10 +1,11 @@
-# room-assistant #
+# room-assistant [![Build Status](https://travis-ci.org/mKeRix/room-assistant.svg?branch=master)](https://travis-ci.org/mKeRix/room-assistant)
 
 room-assistant is a simple Node.js server for tracking presence and other things on a per-room basis.
 Currently it is mainly meant to be used for the [mqtt_room](https://home-assistant.io/components/sensor.mqtt_room/) component of [Home Assistant](https://home-assistant.io/).
 
-## Installation ##
-
+## Usage
+### Runing with node.js
+#### Installation
 Before you continue please make sure that you have the [latest version of Node.js installed](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions), as the Raspbian by default provides is very old.
 You also need to install some more dependencies by running this command:
 
@@ -13,21 +14,57 @@ sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev libusb-1.0-0-d
 ```
 
 Now you can install room-assistant into a directory of your choice:
-
 ```
 git clone https://github.com/mKeRix/room-assistant.git
 cd room-assistant
 npm install
 ```
 
-And run it to see if everything went fine:
-
+#### Execution
+Run it to see if everything went fine:
 ```
 npm start
 ```
 
-## Updating ##
+##### Running as a service
+To make sure your room-assistant is always running you should setup a service for it. This can be done easily on newer systems using systemd.
 
+Create the file `/etc/systemd/system/room-assistant.service` with your favorite editor:
+
+```
+sudo nano /etc/systemd/system/room-assistant.service
+```
+
+Fill the file with the following data, adjusting the values as needed:
+
+```
+[Unit]
+Description=Room Assistant service
+
+[Service]
+ExecStart=/usr/bin/npm start
+WorkingDirectory=/home/pi/room-assistant
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Save the file, then enable and start the service using the following commands:
+
+```
+sudo systemctl enable room-assistant.service
+sudo systemctl start room-assistant.service
+```
+
+You can now check the service status by running:
+
+```
+systemctl status room-assistant.service
+```
+
+#### Updating
 Updating is easy, just pull the new version from Github and check if the dependencies are uptodate:
 
 ```
@@ -35,8 +72,21 @@ git pull
 npm install
 ```
 
-## Configuration ##
 
+### Running with Docker
+#### Execution
+* This image only works on the _host_ network.
+* To add your configuration files, you need to
+  * create a directory on your host (e.g. ~/room-assistant/config)
+  * add your configuration files under it
+  * mount this directory to the /room-assistant/config/ directory on the container.
+
+Example:
+```
+docker run --network=host -d --name room-assistant -v ~/room-assistant/config:/room-assistant/config mkerix/room-assistant:latest-rpi
+```
+
+## Configuration
 To configure room-assistant you should make a copy of the `config/default.json` file and name it `local.json`.
 The `default.json` should not be edited directly as these changes will be overwritten on an update.
 
@@ -48,12 +98,10 @@ nano config/local.json
 All options are stored within these configuration files. They are sorted by components and already set to sensible defaults.
 You need to enable every needed component manually.
 
-### Publishers ###
-
+### Publishers
 Publishers are how room-assistant sends its data around. Currently only one publisher at a time is supported.
 
-#### MQTT ###
-
+#### MQTT
 You need to have a valid MQTT server for this component to work.
 
 ```json
@@ -70,7 +118,6 @@ You need to have a valid MQTT server for this component to work.
 ```
 
 Options:
-
 - **enabled** - enable or disable the component
 - **url** - URL to your MQTT server, this works with the protocols 'mqtt', 'mqtts', 'tcp', 'tls', 'ws', 'wss'
 - **username** - username (please create a new user for each client/room)
@@ -78,8 +125,7 @@ Options:
 - **reject_unauthorized** - set this to `false` to allow self signed certificates
 - **topic** - a topic name to uniquely identify each client/room
 
-#### Console ####
-
+#### Console
 This component is meant to be used for testing and just outputs everything to the console.
 
 ```json
@@ -91,21 +137,16 @@ This component is meant to be used for testing and just outputs everything to th
 ```
 
 Options:
-
 - **enabled** - enable or disable the component
 
-
-### Trackers ###
-
-#### Bluetooth LE Beacons ####
-
+### Trackers
+#### Bluetooth LE Beacons
 This component tracks all BLE beacons it finds and posts updates about them including a calculated their id, name, signal strength and a calculated distance.
 The distance calculation is optimized for the iBeacon standard. To avoid faulty data through noise the distance values are smoothed using the [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter).
 
 In additional the list of supported devices found [here](https://github.com/sandeepmistry/noble/wiki/Compatible-Devices) I have also tested this component with a variety of virtual iBeacon apps and the [RadBeacon Dot](http://store.radiusnetworks.com/collections/all/products/radbeacon-dot).
 
 On Linux this component will have to run as root [unless you set the correct permissions](https://github.com/sandeepmistry/noble#running-on-linux).
-
 ```json
 {
   "ble": {
@@ -122,7 +163,6 @@ On Linux this component will have to run as root [unless you set the correct per
 ```
 
 Options:
-
 - **enabled** - enable or disable component
 - **channel** - channel for the announcements about found beacons
 - **max_distance** - maximum distance where the scanner will still send the data to a publisher, 0 means unlimited
@@ -132,14 +172,12 @@ Options:
 - **measurement_noise** - describes how noisy the measurements are (used for the Kalman filter)
 - **update_frequency** - in milliseconds, limits how often the component sends updates to not "spam" the publisher, 0 disables the check and is the default
 
-#### iBeacons ####
-
+#### iBeacons
 This component tracks only the iBeacons it finds and posts updates about them including a calculated their id, name, signal strength and a calculated distance.
 To avoid faulty data through noise the distance values are smoothed using the [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter).
 The iBeacon component is mostly useful if you want to address your beacons via the major minor system or if the BLE component did not work correctly with your hardware.
 
 On Linux this component will have to run as root [unless you set the correct permissions](https://github.com/sandeepmistry/noble#running-on-linux).
-
 ```json
 {
   "ibeacon": {
@@ -149,13 +187,14 @@ On Linux this component will have to run as root [unless you set the correct per
     "whitelist": ["id1", "id2"],
     "use_mac": false,
     "system_noise": 0.01,
-    "measurement_noise": 3
+    "measurement_noise": 3,
+    "major_mask": "0xFFFF",
+    "minor_mask": "0xFFFF"
   }
 }
 ```
 
 Options:
-
 - **enabled** - enable or disable component
 - **channel** - channel for the announcements about found beacons
 - **max_distance** - maximum distance where the scanner will still send the data to a publisher, 0 means unlimited
@@ -163,13 +202,13 @@ Options:
 - **use_mac** - publish the Bluetooth MAC address instead of the UUID (for devices without a consistent UUID)
 - **system_noise** - describes how noisy the system is and should be kept relatively low (used for the Kalman filter)
 - **measurement_noise** - describes how noisy the measurements are (used for the Kalman filter)
+- **major_mask** - filters out bits of the major id to make dynamic values with encoded information consistent for filtering (for more information see [#20](https://github.com/mKeRix/room-assistant/pull/20))
+- **minor_mask** - filters out bits of the minor id to make dynamic values with encoded information consistent for filtering (for more information see [#20](https://github.com/mKeRix/room-assistant/pull/20))
 
 #### Temper USB Sensors ####
-
 This component is meant to be used for the cheap Temper USB dongles. They read the temperature and humidity values.
 
 On Linux this component will have to run as root [unless you set the correct permissions](https://github.com/padelt/temper-python#usb-device-permissions).
-
 ```json
 {
   "temper": {
@@ -183,15 +222,13 @@ On Linux this component will have to run as root [unless you set the correct per
 ```
 
 Options:
-
 - **enabled** - enable or disable component
 - **channel** - channel for sensor value updates
 - **interval** - the interval in which the sensor should be checked in milliseconds
 - **scale** - the temperature output is calculated as `scale * value + offset`, this allows you to fine-tune the sensor
 - **offset** - see scale
 
-#### Raspberry Pi GPIO ####
-
+#### Raspberry Pi GPIO
 This a very generic component for grabbing data off the GPIO pins on the Raspberry Pi.
 For example you could install a PIR motion sensor to augment the BLE presence tracking.
 
@@ -206,7 +243,6 @@ sudo adduser $USER gpio
 ```
 
 Please note that we are using a fork of the actual tool. Unfortunately the official repository has a severe bug that is not being fixed despite multiple issues and a pull request with the fix.
-
 ```json
 {
   "gpio": {
@@ -226,7 +262,6 @@ Please note that we are using a fork of the actual tool. Unfortunately the offic
 ```
 
 Options:
-
 - **enabled** - enable or disable component
 - **only_send_updates** - only post to the publisher if the value changed
 - **ports** - an array of ports to be checked
@@ -237,7 +272,6 @@ Options:
 - **retain** - whether the message should be retained or not (for MQTT)
 
 #### Shell Commands ####
-
 This component executes any given shell command regularly and reports the stdout output to your publisher.
 
 ```json
@@ -260,7 +294,6 @@ This component executes any given shell command regularly and reports the stdout
 ```
 
 Options:
-
 - **enabled** - enable or disable component
 - **commands** - an array of commands to be executed
   - **command** - any bash command, make sure the user executing room-assistant has the needed permissions
@@ -271,25 +304,8 @@ Options:
 - **qos** - quality of service level for the message (for MQTT)
 - **retain** - whether the message should be retained or not (for MQTT)
 
-## Running as a service ##
-
-To make sure your room-assistant is always running you should setup a service for it. Luckily there are two cool packages that help us do this:
-
-```
-sudo npm install -g forever forever-service
-```
-
-From your room-assistant directory you can then simply run the following command to register a new service:
-
-```
-sudo forever-service install -s index.js -e "ENV=prod" --start room-assistant
-```
-
-
 ## Contributing ##
-
 I started this project mainly to augment my own home automation with Raspberry Pi 3 beacons in each room.
 This was my solution for being too lazy for turning on the lights and heating per room as I come and go.
 If this is of any use to you - cool! If you want to add some code - even cooler! Just create a ticket or a pull request.
-There currently are no specific criteria to meet as long as you follow the basic principles demonstrated in the existing components.
-And if you can: add unit tests too, even if my work on that has not gotten far yet.
+There currently are no specific criteria to meet as long as you follow the basic principles demonstrated in the existing components. And if you can: add unit tests too, even if my work on that has not gotten far yet.

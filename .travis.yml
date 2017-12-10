@@ -1,0 +1,37 @@
+sudo: required
+
+language: node_js
+node_js:
+  - "8"
+
+env:
+  - PLATFORM=x86
+  - PLATFORM=rpi
+
+services:
+  - docker
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y bluetooth bluez libbluetooth-dev libudev-dev libusb-1.0-0-dev
+
+script:
+  # Build room-assistant
+  - npm install
+  - npm test
+
+  # Use qemu if $PLATFORM=rpi
+  - if [ "$PLATFORM" == "rpi" ]; then
+    docker run --rm --privileged multiarch/qemu-user-static:register;
+    fi
+
+  # Build docker image
+  - docker build -t $DOCKER_USERNAME/room-assistant:$TRAVIS_BRANCH-$PLATFORM -f Dockerfile.$PLATFORM .
+
+  # Push docker image
+  - if [ ! -z "$TRAVIS_TAG" ] || [ "$TRAVIS_BRANCH" == "master" ] ; then
+    docker tag $DOCKER_USERNAME/room-assistant:$TRAVIS_BRANCH-$PLATFORM $DOCKER_USERNAME/room-assistant:latest-$PLATFORM;
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
+    docker push $DOCKER_USERNAME/room-assistant:$TRAVIS_BRANCH-$PLATFORM;
+    docker push $DOCKER_USERNAME/room-assistant:latest-$PLATFORM;
+    fi

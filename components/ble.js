@@ -1,6 +1,6 @@
 var config = require('config');
 var noble = require('noble');
-var console = process.console;
+//var console = process.console;
 
 var KalmanFilter = require('kalmanjs').default;
 
@@ -43,10 +43,17 @@ BLEScanner.prototype._handlePacket = function (peripheral) {
 
     var advertisement = peripheral.advertisement;
 
+    var id;
+    if (config.get('ble.use_mac')) {
+        id = peripheral.address;
+    } else {
+        id = peripheral.id;
+    }
+
     // check if we have a whitelist
     // and if we do, if this id is listed there
     var whitelist = config.get('ble.whitelist') || [];
-    if (whitelist.length == 0 || whitelist.indexOf(peripheral.id) > -1) {
+    if (whitelist.length == 0 || whitelist.indexOf(id) > -1) {
         // default hardcoded value for beacon tx power
         var txPower = advertisement.txPowerLevel || -59;
         var distance = this._calculateDistance(peripheral.rssi, txPower);
@@ -54,14 +61,7 @@ BLEScanner.prototype._handlePacket = function (peripheral) {
         // max distance parameter checking
         var maxDistance = config.get('ble.max_distance') || 0;
         if (maxDistance == 0 || distance <= maxDistance) {
-            var filteredDistance = this._filter(peripheral.id, distance);
-            var id;
-
-            if (config.get('ble.use_mac')) {
-                id = peripheral.address;
-            } else {
-                id = peripheral.id;
-            }
+            var filteredDistance = this._filter(id, distance);
 
             var payload = {
                 id: id,
