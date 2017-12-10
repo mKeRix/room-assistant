@@ -83,7 +83,7 @@ npm install
 
 Example:
 ```
-docker run --network=host -d --name room-assistant -v ~/room-assistant/config:/room-assistant/config mKeRix/room-assistant:latest-rpi
+docker run --network=host -d --name room-assistant -v ~/room-assistant/config:/room-assistant/config mkerix/room-assistant:latest-rpi
 ```
 
 ## Configuration
