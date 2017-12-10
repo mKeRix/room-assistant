@@ -27,13 +27,41 @@ npm start
 ```
 
 ##### Running as a service
-To make sure your room-assistant is always running you should setup a service for it. Luckily there are two cool packages that help us do this:
+To make sure your room-assistant is always running you should setup a service for it. This can be done easily on newer systems using systemd.
+
+Create the file `/etc/systemd/system/room-assistant.service` with your favorite editor:
+
 ```
-sudo npm install -g forever forever-service
+sudo nano /etc/systemd/system/room-assistant.service
 ```
-From your room-assistant directory you can then simply run the following command to register a new service:
+
+Fill the file with the following data, adjusting the values as needed:
+
 ```
-sudo forever-service install -s index.js -e "ENV=prod" --start room-assistant
+[Unit]
+Description=Room Assistant service
+
+[Service]
+ExecStart=/usr/bin/npm start
+WorkingDirectory=/home/pi/room-assistant
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Save the file, then enable and start the service using the following commands:
+
+```
+sudo systemctl enable room-assistant.service
+sudo systemctl start room-assistant.service
+```
+
+You can now check the service status by running:
+
+```
+systemctl status room-assistant.service
 ```
 
 #### Updating
@@ -159,7 +187,9 @@ On Linux this component will have to run as root [unless you set the correct per
     "whitelist": ["id1", "id2"],
     "use_mac": false,
     "system_noise": 0.01,
-    "measurement_noise": 3
+    "measurement_noise": 3,
+    "major_mask": "0xFFFF",
+    "minor_mask": "0xFFFF"
   }
 }
 ```
@@ -172,6 +202,8 @@ Options:
 - **use_mac** - publish the Bluetooth MAC address instead of the UUID (for devices without a consistent UUID)
 - **system_noise** - describes how noisy the system is and should be kept relatively low (used for the Kalman filter)
 - **measurement_noise** - describes how noisy the measurements are (used for the Kalman filter)
+- **major_mask** - filters out bits of the major id to make dynamic values with encoded information consistent for filtering (for more information see [#20](https://github.com/mKeRix/room-assistant/pull/20))
+- **minor_mask** - filters out bits of the minor id to make dynamic values with encoded information consistent for filtering (for more information see [#20](https://github.com/mKeRix/room-assistant/pull/20))
 
 #### Temper USB Sensors ####
 This component is meant to be used for the cheap Temper USB dongles. They read the temperature and humidity values.
