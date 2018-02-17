@@ -146,6 +146,8 @@ The distance calculation is optimized for the iBeacon standard. To avoid faulty 
 
 In additional the list of supported devices found [here](https://github.com/sandeepmistry/noble/wiki/Compatible-Devices) I have also tested this component with a variety of virtual iBeacon apps and the [RadBeacon Dot](http://store.radiusnetworks.com/collections/all/products/radbeacon-dot).
 
+A note on whitelist/blacklist precedence: when an id is detected and the id is on the whitelist, it is always sent to the configured publishers. If it is not on the whitelist or the whitelist is empty, the blacklist is checked. If the id is then found on the blacklist, it will not be published. If both blacklist and whitelist are empty, all detected ids are published.
+
 On Linux this component will have to run as root [unless you set the correct permissions](https://github.com/sandeepmistry/noble#running-on-linux).
 ```json
 {
@@ -154,6 +156,7 @@ On Linux this component will have to run as root [unless you set the correct per
     "channel": "room_presence",
     "max_distance": 0,
     "whitelist": ["id1", "id2"],
+    "blacklist": ["id3", "id4"],
     "use_mac": false,
     "system_noise": 0.01,
     "measurement_noise": 3,
@@ -166,11 +169,13 @@ Options:
 - **enabled** - enable or disable component
 - **channel** - channel for the announcements about found beacons
 - **max_distance** - maximum distance where the scanner will still send the data to a publisher, 0 means unlimited
-- **whitelist** - array of Bluetooth IDs as whitelist for updates that should be sent to the publisher, an empty list disables the whitelist
+- **whitelist** - array of Bluetooth IDs as whitelist for updates that should be sent to the publisher, an empty list disables the whitelist 
+- **blacklist** - array of Bluetooth IDs as blacklist for updates that should not be sent to the publisher, an empty list disables the blacklist 
 - **use_mac** - publish the Bluetooth MAC address instead of the UUID (for devices without a consistent UUID)
 - **system_noise** - describes how noisy the system is and should be kept relatively low (used for the Kalman filter)
 - **measurement_noise** - describes how noisy the measurements are (used for the Kalman filter)
 - **update_frequency** - in milliseconds, limits how often the component sends updates to not "spam" the publisher, 0 disables the check and is the default
+
 
 #### iBeacons
 This component tracks only the iBeacons it finds and posts updates about them including a calculated their id, name, signal strength and a calculated distance.
