@@ -37,7 +37,7 @@ iBeaconScanner.prototype._handlePacket = function (ibeacon) {
 
         // max distance parameter checking
         var maxDistance = config.get('ibeacon.max_distance') || 0;
-        if (maxDistance == 0 || ibeacon.accuracy <= maxDistance) {
+        if (maxDistance == 0 || distance <= maxDistance) {
             var filteredDistance = this._filter(id, distance);
 
             var payload = {
