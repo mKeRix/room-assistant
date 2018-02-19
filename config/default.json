@@ -28,6 +28,7 @@
     "enabled": false,
     "channel": "room_presence",
     "max_distance": 0,
+    "blacklist": [],
     "whitelist": [],
     "system_noise": 0.01,
     "measurement_noise": 3,
