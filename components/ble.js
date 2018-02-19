@@ -50,10 +50,12 @@ BLEScanner.prototype._handlePacket = function (peripheral) {
         id = peripheral.id;
     }
 
-    // check if we have a whitelist
+    // check if we have a whitelist or blacklist
     // and if we do, if this id is listed there
     var whitelist = config.get('ble.whitelist') || [];
-    if (whitelist.length == 0 || whitelist.indexOf(id) > -1) {
+    var blacklist = config.get('ble.blacklist') || [];
+    if ((whitelist.length > 0 && whitelist.includes(id))
+        || !(blacklist.length > 0 && blacklist.includes(id))) {
         // default hardcoded value for beacon tx power
         var txPower = advertisement.txPowerLevel || -59;
         var distance = this._calculateDistance(peripheral.rssi, txPower);

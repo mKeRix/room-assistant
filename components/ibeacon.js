@@ -6,7 +6,7 @@ var KalmanFilter = require('kalmanjs').default;
 
 var channel = config.get('ibeacon.channel');
 
-function iBeaconScanner(callback) {
+function IBeaconScanner(callback) {
     // constructor
     this.callback = callback;
     this.kalmanManager = {};
@@ -15,21 +15,23 @@ function iBeaconScanner(callback) {
     console.info('iBeacon scanner was initialized');
 }
 
-iBeaconScanner.prototype._init = function () {
+IBeaconScanner.prototype._init = function () {
     bleacon.startScanning();
     bleacon.on('discover', this._handlePacket.bind(this));
 };
 
-iBeaconScanner.prototype._handlePacket = function (ibeacon) {
+IBeaconScanner.prototype._handlePacket = function (ibeacon) {
     // check if we have a whitelist
     // and if we do, if this id is listed there
     var whitelist = config.get('ibeacon.whitelist') || [];
+    var blacklist = config.get('ibeacon.blacklist') || [];
     var major_mask = config.has('ibeacon.major_mask') ? parseInt(config.get('ibeacon.major_mask')) : 0xFFFF;
     var minor_mask = config.has('ibeacon.minor_mask') ? parseInt(config.get('ibeacon.minor_mask')) : 0xFFFF;
 
     var id = ibeacon.uuid + '-' + (ibeacon.major & major_mask) + '-' + (ibeacon.minor & minor_mask);
 
-    if (whitelist.length == 0 || whitelist.indexOf(id) > -1) {
+    if ((whitelist.length > 0 && whitelist.includes(id))
+        || !(blacklist.length > 0 && blacklist.includes(id))) {
 
         // default hardcoded value for beacon tx power
         var txPower = ibeacon.measuredPower || -59;
@@ -37,7 +39,7 @@ iBeaconScanner.prototype._handlePacket = function (ibeacon) {
 
         // max distance parameter checking
         var maxDistance = config.get('ibeacon.max_distance') || 0;
-        if (maxDistance == 0 || ibeacon.accuracy <= maxDistance) {
+        if (maxDistance == 0 || distance <= maxDistance) {
             var filteredDistance = this._filter(id, distance);
 
             var payload = {
@@ -57,7 +59,7 @@ iBeaconScanner.prototype._handlePacket = function (ibeacon) {
     }
 };
 
-iBeaconScanner.prototype._calculateDistance = function (rssi, txPower) {
+IBeaconScanner.prototype._calculateDistance = function (rssi, txPower) {
     if (rssi == 0) {
         return -1.0;
     }
@@ -71,7 +73,7 @@ iBeaconScanner.prototype._calculateDistance = function (rssi, txPower) {
     }
 };
 
-iBeaconScanner.prototype._filter = function (id, distance) {
+IBeaconScanner.prototype._filter = function (id, distance) {
     if (!this.kalmanManager.hasOwnProperty(id)) {
         this.kalmanManager[id] = new KalmanFilter({
             R: config.get('ibeacon.system_noise') || 0.01,
@@ -83,4 +85,4 @@ iBeaconScanner.prototype._filter = function (id, distance) {
 };
 
 
-module.exports = iBeaconScanner;
+module.exports = IBeaconScanner;
