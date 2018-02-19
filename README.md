@@ -182,6 +182,8 @@ This component tracks only the iBeacons it finds and posts updates about them in
 To avoid faulty data through noise the distance values are smoothed using the [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter).
 The iBeacon component is mostly useful if you want to address your beacons via the major minor system or if the BLE component did not work correctly with your hardware.
 
+A note on whitelist/blacklist precedence: when an id is detected and the id is on the whitelist, it is always sent to the configured publishers. If it is not on the whitelist or the whitelist is empty, the blacklist is checked. If the id is then found on the blacklist, it will not be published. If both blacklist and whitelist are empty, all detected ids are published.
+
 On Linux this component will have to run as root [unless you set the correct permissions](https://github.com/sandeepmistry/noble#running-on-linux).
 ```json
 {
@@ -203,7 +205,8 @@ Options:
 - **enabled** - enable or disable component
 - **channel** - channel for the announcements about found beacons
 - **max_distance** - maximum distance where the scanner will still send the data to a publisher, 0 means unlimited
-- **whitelist** - array of Bluetooth IDs as whitelist for updates that should be sent to the publisher, an empty list disables the whitelist
+- **whitelist** - array of iBeacon IDs as whitelist for updates that should be sent to the publisher, an empty list disables the whitelist
+- **blacklist** - array of iBeacon IDs as blacklist for updates that should not be sent to the publisher, an empty list disables the blacklist
 - **use_mac** - publish the Bluetooth MAC address instead of the UUID (for devices without a consistent UUID)
 - **system_noise** - describes how noisy the system is and should be kept relatively low (used for the Kalman filter)
 - **measurement_noise** - describes how noisy the measurements are (used for the Kalman filter)
