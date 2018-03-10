@@ -1,0 +1,131 @@
+{
+  "name": "room-assistant",
+  "version": "dev",
+  "slug": "room-assistant",
+  "description": "room-assistant is a simple Node.js server for tracking presence and other things on a per-room basis.",
+  "url": "https://github.com/mKeRix/room-assistant",
+  "startup": "application",
+  "arch": [
+    "aarch64",
+    "amd64",
+    "armhf",
+    "i386"
+  ],
+  "image": "mkerix/room-assistant-{arch}",
+  "boot": "auto",
+  "host_network": true,
+  "options": {
+    "app": {
+      "unsafe": false
+    },
+    "mqtt": {
+      "enabled": false,
+      "url": "mqtt://localhost",
+      "username": "",
+      "password": "",
+      "reject_unauthorized": true,
+      "topic": "room-name"
+    },
+    "console": {
+      "enabled": false
+    },
+    "ble": {
+      "enabled": false,
+      "channel": "room_presence",
+      "max_distance": 0,
+      "blacklist": [],
+      "whitelist": [],
+      "use_mac": false,
+      "system_noise": 0.01,
+      "measurement_noise": 3,
+      "update_frequency": 0
+    },
+    "ibeacon": {
+      "enabled": false,
+      "channel": "room_presence",
+      "max_distance": 0,
+      "whitelist": [],
+      "system_noise": 0.01,
+      "measurement_noise": 3,
+      "major_mask": "0xFFFF",
+      "minor_mask": "0xFFFF"
+    },
+    "temper": {
+      "enabled": false,
+      "channel": "temper",
+      "interval": 60000,
+      "scale": 1,
+      "offset": 0
+    },
+    "gpio": {
+      "enabled": false,
+      "only_send_updates": true,
+      "ports": [],
+      "qos": 0,
+      "retain": false
+    },
+    "shell": {
+      "enabled": false,
+      "commands": [],
+      "qos": 0,
+      "retain": false
+    }
+  },
+  "schema": {
+    "app": {
+      "unsafe": "bool"
+    },
+    "mqtt": {
+      "enabled": "bool",
+      "url": "str",
+      "username": "str",
+      "password": "str",
+      "reject_unauthorized": "bool",
+      "topic": "str"
+    },
+    "console": {
+      "enabled": "bool"
+    },
+    "ble": {
+      "enabled": "bool",
+      "channel": "str",
+      "max_distance": "int",
+      "blacklist": ["str"],
+      "whitelist": ["str"],
+      "use_mac": "bool",
+      "system_noise": "float",
+      "measurement_noise": "int",
+      "update_frequency": "int"
+    },
+    "ibeacon": {
+      "enabled": "bool",
+      "channel": "str",
+      "max_distance": "int",
+      "whitelist": ["str"],
+      "system_noise": "float",
+      "measurement_noise": "int",
+      "major_mask": "str",
+      "minor_mask": "str"
+    },
+    "temper": {
+      "enabled": "bool",
+      "channel": "str",
+      "interval": "int",
+      "scale": "int",
+      "offset": "int"
+    },
+    "gpio": {
+      "enabled": "bool",
+      "only_send_updates": "bool",
+      "ports": ["int"],
+      "qos": "int",
+      "retain": "bool"
+    },
+    "shell": {
+      "enabled": "bool",
+      "commands": ["str"],
+      "qos": "int",
+      "retain": "bool"
+    }
+  }
+}
