@@ -11,7 +11,7 @@
     "armhf",
     "i386"
   ],
-  "image": "mkerix/room-assistant-{arch}",
+  "__DISABLED_FOR_TESTING__image": "mkerix/room-assistant-{arch}",
   "boot": "auto",
   "host_network": true,
   "options": {

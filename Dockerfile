@@ -22,5 +22,4 @@ COPY . /room-assistant
 WORKDIR /room-assistant
 RUN npm install -q --production && ln -s /data/options.json config/local.json
 
-ENTRYPOINT [ "/bin/bash -c" ]
-CMD [ "node index.js" ]
+CMD [ "node", "index.js" ]
