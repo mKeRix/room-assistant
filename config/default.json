@@ -1,6 +1,7 @@
 {
   "app": {
-    "unsafe": false
+    "unsafe": false,
+    "logging": false
   },
   "mqtt": {
     "enabled": false,

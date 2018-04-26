@@ -1,6 +1,7 @@
-require('scribe-js')();
+var scribe = require('scribe-js')({ createDefaultConsole : false });
 
 var config = require('config');
+process.console = scribe.console({ logWriter: config.get('app.logging') });
 var console = process.console;
 
 var Publisher = require('./components/publisher');

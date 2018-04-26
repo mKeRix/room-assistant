@@ -98,6 +98,10 @@ nano config/local.json
 All options are stored within these configuration files. They are sorted by components and already set to sensible defaults.
 You need to enable every needed component manually.
 
+Available global app options:
+- **unsafe** - catch all exceptions thrown and keep running anyway (keep this on false unless you read otherwise in the Github issue for your problem!)
+- **logging** - whether to store logs on the filesystem or not
+
 ### Publishers
 Publishers are how room-assistant sends its data around. Currently only one publisher at a time is supported.
 
