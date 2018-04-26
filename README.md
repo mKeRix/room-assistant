@@ -146,7 +146,7 @@ Options:
 ### Trackers
 #### Bluetooth LE Beacons
 This component tracks all BLE beacons it finds and posts updates about them including a calculated their id, name, signal strength and a calculated distance.
-The distance calculation is optimized for the iBeacon standard. To avoid faulty data through noise the distance values are smoothed using the [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter).
+The distance calculation is optimized for the iBeacon standard and in meters. To avoid faulty data through noise the distance values are smoothed using the [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter).
 
 In additional the list of supported devices found [here](https://github.com/sandeepmistry/noble/wiki/Compatible-Devices) I have also tested this component with a variety of virtual iBeacon apps and the [RadBeacon Dot](http://store.radiusnetworks.com/collections/all/products/radbeacon-dot).
 
@@ -172,7 +172,7 @@ On Linux this component will have to run as root [unless you set the correct per
 Options:
 - **enabled** - enable or disable component
 - **channel** - channel for the announcements about found beacons
-- **max_distance** - maximum distance where the scanner will still send the data to a publisher, 0 means unlimited
+- **max_distance** - maximum distance in meters where the scanner will still send the data to a publisher, 0 means unlimited
 - **whitelist** - array of Bluetooth IDs as whitelist for updates that should be sent to the publisher, an empty list disables the whitelist 
 - **blacklist** - array of Bluetooth IDs as blacklist for updates that should not be sent to the publisher, an empty list disables the blacklist 
 - **use_mac** - publish the Bluetooth MAC address instead of the UUID (for devices without a consistent UUID)
@@ -182,7 +182,7 @@ Options:
 
 
 #### iBeacons
-This component tracks only the iBeacons it finds and posts updates about them including a calculated their id, name, signal strength and a calculated distance.
+This component tracks only the iBeacons it finds and posts updates about them including a calculated their id, name, signal strength and a calculated distance in meters.
 To avoid faulty data through noise the distance values are smoothed using the [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter).
 The iBeacon component is mostly useful if you want to address your beacons via the major minor system or if the BLE component did not work correctly with your hardware.
 
@@ -208,7 +208,7 @@ On Linux this component will have to run as root [unless you set the correct per
 Options:
 - **enabled** - enable or disable component
 - **channel** - channel for the announcements about found beacons
-- **max_distance** - maximum distance where the scanner will still send the data to a publisher, 0 means unlimited
+- **max_distance** - maximum distance in meters where the scanner will still send the data to a publisher, 0 means unlimited
 - **whitelist** - array of iBeacon IDs as whitelist for updates that should be sent to the publisher, an empty list disables the whitelist
 - **blacklist** - array of iBeacon IDs as blacklist for updates that should not be sent to the publisher, an empty list disables the blacklist
 - **use_mac** - publish the Bluetooth MAC address instead of the UUID (for devices without a consistent UUID)
