@@ -7,7 +7,7 @@ var KalmanFilter = require('kalmanjs').default;
 var channel = config.get('ble.channel');
 var updateFreq = parseInt(config.get('ble.update_frequency'), 0);
 
-var lastUpdateTime = new Date();
+var lastUpdateTimeMap = new Map();
 
 function BLEScanner(callback) {
     // constructor
@@ -33,13 +33,6 @@ BLEScanner.prototype._startScanning = function (state) {
 };
 
 BLEScanner.prototype._handlePacket = function (peripheral) {
-    if (updateFreq > 0) {
-        var currTime = new Date();
-        if ((currTime - lastUpdateTime) < updateFreq) {
-            return;
-        }
-        lastUpdateTime = currTime;
-    }
 
     var advertisement = peripheral.advertisement;
 
@@ -54,8 +47,26 @@ BLEScanner.prototype._handlePacket = function (peripheral) {
     // and if we do, if this id is listed there
     var whitelist = config.get('ble.whitelist') || [];
     var blacklist = config.get('ble.blacklist') || [];
-    if ((whitelist.length > 0 && whitelist.includes(id))
-        || !(blacklist.length > 0 && blacklist.includes(id))) {
+    var use_whitelist = whitelist.length > 0;
+    var use_blacklist = blacklist.length > 0;
+    
+    // If white list not in use || id is found on white list then white list = true
+    // If white list true (not in use or found) and blacklist not in use or id NOT blacklisted = true
+    if ((!use_whitelist || whitelist.includes(id))
+     && (!use_blacklist || !blacklist.includes(id))) {
+        if (updateFreq > 0) {
+            var currTime = new Date();
+            var lastUpdateTime = lastUpdateTimeMap.get(peripheral.id);
+            if (lastUpdateTime === undefined) {
+                lastUpdateTimeMap.set(id,currTime);
+            } else {
+                if ((currTime - lastUpdateTime) < (updateFreq*1000)) {
+                    return;
+                }
+                lastUpdateTimeMap.set(id,currTime);
+            }
+        }
+
         // default hardcoded value for beacon tx power
         var txPower = advertisement.txPowerLevel || -59;
         var distance = this._calculateDistance(peripheral.rssi, txPower);
