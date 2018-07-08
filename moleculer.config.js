@@ -10,7 +10,7 @@ module.exports = {
 
 	serializer: "JSON",
 
-	requestTimeout: 10 * 1000,
+	requestTimeout: 20 * 1000,
 	requestRetry: 0,
 	maxCallLevel: 100,
 	heartbeatInterval: 5,
