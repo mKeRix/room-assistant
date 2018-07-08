@@ -15,7 +15,7 @@ if [ "$TRAVIS_BRANCH" = "rewrite" ] || [ -z "$TRAVIS_TAG" ]; then
 else
     docker run --rm \
            --privileged \
-           -v ~/.docker:/root/.docker \
+           -v /var/run/docker.sock:/var/run/docker.sock \
            -v "$TRAVIS_BUILD_DIR":/data \
            homeassistant/amd64-builder \
            --test \
