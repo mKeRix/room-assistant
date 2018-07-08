@@ -5,7 +5,6 @@ const { spawn } = require('child_process');
 const config = require('config');
 const util = require('util');
 const npm = require('global-npm');
-const fs = require('fs');
 
 const dependencies = require('../dependencies');
 
@@ -26,36 +25,19 @@ function getDependencies() {
     });
 }
 
-function excludeCachedDependencies(toBeInstalled) {
-    return getDependencyCache()
-        .then(function (installed) {
+function excludeInstalledDependencies(toBeInstalled) {
+    const npmLs = util.promisify(npm.commands.ls);
+
+    return npmLs(toBeInstalled, true)
+        .then(function (list) {
+            const installed = _.flatMap(list.dependencies, dependency => dependency._id);
+            const diff = _.difference(toBeInstalled, installed);
+
             console.log(`Already installed: ${installed}`);
+            console.log(`Now installing: ${diff}`);
 
-            return _.difference(toBeInstalled, installed);
+            return diff;
         });
-}
-
-function getDependencyCache() {
-    const readFile = util.promisify(fs.readFile);
-
-    return readFile('dependencies.cache.json')
-        .then(function (content) {
-            return JSON.parse(content);
-        })
-        .catch(function () {
-            Promise.resolve([]);
-        });
-}
-
-function saveDependencyCache(installed) {
-    const writeFile = util.promisify(fs.writeFile);
-
-    if (installed && installed.length > 0) {
-        return getDependencies()
-            .then(function (dependencies) {
-                return writeFile('dependencies.cache.json', JSON.stringify(dependencies));
-            });
-    }
 }
 
 function installDependencies(toBeInstalled) {
@@ -77,9 +59,8 @@ process.env.SERVICEDIR = process.env.SERVICEDIR || 'services';
 const npmLoad = util.promisify(npm.load);
 npmLoad({save: false, 'package-lock': false})
     .then(getDependencies)
-    .then(excludeCachedDependencies)
+    .then(excludeInstalledDependencies)
     .then(installDependencies)
-    .then(saveDependencyCache)
     .then(runMoleculer)
     .catch(function (err) {
         console.error(err);
