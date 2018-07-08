@@ -14,15 +14,35 @@ jobs:
     - stage: test
       script: npm run test
     - stage: build
+      env: PLATFORM=armhf
       services:
         - docker
       addons:
         apt:
           packages:
             - docker-ce
-      env:
-        - PLATFORM=armhf
-        - PLATFORM=amd64
-        - PLATFORM=aarch64
-        - PLATFORM=i386
+      script: ./build_hassio.sh $PLATFORM
+    - env: PLATFORM=amd64
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      script: ./build_hassio.sh $PLATFORM
+    - env: PLATFORM=amd64
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      script: ./build_hassio.sh $PLATFORM
+    - env: PLATFORM=i386
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
       script: ./build_hassio.sh $PLATFORM
