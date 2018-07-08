@@ -75,7 +75,7 @@ process.env.SERVICES = process.env.SERVICES || config.get('services').join(',');
 process.env.SERVICEDIR = process.env.SERVICEDIR || 'services';
 
 const npmLoad = util.promisify(npm.load);
-npmLoad({save: false})
+npmLoad({save: false, 'package-lock': false})
     .then(getDependencies)
     .then(excludeCachedDependencies)
     .then(installDependencies)

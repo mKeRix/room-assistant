@@ -9,6 +9,13 @@ Currently it is mainly meant to be used for the [mqtt_room](https://home-assista
 
 You are currently looking at an early stage version of my rewriting efforts. **This version is only intended for development purposes!**
 
+## Requirements
+
+room-assistant needs:
+
+- NodeJS 8.0 or higher
+- npm 5.7.1 or higher
+
 ## Build Setup
 
 ``` bash
