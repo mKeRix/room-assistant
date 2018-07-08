@@ -13,7 +13,11 @@ module.exports = {
 
     settings: {
         channel: 'room_presence',
-        useAddress : false
+        useAddress : false,
+        processIBeacon: true,
+        onlyIBeacon: false,
+        majorMask: 0xFFFF,
+        minorMask: 0xFFFF
     },
 
     methods: {
@@ -26,10 +30,17 @@ module.exports = {
         },
 
         handleDiscovery(peripheral) {
+            if (this.settings.processIBeacon && this.isIBeacon(peripheral)) {
+                peripheral = this.extractIBeacon(peripheral);
+            } else if (this.settings.onlyIBeacon) {
+                return;
+            }
+
             const handle = this.settings.useAddress ? peripheral.address : peripheral.id;
 
             if (this.isOnWhitelist(handle) && !this.isThrottled(handle)) {
-                const distance = this.calculateDistance(peripheral.rssi, peripheral.advertisement.txPower);
+                const power = peripheral.measuredPower || peripheral.advertisement.txPower;
+                const distance = this.calculateDistance(peripheral.rssi, power);
                 const filteredDistance = this.smoothData(handle, distance);
 
                 const payload = {
@@ -38,6 +49,9 @@ module.exports = {
                         id: handle,
                         name: peripheral.advertisement.localName,
                         rssi: peripheral.rssi,
+                        uuid: peripheral.uuid,
+                        major: peripheral.major,
+                        minor: peripheral.minor,
                         distance: filteredDistance
                     },
                     options: {}
@@ -45,6 +59,28 @@ module.exports = {
 
                 this.broker.emit('data.found', payload);
             }
+        },
+
+        isIBeacon(peripheral) {
+            const manufacturerData = peripheral.advertisement.manufacturerData;
+
+            return manufacturerData
+                && 25 <= manufacturerData.length // expected data length
+                && 0x004c === manufacturerData.readUInt16LE(0) // apple company identifier
+                && 0x02 === manufacturerData.readUInt8(2) // ibeacon type
+                && 0x15 === manufacturerData.readUInt8(3); // expected ibeacon data length
+        },
+
+        extractIBeacon(peripheral) {
+            const manufacturerData = peripheral.advertisement.manufacturerData;
+
+            peripheral.uuid = manufacturerData.slice(4, 20).toString('hex');
+            peripheral.major = manufacturerData.readUInt16BE(20);
+            peripheral.minor = manufacturerData.readUInt16BE(22);
+            peripheral.measuredPower = manufacturerData.readInt8(24);
+            peripheral.id = `${peripheral.uuid}-${peripheral.major & this.settings.majorMask}-${peripheral.minor & this.settings.minorMask}`;
+
+            return peripheral;
         },
 
         calculateDistance(rssi, txPower) {
