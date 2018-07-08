@@ -1,7 +1,10 @@
 docker-compose.env
 docker-compose.yml
-Dockerfile
+nohassio.Dockerfile
 node_modules
 test
 .vscode
 dependencies.cache.json
+config/*
+!config/default.json
+!config/custom-environment-variables.json

@@ -1,0 +1,20 @@
+sudo: required
+
+services:
+  - docker
+
+addons:
+  apt:
+    packages:
+      - docker-ce
+
+env:
+  - PLATFORM=armhf
+  - PLATFORM=amd64
+  - PLATFORM=aarch64
+  - PLATFORM=i386
+
+jobs:
+  include:
+    - stage: build
+      script: ./build_hassio.sh $PLATFORM

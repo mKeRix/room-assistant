@@ -1,13 +1,17 @@
-FROM node:8-alpine
+ARG BUILD_FROM
+FROM $BUILD_FROM
 
-RUN mkdir /app
-WORKDIR /app
+ENV LANG C.UTF-8
 
-COPY package.json .
+ARG BUILD_ARCH
+ARG BUILD_DATE
+ARG BUILD_REF
+ARG BUILD_VERSION
 
-RUN npm install --production
+RUN apk add --no-cache nodejs nodejs-npm python git make g++ bluez libusb libusb-dev
 
-COPY . .
+COPY . /room-assistant
+WORKDIR /room-assistant
+RUN npm install --production && ln -s /data/options.json config/local.json
 
-ENTRYPOINT ["/usr/local/bin/npm"]
-CMD ["start"]
+CMD [ "node", "index.js" ]
