@@ -8,10 +8,23 @@ addons:
     packages:
       - docker-ce
 
-env:
-  - PLATFORM=armhf
-  - PLATFORM=amd64
-  - PLATFORM=aarch64
-  - PLATFORM=i386
+language: nodejs
+node_js:
+  - "node"
+cache:
+  directories:
+    - "node_modules"
 
-script: ./build_hassio.sh $PLATFORM
+jobs:
+  include:
+    - stage: lint
+      script: npm run lint
+    - stage: test
+      script: npm run test
+    - stage: build
+      env:
+        - PLATFORM=armhf
+        - PLATFORM=amd64
+        - PLATFORM=aarch64
+        - PLATFORM=i386
+      script: ./build_hassio.sh $PLATFORM
