@@ -4,11 +4,13 @@ services:
   room-assistant:
     build:
       context: .
-    env_file: docker-compose.env
     command: run dev
     volumes:
       - .:/app
     environment:
+      NAMESPACE:
+      LOGGER: 'true'
+      LOGLEVEL: info
       SERVICES: mqtt
       MQTT_URL: mqtt://mqtt
 
