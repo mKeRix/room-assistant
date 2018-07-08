@@ -26,7 +26,7 @@ function getDependencies() {
 
 
 const npmLoad = util.promisify(npm.load);
-npmLoad()
+npmLoad({loglevel: 'silent', save: false})
     .then(getDependencies)
     .then(function (toBeInstalled) {
         if (toBeInstalled.length > 0) {
