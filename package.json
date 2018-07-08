@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "global-npm": "^0.3.0",
+    "kalmanjs": "^1.0.0-beta",
     "lodash": "^4.17.10",
     "moleculer": "^0.12.0"
   },
