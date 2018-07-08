@@ -62,3 +62,6 @@ typings/
 
 # Jetbrains IDE settings
 .idea/
+
+# Room Assistant specific files
+dependencies.cache.json
