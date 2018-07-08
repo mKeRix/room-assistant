@@ -29,7 +29,7 @@ module.exports = {
         this.client = mqtt.connect(this.settings.url, this.settings.options);
 
         this.client.on('connect', () => {
-            this.broker.logger.info(`Connected to ${this.settings.url}`);
+            this.logger.info(`Connected to ${this.settings.url}`);
         });
     }
 };

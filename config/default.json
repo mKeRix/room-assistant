@@ -17,5 +17,8 @@
     "onlyIBeacon": false,
     "majorMask": "0xFFFF",
     "minorMask": "0xFFFF"
+  },
+  "shell": {
+    "commands": []
   }
 }

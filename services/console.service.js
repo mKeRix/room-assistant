@@ -5,7 +5,7 @@ module.exports = {
 
     events: {
         'data.found'(payload) {
-            this.broker.logger.info(`${payload.channel}:\n${JSON.stringify(payload.data)}`);
+            this.logger.info(`${payload.channel}: ${JSON.stringify(payload.data)}`);
         }
     }
 };

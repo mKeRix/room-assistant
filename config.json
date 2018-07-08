@@ -33,6 +33,9 @@
       "onlyIBeacon": false,
       "majorMask": "0xFFFF",
       "minorMask": "0xFFFF"
+    },
+    "shell": {
+      "commands": []
     }
   },
   "schema": {
@@ -54,6 +57,18 @@
       "onlyIBeacon": "bool",
       "majorMask": "str",
       "minorMask": "str"
+    },
+    "shell": {
+      "commands": [
+        {
+          "channel": "str",
+          "command": "str",
+          "cron": "str",
+          "regexp": "str?",
+          "number": "bool?",
+          "retain": "bool?"
+        }
+      ]
     }
   }
 }

@@ -19,5 +19,11 @@
     "onlyIBeacon": "BLE_ONLY_IBEACON",
     "majorMask": "BLE_MAJOR_MASK",
     "minorMask": "BLE_MINOR_MASK"
+  },
+  "shell": {
+    "commands": {
+      "__name": "SHELL_COMMANDS",
+      "__format": "json"
+    }
   }
 }
