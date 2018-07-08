@@ -1,18 +1,15 @@
 sudo: required
 
+language: node_js
+cache:
+  directories:
+    - "node_modules"
+
 jobs:
   include:
     - stage: lint
-      language: nodejs
-      cache:
-        directories:
-          - "node_modules"
       script: npm run lint
     - stage: test
-      language: nodejs
-      cache:
-        directories:
-          - "node_modules"
       script: npm run test
     - stage: build
       services:
