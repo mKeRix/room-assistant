@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const { spawn } = require('child_process');
+const config = require('config');
 const util = require('util');
 const npm = require('global-npm');
 const fs = require('fs');
@@ -9,7 +10,7 @@ const fs = require('fs');
 const dependencies = require('../dependencies');
 
 function getDependencies() {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
         const services = process.env.SERVICES;
         let toBeInstalled = dependencies;
 
@@ -41,9 +42,9 @@ function getDependencyCache() {
         .then(function (content) {
             return JSON.parse(content);
         })
-        .catch(function (err) {
+        .catch(function () {
             Promise.resolve([]);
-        })
+        });
 }
 
 function saveDependencyCache(installed) {
@@ -53,7 +54,7 @@ function saveDependencyCache(installed) {
         return getDependencies()
             .then(function (dependencies) {
                 return writeFile('dependencies.cache.json', JSON.stringify(dependencies));
-            })
+            });
     }
 }
 
@@ -68,6 +69,11 @@ function runMoleculer() {
     spawn('moleculer-runner', process.argv.slice(2), { stdio: 'inherit'} );
 }
 
+/* main script */
+
+process.env.SERVICES = process.env.SERVICES || config.get('services').join(',');
+process.env.SERVICEDIR = process.env.SERVICEDIR || 'services';
+
 const npmLoad = util.promisify(npm.load);
 npmLoad({save: false})
     .then(getDependencies)
@@ -76,5 +82,5 @@ npmLoad({save: false})
     .then(saveDependencyCache)
     .then(runMoleculer)
     .catch(function (err) {
-        console.error(err)
+        console.error(err);
     });

@@ -65,3 +65,6 @@ typings/
 
 # Room Assistant specific files
 dependencies.cache.json
+config/*
+!config/default.json
+!config/custom-environment-variables.json

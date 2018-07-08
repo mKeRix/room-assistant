@@ -21,6 +21,7 @@
     "moleculer-repl": "^0.4.0"
   },
   "dependencies": {
+    "config": "^1.30.0",
     "global-npm": "^0.3.0",
     "kalmanjs": "^1.0.0-beta",
     "lodash": "^4.17.10",

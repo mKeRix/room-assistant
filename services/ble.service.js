@@ -1,5 +1,6 @@
 'use strict';
 
+const config = require('config');
 const noble = require('noble');
 
 const KalmanService = require('../mixins/kalman.mixin');
@@ -12,12 +13,16 @@ module.exports = {
     mixins: [KalmanService, ThrottledService, WhitelistService],
 
     settings: {
-        channel: 'room_presence',
-        useAddress : false,
-        processIBeacon: true,
-        onlyIBeacon: false,
-        majorMask: 0xFFFF,
-        minorMask: 0xFFFF
+        frequency: config.get('ble.updateFrequency'),
+        whitelist: config.get('ble.whitelist'),
+
+        channel: config.get('ble.channel'),
+        useAddress : config.get('ble.useAddress'),
+        maxDistance: config.get('ble.maxDistance'),
+        processIBeacon: config.get('ble.processIBeacon'),
+        onlyIBeacon: config.get('ble.onlyIBeacon'),
+        majorMask: parseInt(config.get('ble.majorMask')),
+        minorMask: parseInt(config.get('ble.minorMask'))
     },
 
     methods: {
@@ -41,23 +46,27 @@ module.exports = {
             if (this.isOnWhitelist(handle) && !this.isThrottled(handle)) {
                 const power = peripheral.measuredPower || peripheral.advertisement.txPower;
                 const distance = this.calculateDistance(peripheral.rssi, power);
-                const filteredDistance = this.smoothData(handle, distance);
+                const maxDistance = this.settings.maxDistance;
 
-                const payload = {
-                    channel: this.settings.channel,
-                    data: {
-                        id: handle,
-                        name: peripheral.advertisement.localName,
-                        rssi: peripheral.rssi,
-                        uuid: peripheral.uuid,
-                        major: peripheral.major,
-                        minor: peripheral.minor,
-                        distance: filteredDistance
-                    },
-                    options: {}
-                };
+                if (!maxDistance || distance <= maxDistance) {
+                    const filteredDistance = this.smoothData(handle, distance);
 
-                this.broker.emit('data.found', payload);
+                    const payload = {
+                        channel: this.settings.channel,
+                        data: {
+                            id: handle,
+                            name: peripheral.advertisement.localName,
+                            rssi: peripheral.rssi,
+                            uuid: peripheral.uuid,
+                            major: peripheral.major,
+                            minor: peripheral.minor,
+                            distance: filteredDistance
+                        },
+                        options: {}
+                    };
+
+                    this.broker.emit('data.found', payload);
+                }
             }
         },
 
