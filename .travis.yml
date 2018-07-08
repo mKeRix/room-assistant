@@ -11,8 +11,8 @@ jobs:
   include:
     - stage: lint
       script: npm run lint
-    - stage: test
-      script: npm run test
+#    - stage: test
+#      script: npm run test
     - stage: build
       env: PLATFORM=armhf
       services:
