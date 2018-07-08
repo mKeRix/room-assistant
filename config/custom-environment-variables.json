@@ -20,6 +20,12 @@
     "majorMask": "BLE_MAJOR_MASK",
     "minorMask": "BLE_MINOR_MASK"
   },
+  "gpio": {
+    "ports": {
+      "__name": "GPIO_PORTS",
+      "__format": "json"
+    }
+  },
   "shell": {
     "commands": {
       "__name": "SHELL_COMMANDS",

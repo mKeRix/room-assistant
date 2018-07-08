@@ -58,6 +58,15 @@
       "majorMask": "str",
       "minorMask": "str"
     },
+    "gpio": {
+      "ports": [
+        {
+          "channel": "str",
+          "pin": "int",
+          "retain": "bool?"
+        }
+      ]
+    },
     "shell": {
       "commands": [
         {
