@@ -14,7 +14,4 @@ env:
   - PLATFORM=aarch64
   - PLATFORM=i386
 
-jobs:
-  include:
-    - stage: build
-      script: ./build_hassio.sh $PLATFORM
+script: ./build_hassio.sh $PLATFORM
