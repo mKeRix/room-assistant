@@ -53,8 +53,7 @@ function runMoleculer() {
 
 /* main script */
 
-// we force the api service since it keeps the process alive (better solution tbd)
-process.env.SERVICES = (process.env.SERVICES || config.get('services').join(',')) + ',api';
+process.env.SERVICES = process.env.SERVICES || config.get('services').join(',');
 process.env.SERVICEDIR = process.env.SERVICEDIR || 'services';
 
 const npmLoad = util.promisify(npm.load);
