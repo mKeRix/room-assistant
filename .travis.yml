@@ -61,4 +61,5 @@ jobs:
         apt:
           packages:
             - docker-ce
+      before_script: docker run --rm --privileged multiarch/qemu-user-static:register
       script: ./build-docker.sh
