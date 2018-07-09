@@ -7,4 +7,4 @@ WORKDIR /room-assistant
 
 RUN npm install --production
 
-CMD [ "npm", "run", "docker" ]
+CMD [ "npm", "start" ]

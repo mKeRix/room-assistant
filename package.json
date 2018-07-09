@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "bin/room-assistant-runner.js --repl --hot services",
     "start": "bin/room-assistant-runner.js",
-    "docker": "bin/room-assistant-runner.js --instances 1",
     "ci": "jest --watch",
     "test": "jest --coverage",
     "lint": "eslint services"
