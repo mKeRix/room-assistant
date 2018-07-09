@@ -1,6 +1,6 @@
 docker-compose.env
 docker-compose.yml
-nohassio.Dockerfile
+amd64.Dockerfile
 node_modules
 test
 .vscode

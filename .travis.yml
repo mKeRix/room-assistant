@@ -14,14 +14,38 @@ jobs:
 #    - stage: test
 #      script: npm run test
     - stage: build
-      env: PLATFORM=armhf
+      env: PLATFORM=armhf HASSIO=true
       services:
         - docker
       addons:
         apt:
           packages:
             - docker-ce
-      script: ./build_hassio.sh $PLATFORM
+      script: ./build_docker.sh
+    - env: PLATFORM=amd64 HASSIO=true
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      script: ./build_docker.sh
+    - env: PLATFORM=amd64 HASSIO=true
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      script: ./build_docker.sh
+    - env: PLATFORM=i386 HASSIO=true
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      script: ./build_docker.sh
     - env: PLATFORM=amd64
       services:
         - docker
@@ -29,20 +53,12 @@ jobs:
         apt:
           packages:
             - docker-ce
-      script: ./build_hassio.sh $PLATFORM
-    - env: PLATFORM=amd64
+      script: ./build_docker.sh
+    - env: PLATFORM=arm32
       services:
         - docker
       addons:
         apt:
           packages:
             - docker-ce
-      script: ./build_hassio.sh $PLATFORM
-    - env: PLATFORM=i386
-      services:
-        - docker
-      addons:
-        apt:
-          packages:
-            - docker-ce
-      script: ./build_hassio.sh $PLATFORM
+      script: ./build_docker.sh
