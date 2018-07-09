@@ -16,6 +16,7 @@ if [ -n "$TRAVIS_TAG" ]; then
     else
         if [ "$PLATFORM" != "amd64" ]; then
             TAG_ADDON = "-$PLATFORM"
+            docker run --rm --privileged multiarch/qemu-user-static:register
         fi
 
         docker build -t mkerix/room-assistant:${TRAVIS_TAG}${TAG_ADDON} -t mkerix/room-assistant:latest${TAG_ADDON} -f $PLATFORM.Dockerfile .
@@ -33,6 +34,10 @@ else
                    --$PLATFORM \
                    -t /data
     else
+        if [ "$PLATFORM" != "amd64" ]; then
+            docker run --rm --privileged multiarch/qemu-user-static:register
+        fi
+
         docker build -f $PLATFORM.Dockerfile .
     fi
 fi
