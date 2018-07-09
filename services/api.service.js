@@ -12,6 +12,9 @@ module.exports = {
     settings: {
         port: config.get('api.port'),
 
+        logRequestParams: 'debug',
+        logResponseData: 'debug',
+
         routes: [
             {
                 mappingPolicy: 'restrict',
