@@ -44,6 +44,9 @@
   "schema": {
     "services": ["str"],
     "room": "str",
+    "api": {
+      "port": "port?"
+    },
     "mqtt": {
       "url": "str",
       "username": "str",

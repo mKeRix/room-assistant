@@ -1,5 +1,8 @@
 {
   "room": "ROOM",
+  "api": {
+    "port": "API_PORT"
+  },
   "mqtt": {
     "url": "MQTT_URL",
     "username": "MQTT_USERNAME",
