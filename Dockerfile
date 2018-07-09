@@ -14,4 +14,4 @@ COPY . /room-assistant
 WORKDIR /room-assistant
 RUN npm install --production && ln -s /data/options.json config/local.json
 
-CMD [ "npm", "start" ]
+CMD [ "npm", "run", "docker" ]

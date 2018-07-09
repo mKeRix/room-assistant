@@ -4,14 +4,11 @@ services:
     build:
       context: .
       dockerfile: amd64.Dockerfile
-    command: run dev
-    volumes:
-      - .:/app
     environment:
       NAMESPACE:
       LOGGER: 'true'
       LOGLEVEL: info
-      SERVICES: mqtt
+      SERVICES: console
       MQTT_URL: mqtt://mqtt
   mqtt:
     image: ncarlier/mqtt

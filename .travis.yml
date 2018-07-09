@@ -22,7 +22,7 @@ jobs:
           packages:
             - docker-ce
       script: ./build_docker.sh
-    - env: PLATFORM=amd64 HASSIO=true
+    - env: PLATFORM=aarch64 HASSIO=true
       services:
         - docker
       addons:
