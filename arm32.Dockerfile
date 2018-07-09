@@ -1,8 +1,6 @@
-FROM arm32v6/node:8-slim
+FROM arm32v6/node:8-alpine
 
-RUN apt-get update  \
-    && apt-get install -y python build-essential bluetooth bluez libbluetooth-dev libudev-dev libusb-1.0-0-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache python git make g++ bluez libusb libusb-dev
 
 COPY . /room-assistant
 WORKDIR /room-assistant
