@@ -1,6 +1,6 @@
 FROM arm32v6/node:8-alpine
 
-COPY /usr/bin/qemu-arm-static /usr/bin/qemu-arm-static
+COPY qemu-arm-static /usr/bin/qemu-arm-static
 
 RUN apk add --no-cache python git make g++ bluez libusb libusb-dev
 

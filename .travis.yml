@@ -61,5 +61,8 @@ jobs:
         apt:
           packages:
             - docker-ce
-      before_script: docker run --rm --privileged multiarch/qemu-user-static:register
+      before_script:
+        - wget https://github.com/multiarch/qemu-user-static/releases/download/v2.12.0/qemu-arm-static.tar.gz -O /tmp/qemu-arm-static.tar.gz
+        - tar zxvf /tmp/qemu-arm-static.tar.gz -C .
+        - docker run --rm --privileged multiarch/qemu-user-static:register
       script: ./build-docker.sh
