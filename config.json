@@ -37,45 +37,5 @@
     "gpio": [],
     "shell": []
   },
-  "schema": {
-    "services": ["str"],
-    "room": "str",
-    "api": {
-      "port": "port?"
-    },
-    "mqtt": {
-      "url": "str",
-      "username": "str",
-      "password": "str",
-      "rejectUnauthorized": "bool"
-    },
-    "ble": {
-      "channel": "str",
-      "useAddress": "bool",
-      "whitelist": ["str"],
-      "maxDistance": "int",
-      "updateFrequency": "int",
-      "processIBeacon": "bool",
-      "onlyIBeacon": "bool",
-      "majorMask": "str",
-      "minorMask": "str"
-    },
-    "gpio": [
-      {
-        "channel": "str",
-        "pin": "int",
-        "retain": "bool?"
-      }
-    ],
-    "shell": [
-      {
-        "channel": "str",
-        "command": "str",
-        "cron": "str",
-        "regexp": "str?",
-        "number": "bool?",
-        "retain": "bool?"
-      }
-    ]
-  }
+  "schema": false
 }
