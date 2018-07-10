@@ -12,7 +12,7 @@ module.exports = {
 
     mixins: [CronService],
 
-    crons: config.get('shell.commands').map((command) => {
+    crons: config.get('shell').map((command) => {
         return {
             name: slugify(command.command),
             cronTime: command.cron,

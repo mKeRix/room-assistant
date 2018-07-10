@@ -34,12 +34,8 @@
       "majorMask": "0xFFFF",
       "minorMask": "0xFFFF"
     },
-    "gpio": {
-      "ports": []
-    },
-    "shell": {
-      "commands": []
-    }
+    "gpio": [],
+    "shell": []
   },
   "schema": {
     "services": ["str"],
@@ -64,26 +60,22 @@
       "majorMask": "str",
       "minorMask": "str"
     },
-    "gpio": {
-      "ports": [
-        {
-          "channel": "str",
-          "pin": "int",
-          "retain": "bool?"
-        }
-      ]
-    },
-    "shell": {
-      "commands": [
-        {
-          "channel": "str",
-          "command": "str",
-          "cron": "str",
-          "regexp": "str?",
-          "number": "bool?",
-          "retain": "bool?"
-        }
-      ]
-    }
+    "gpio": [
+      {
+        "channel": "str",
+        "pin": "int",
+        "retain": "bool?"
+      }
+    ],
+    "shell": [
+      {
+        "channel": "str",
+        "command": "str",
+        "cron": "str",
+        "regexp": "str?",
+        "number": "bool?",
+        "retain": "bool?"
+      }
+    ]
   }
 }

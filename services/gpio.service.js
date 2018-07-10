@@ -7,7 +7,7 @@ module.exports = {
     name: 'gpio',
 
     settings: {
-        ports: config.get('gpio.ports')
+        ports: config.get('gpio')
     },
 
     methods: {
