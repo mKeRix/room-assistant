@@ -14,6 +14,7 @@
   "image": "mkerix/room-assistant-{arch}",
   "boot": "auto",
   "host_network": true,
+  "gpio": true,
   "options": {
     "services": [],
     "room": "default-room",
