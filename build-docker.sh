@@ -15,7 +15,7 @@ if [ -n "$TRAVIS_TAG" ]; then
                -t /data
     else
         if [ "$PLATFORM" != "amd64" ]; then
-            TAG_ADDON = "-$PLATFORM"
+            TAG_ADDON="-$PLATFORM"
         fi
 
         docker build -t mkerix/room-assistant:${TRAVIS_TAG}${TAG_ADDON} -t mkerix/room-assistant:latest${TAG_ADDON} -f $PLATFORM.Dockerfile .
@@ -37,7 +37,7 @@ elif [ "$TRAVIS_BRANCH" = "rewrite" ]; then
                -t /data
     else
         if [ "$PLATFORM" != "amd64" ]; then
-            TAG_ADDON = "-$PLATFORM"
+            TAG_ADDON="-$PLATFORM"
         fi
 
         docker build -t mkerix/room-assistant:${TRAVIS_BRANCH}${TAG_ADDON} -f $PLATFORM.Dockerfile .
