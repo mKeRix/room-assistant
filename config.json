@@ -15,6 +15,9 @@
   "boot": "auto",
   "host_network": true,
   "gpio": true,
+  "ports": {
+    "3000/tcp": 3000
+  },
   "options": {
     "services": [],
     "room": "default-room",
