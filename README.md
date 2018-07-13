@@ -1,45 +1,116 @@
-[![Moleculer](https://img.shields.io/badge/Powered%20by-Moleculer-green.svg?colorB=0e83cd)](https://moleculer.services)
-
 # room-assistant
 
+[![Build Status](https://travis-ci.org/mKeRix/room-assistant.svg?branch=master)](https://travis-ci.org/mKeRix/room-assistant)
+[![Moleculer](https://img.shields.io/badge/Powered%20by-Moleculer-green.svg?colorB=0e83cd)](https://moleculer.services)
+
 room-assistant is a simple Node.js server for tracking presence and other things on a per-room basis.
-Currently it is mainly meant to be used for the [mqtt_room](https://home-assistant.io/components/sensor.mqtt_room/) component of [Home Assistant](https://home-assistant.io/).
+It pairs well with the [mqtt_room](https://home-assistant.io/components/sensor.mqtt_room/) component of [Home Assistant](https://home-assistant.io/).
 
-## Important note
+## Installation
 
-You are currently looking at an early stage version of my rewriting efforts. **This version is only intended for development purposes!**
+### Running with NodeJS
 
-## Requirements
+#### Requirements
 
-room-assistant needs:
+Please make sure you have [a recent version of NodeJS installed](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions), as the one provided by Raspbian is outdated. 
+For room-assistant we recommend using:
 
 - NodeJS 8.0 or higher
 - npm 5.7.1 or higher
 
-## Build Setup
-
-``` bash
-# Install dependencies
-npm install
-
-# Start developing with REPL
-npm run dev
-
-# Start production
-npm start
-
-# Run unit tests
-npm test
-
-# Run continuous test mode
-npm run ci
-
-# Run ESLint
-npm run lint
-```
-
-## Run in Docker
+If you want to run any Bluetooth related components you will also need some additional packages:
 
 ```bash
-$ docker-compose up -d --build
+sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev libusb-1.0-0-dev
 ```
+
+#### Setting up
+
+You can install room-assistant into a directory of your choice by cloning the git repository and installing the main dependencies:
+
+```bash
+git clone https://github.com/mKeRix/room-assistant.git
+cd room-assistant
+npm install
+```
+
+Once you have your [configuration](https://github.com/mKeRix/room-assistant/wiki/Configuration) in place you can start the service manually:
+
+```bash
+npm start
+```
+
+Any additional dependencies of the services you selected will be downloaded before the software starts.
+
+#### Making it a service
+
+To make sure your room-assistant is always running you should setup a service for it. On newer systems this can be done easily using systemd.
+Create the file `/etc/systemd/system/room-assistant.service` with your favorite editor and fill it with the following data:
+
+```
+[Unit]
+Description=Room Assistant service
+
+[Service]
+ExecStart=/usr/bin/npm start
+WorkingDirectory=/home/pi/room-assistant
+Restart=always
+RestartSec=10
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Save the file, then enable and start the service using the following commands:
+
+```bash
+sudo systemctl enable room-assistant.service
+sudo systemctl start room-assistant.service
+```
+
+You can now check the service status by running:
+
+```bash
+systemctl status room-assistant.service
+```
+
+#### Updating
+
+To update room-assistant you simply need to pull the new version from GitHub and update the dependencies:
+
+```bash
+git pull
+npm install
+```
+
+### Running with Docker
+
+You need to run the image on the `host` network. [Configuration](https://github.com/mKeRix/room-assistant/wiki/Configuration) can be done by providing your container with the needed environment variables.
+
+Currently two images are provided, a regular amd64 one and an arm32 based version. If you are running a Linux board like the Raspberry Pi you will most likely need the arm32 version. Find the available version tags on [Docker Hub](https://hub.docker.com/r/mkerix/room-assistant/).
+
+**Example amd64**
+
+```
+docker run --network=host -d --name room-assistant -e SERVICES=ble,console mkerix/room-assistant
+``` 
+
+**Example arm32, e.g. Raspberry Pi**
+
+```
+docker run --network=host -d --name room-assistant -e SERVICES=ble,console mkerix/room-assistant:latest-arm32
+```
+
+### Running with Hass.io
+
+To run on Hass.io please add [my addon repository](https://github.com/mKeRix/hassio-repo) to your installation as described.
+You should then be able to select room-assistant from the add-on store and [configure it with the normal JSON based syntax](https://github.com/mKeRix/room-assistant/wiki/Configuration).
+
+## Configuration
+
+You can find detailed information about all available services and options in the [wiki](https://github.com/mKeRix/room-assistant/wiki/Configuration).
+
+## Troubleshooting
+
+If you are running into issues, please consult the [FAQ section](https://github.com/mKeRix/room-assistant/wiki/FAQ) and search through the [issues](https://github.com/mKeRix/room-assistant/issues) before creating a new one.
