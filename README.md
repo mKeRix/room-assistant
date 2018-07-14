@@ -86,20 +86,34 @@ npm install
 
 ### Running with Docker
 
-You need to run the image on the `host` network. [Configuration](https://github.com/mKeRix/room-assistant/wiki/Configuration) can be done by providing your container with the needed environment variables.
-
 Currently two images are provided, a regular amd64 one and an arm32 based version. If you are running a Linux board like the Raspberry Pi you will most likely need the arm32 version. Find the available version tags on [Docker Hub](https://hub.docker.com/r/mkerix/room-assistant/).
+
+Configuration can be done by providing your container with the needed environment variables as described in the [wiki examples](https://github.com/mKeRix/room-assistant/wiki/Configuration).
 
 **Example amd64**
 
 ```
-docker run --network=host -d --name room-assistant -e SERVICES=ble,console mkerix/room-assistant
+docker run --network=host --restart=unless-stopped -d --name room-assistant -e SERVICES=ble,console mkerix/room-assistant
 ``` 
 
 **Example arm32, e.g. Raspberry Pi**
 
 ```
-docker run --network=host -d --name room-assistant -e SERVICES=ble,console mkerix/room-assistant:latest-arm32
+docker run --network=host --restart=unless-stopped -d --name room-assistant -e SERVICES=ble,console mkerix/room-assistant:latest-arm32
+```
+
+**Example docker-compose.yml**
+
+```yaml
+version: '2'
+services:
+  room-assistant:
+    image: mkerix/room-assistant
+    restart: always
+    network_mode: host
+    environment:
+      SERVICES: 'ble,console'
+      ROOM: 'docker-room'
 ```
 
 ### Running with Hass.io
