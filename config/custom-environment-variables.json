@@ -24,11 +24,11 @@
     "minorMask": "BLE_MINOR_MASK"
   },
   "gpio": {
-    "__name": "GPIO",
+    "__name": "GPIO_PINS",
     "__format": "json"
   },
   "shell": {
-    "__name": "SHELL",
+    "__name": "SHELL_COMMANDS",
     "__format": "json"
   }
 }
