@@ -31,7 +31,7 @@ You can install room-assistant into a directory of your choice by cloning the gi
 ```bash
 git clone https://github.com/mKeRix/room-assistant.git
 cd room-assistant
-npm install
+npm install --production
 ```
 
 Once you have your [configuration](https://github.com/mKeRix/room-assistant/wiki/Configuration) in place you can start the service manually:
@@ -81,7 +81,7 @@ To update room-assistant you simply need to pull the new version from GitHub and
 
 ```bash
 git pull
-npm install
+npm install --production
 ```
 
 ### Running with Docker
