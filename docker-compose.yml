@@ -1,0 +1,14 @@
+version: "3.0"
+services:
+  room-assistant:
+    build:
+      context: .
+      dockerfile: amd64.Dockerfile
+    environment:
+      NAMESPACE:
+      LOGGER: 'true'
+      LOGLEVEL: info
+      SERVICES: console
+      MQTT_URL: mqtt://mqtt
+  mqtt:
+    image: ncarlier/mqtt

@@ -3,35 +3,66 @@ sudo: required
 language: node_js
 node_js:
   - "8"
+cache:
+  directories:
+    - "node_modules"
 
-env:
-  - PLATFORM=x86
-  - PLATFORM=rpi
-
-services:
-  - docker
-
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y bluetooth bluez libbluetooth-dev libudev-dev libusb-1.0-0-dev
-
-script:
-  # Build room-assistant
-  - npm install
-  - npm test
-
-  # Use qemu if $PLATFORM=rpi
-  - if [ "$PLATFORM" == "rpi" ]; then
-    docker run --rm --privileged multiarch/qemu-user-static:register;
-    fi
-
-  # Build docker image
-  - docker build -t $DOCKER_USERNAME/room-assistant:$TRAVIS_BRANCH-$PLATFORM -f Dockerfile.$PLATFORM .
-
-  # Push docker image
-  - if [ ! -z "$TRAVIS_TAG" ] || [ "$TRAVIS_BRANCH" == "master" ] ; then
-    docker tag $DOCKER_USERNAME/room-assistant:$TRAVIS_BRANCH-$PLATFORM $DOCKER_USERNAME/room-assistant:latest-$PLATFORM;
-    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-    docker push $DOCKER_USERNAME/room-assistant:$TRAVIS_BRANCH-$PLATFORM;
-    docker push $DOCKER_USERNAME/room-assistant:latest-$PLATFORM;
-    fi
+jobs:
+  include:
+    - stage: lint
+      script: npm run lint
+#    - stage: test
+#      script: npm run test
+    - stage: build
+      env: PLATFORM=armhf HASSIO=true
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      script: ./build-docker.sh
+    - env: PLATFORM=aarch64 HASSIO=true
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      script: ./build-docker.sh
+    - env: PLATFORM=amd64 HASSIO=true
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      script: ./build-docker.sh
+    - env: PLATFORM=i386 HASSIO=true
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      script: ./build-docker.sh
+    - env: PLATFORM=amd64
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      script: ./build-docker.sh
+    - env: PLATFORM=arm32
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      before_script:
+        - wget https://github.com/multiarch/qemu-user-static/releases/download/v2.12.0/qemu-arm-static.tar.gz -O /tmp/qemu-arm-static.tar.gz
+        - tar zxvf /tmp/qemu-arm-static.tar.gz -C .
+        - docker run --rm --privileged multiarch/qemu-user-static:register
+      script: ./build-docker.sh

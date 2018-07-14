@@ -1,59 +1,26 @@
 {
-  "app": {
-    "unsafe": false,
-    "logging": false
+  "services": [],
+  "room": "default-room",
+  "api": {
+    "port": "3000"
   },
   "mqtt": {
-    "enabled": false,
     "url": "mqtt://localhost",
     "username": "",
     "password": "",
-    "reject_unauthorized": true,
-    "topic": "room-name"
-  },
-  "console": {
-    "enabled": false
+    "rejectUnauthorized": true
   },
   "ble": {
-    "enabled": false,
     "channel": "room_presence",
-    "max_distance": 0,
-    "blacklist": [],
+    "useAddress": false,
     "whitelist": [],
-    "use_mac": false,
-    "system_noise": 0.01,
-    "measurement_noise": 3,
-    "update_frequency": 0
+    "maxDistance": 0,
+    "updateFrequency": 0,
+    "processIBeacon": true,
+    "onlyIBeacon": false,
+    "majorMask": "0xFFFF",
+    "minorMask": "0xFFFF"
   },
-  "ibeacon": {
-    "enabled": false,
-    "channel": "room_presence",
-    "max_distance": 0,
-    "blacklist": [],
-    "whitelist": [],
-    "system_noise": 0.01,
-    "measurement_noise": 3,
-    "major_mask": "0xFFFF",
-    "minor_mask": "0xFFFF"
-  },
-  "temper": {
-    "enabled": false,
-    "channel": "temper",
-    "interval": 60000,
-    "scale": 1,
-    "offset": 0
-  },
-  "gpio": {
-    "enabled": false,
-    "only_send_updates": true,
-    "ports": [],
-    "qos": 0,
-    "retain": false
-  },
-  "shell": {
-    "enabled": false,
-    "commands": [],
-    "qos": 0,
-    "retain": false
-  }
+  "gpio": [],
+  "shell": []
 }

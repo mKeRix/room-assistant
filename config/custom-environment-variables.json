@@ -1,0 +1,34 @@
+{
+  "room": "ROOM",
+  "api": {
+    "port": "API_PORT"
+  },
+  "mqtt": {
+    "url": "MQTT_URL",
+    "username": "MQTT_USERNAME",
+    "password": "MQTT_PASSWORD",
+    "rejectUnauthorized": "MQTT_REJECT_UNAUTHORIZED"
+  },
+  "ble": {
+    "channel": "BLE_CHANNEL",
+    "useAddress": "BLE_USE_ADDRESS",
+    "whitelist": {
+      "__name": "BLE_WHITELIST",
+      "__format": "json"
+    },
+    "maxDistance": "BLE_MAX_DISTANCE",
+    "updateFrequency": "BLE_UPDATE_FREQUENCY",
+    "processIBeacon": "BLE_PROCESS_IBEACON",
+    "onlyIBeacon": "BLE_ONLY_IBEACON",
+    "majorMask": "BLE_MAJOR_MASK",
+    "minorMask": "BLE_MINOR_MASK"
+  },
+  "gpio": {
+    "__name": "GPIO",
+    "__format": "json"
+  },
+  "shell": {
+    "__name": "SHELL",
+    "__format": "json"
+  }
+}

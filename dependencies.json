@@ -1,0 +1,17 @@
+{
+  "mqtt": [
+    "mqtt@2.18.2"
+  ],
+  "ble": [
+    "noble@1.9.1"
+  ],
+  "gpio": [
+    "onoff@3.1.0"
+  ],
+  "api": [
+    "moleculer-web@0.8.0"
+  ],
+  "prometheus": [
+    "prom-client@11.1.1"
+  ]
+}
