@@ -2,6 +2,12 @@
   "name": "room-assistant",
   "version": "1.0.0",
   "description": "Companion client for Home Assistant to handle sensors in multiple rooms",
+  "homepage": "https://github.com/mKeRix/room-assistant#readme",
+  "bugs": {
+    "url": "https://github.com/mKeRix/room-assistant/issues"
+  },
+  "license": "MIT",
+  "repository": "github:mKeRix/room-assistant",
   "scripts": {
     "dev": "bin/room-assistant-runner.js --repl --hot services",
     "start": "bin/room-assistant-runner.js",
