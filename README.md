@@ -8,6 +8,15 @@ It pairs well with the [mqtt_room](https://home-assistant.io/components/sensor.m
 
 **Upgrading from room-assistant 0.x?** Please review the [upgrade guide](https://github.com/mKeRix/room-assistant/wiki/Upgrade-Guide).
 
+## What can room-assistant do for you?
+
+Motion sensors for home automation pose an issue: they require constant motion to stay activated. This will inevitably lead to a lot of frantic hand waving in front of the sensors when you're working on something and the light goes out.
+This piece of software can help you by scanning for Bluetooth tags in each room that it is placed in and estimating their distance. Just throw on a compatible beacon or smart watch and Home Assistant will always know where you are in your home.
+You can even customize the light settings or thermostat preferences based on who is in the room.
+
+Additionally to the presence tracking room-assistant also comes with a few components to make your automations even smarter. It can handle GPIO components like motion sensors to augment your Bluetooth presence tracking and even execute shell commands for complete flexibility.
+A list of all the modules and their options is available in the [wiki](https://github.com/mKeRix/room-assistant/wiki/Configuration).
+
 ## Installation
 
 ### Running with NodeJS
