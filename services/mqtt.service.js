@@ -20,12 +20,22 @@ module.exports = {
 
     events: {
         'sensor.started'(details) {
-            if (this.settings.discoveryEnabled && details.discoverable) {
+            if (this.settings.discoveryEnabled) {
                 const baseTopic = `homeassistant/${details.discoveryType}/${this.settings.room}/${details.channel}`;
                 this.channelRegistry[details.channel] = `${baseTopic}/state`;
 
                 this.logger.debug(`Sending discovery info to ${baseTopic}/config`);
                 this.client.publish(`${baseTopic}/config`, JSON.stringify(details.discoveryConfig), { retain: true });
+            }
+        },
+
+        'sensor.stopped'(details) {
+            if (this.settings.discoveryEnabled) {
+                delete this.channelRegistry[details.channel];
+
+                const configTopic = `homeassistant/${details.discoveryType}/${this.settings.room}/${details.channel}`;
+                this.logger.debug(`Removing discovery config from ${configTopic}`);
+                this.client.publish(configTopic, null, { retain: true });
             }
         },
 

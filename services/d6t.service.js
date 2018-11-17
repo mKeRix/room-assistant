@@ -3,8 +3,12 @@
 const config = require('config');
 const d6t = require('d6t').d6t;
 
+const DiscoveryService = require('../mixins/discovery.mixin');
+
 module.exports = {
     name: 'd6t',
+
+    mixins: [DiscoveryService],
 
     settings: {
         channel: config.get('d6t.channel'),
@@ -12,7 +16,9 @@ module.exports = {
         interval: config.get('d6t.interval'),
         threshold: config.get('d6t.threshold'),
         onlyChanges: config.get('d6t.onlyChanges'),
-        retain: config.get('d6t.retain')
+        retain: config.get('d6t.retain'),
+        discoveryType: config.get('d6t.discoveryType'),
+        discoveryConfig: config.get('d6t.discoveryConfig')
     },
 
     methods: {
@@ -44,6 +50,8 @@ module.exports = {
     },
 
     async started() {
+        this.registerSensor(this.settings.channel, this.settings.discoveryType, this.settings.discoveryConfig);
+
         const sensorType = d6t[this.settings.type];
         d6t.d6t_open_js(this.d6tDevh, sensorType, null);
 
@@ -54,5 +62,7 @@ module.exports = {
         clearInterval(this.interval);
 
         d6t.d6t_close_js(this.d6tDevh);
+
+        this.unregisterSensor(this.settings.channel, this.settings.discoveryType);
     }
 };
