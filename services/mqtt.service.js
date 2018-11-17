@@ -24,6 +24,7 @@ module.exports = {
                 const baseTopic = `homeassistant/${details.discoveryType}/${this.settings.room}/${details.channel}`;
                 this.channelRegistry[details.channel] = `${baseTopic}/state`;
 
+                this.logger.debug(`Sending discovery info to ${baseTopic}/config`);
                 this.client.publish(`${baseTopic}/config`, JSON.stringify(details.discoveryConfig), { retain: true });
             }
         },

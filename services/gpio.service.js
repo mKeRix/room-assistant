@@ -44,16 +44,19 @@ module.exports = {
     },
 
     async started() {
-        this.settings.ports.forEach((port) => {
-            const details = {
-                channel: port.channel,
-                discoverable: true,
-                discoveryType: port.discoveryType,
-                discoveryConfig: port.discoveryConfig
-            };
+        this.waitForServices('mqtt', 10 * 1000)
+            .then(() => {
+                this.settings.ports.forEach((port) => {
+                    const details = {
+                        channel: port.channel,
+                        discoverable: true,
+                        discoveryType: port.discoveryType,
+                        discoveryConfig: port.discoveryConfig
+                    };
 
-            this.broker.emit('sensor.started', details);
-        });
+                    this.broker.emit('sensor.started', details);
+                });
+            });
     },
 
     async stopped() {
