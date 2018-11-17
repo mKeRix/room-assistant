@@ -1,16 +1,13 @@
-const promClient = require('prom-client');
+'use strict';
+
+const config = require('config');
+
+const PromService = require('moleculer-prometheus');
 
 module.exports = {
-    name: 'prometheus',
+    mixins: [PromService],
 
-    actions: {
-        metrics(ctx) {
-            ctx.meta.$responseType = 'text/plain';
-            return promClient.register.metrics();
-        }
-    },
-
-    created() {
-        promClient.collectDefaultMetrics();
+    settings: {
+        port: config.get('prometheus.port')
     }
 };

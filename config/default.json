@@ -1,9 +1,6 @@
 {
   "services": [],
   "room": "default-room",
-  "api": {
-    "port": "3000"
-  },
   "mqtt": {
     "url": "mqtt://localhost",
     "username": "",
@@ -30,5 +27,8 @@
     "retain": true
   },
   "gpio": [],
-  "shell": []
+  "shell": [],
+  "prometheus": {
+    "port": "3030"
+  }
 }

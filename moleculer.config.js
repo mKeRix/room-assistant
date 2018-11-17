@@ -33,7 +33,7 @@ module.exports = {
 
 	validation: true,
 	validator: null,
-	metrics: false,
+	metrics: true,
 	metricsRate: 1,
 	statistics: false,
 	internalActions: true,

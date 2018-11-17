@@ -1,8 +1,5 @@
 {
   "room": "ROOM",
-  "api": {
-    "port": "API_PORT"
-  },
   "mqtt": {
     "url": "MQTT_URL",
     "username": "MQTT_USERNAME",
@@ -38,5 +35,8 @@
   "shell": {
     "__name": "SHELL_COMMANDS",
     "__format": "json"
+  },
+  "prometheus": {
+    "port": "PROMETHEUS_PORT"
   }
 }
