@@ -8,6 +8,9 @@
   "gpio": [
     "onoff@3.1.0"
   ],
+  "d6t": [
+    "d6t@0.0.5"
+  ],
   "api": [
     "moleculer-web@0.8.0"
   ],
