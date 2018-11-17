@@ -23,6 +23,14 @@
     "majorMask": "BLE_MAJOR_MASK",
     "minorMask": "BLE_MINOR_MASK"
   },
+  "d6t": {
+    "channel": "D6T_CHANNEL",
+    "type": "D6T_TYPE",
+    "interval": "D6T_INTERVAL",
+    "threshold": "D6T_THRESHOLD",
+    "onlyChanges": "D6T_ONLY_CHANGES",
+    "retain": "D6T_RETAIN"
+  },
   "gpio": {
     "__name": "GPIO_PINS",
     "__format": "json"
