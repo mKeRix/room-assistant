@@ -8,6 +8,7 @@ module.exports = {
 
     settings: {
         room: config.get('room'),
+        discoveryEnabled: config.get('autoDiscovery'),
 
         url: config.get('mqtt.url'),
         options: {
@@ -18,16 +19,30 @@ module.exports = {
     },
 
     events: {
+        'sensor.started'(details) {
+            if (this.settings.discoveryEnabled && details.discoverable) {
+                const baseTopic = `homeassistant/${details.discoveryType}/${this.settings.room}/${details.channel}`;
+                this.channelRegistry[details.channel] = `${baseTopic}/state`;
+
+                this.client.publish(`${baseTopic}/config`, JSON.stringify(details.discoveryConfig), { retain: true });
+            }
+        },
+
         'data.found'(payload) {
-            const subTopic = `${payload.channel}/${this.settings.room}`;
+            let subTopic = `${payload.channel}/${this.settings.room}`;
+
+            if (this.channelRegistry.hasOwnProperty(payload.channel)) {
+                subTopic = this.channelRegistry[payload.channel];
+            }
 
             this.client.publish(subTopic, JSON.stringify(payload.data), payload.options);
         }
     },
 
     created() {
-        this.client = mqtt.connect(this.settings.url, this.settings.options);
+        this.channelRegistry = {};
 
+        this.client = mqtt.connect(this.settings.url, this.settings.options);
         this.client.on('connect', () => {
             this.logger.info(`Connected to ${this.settings.url}`);
         });

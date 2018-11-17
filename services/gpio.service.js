@@ -43,7 +43,20 @@ module.exports = {
         });
     },
 
-    stopped() {
+    async started() {
+        this.settings.ports.forEach((port) => {
+            const details = {
+                channel: port.channel,
+                discoverable: true,
+                discoveryType: port.discoveryType,
+                discoveryConfig: port.discoveryConfig
+            };
+
+            this.broker.emit('sensor.started', details);
+        });
+    },
+
+    async stopped() {
         this.gpioMap.forEach(function (gpio) {
             gpio.unexport();
         });

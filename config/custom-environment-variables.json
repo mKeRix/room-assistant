@@ -1,5 +1,6 @@
 {
   "room": "ROOM",
+  "autoDiscovery": "AUTO_DISCOVERY",
   "mqtt": {
     "url": "MQTT_URL",
     "username": "MQTT_USERNAME",

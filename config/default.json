@@ -1,6 +1,7 @@
 {
   "services": [],
   "room": "default-room",
+  "autoDiscovery": true,
   "mqtt": {
     "url": "mqtt://localhost",
     "username": "",
