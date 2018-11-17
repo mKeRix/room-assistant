@@ -24,6 +24,7 @@
   "d6t": {
     "channel": "d6t",
     "type": "D6T_44L_06",
+    "interval": 500,
     "threshold": 21,
     "onlyChanges": true,
     "retain": true

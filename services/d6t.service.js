@@ -9,6 +9,7 @@ module.exports = {
     settings: {
         channel: config.get('d6t.channel'),
         type: config.get('d6t.type'),
+        interval: config.get('d6t.interval'),
         threshold: config.get('d6t.threshold'),
         onlyChanges: config.get('d6t.onlyChanges'),
         retain: config.get('d6t.retain')
@@ -46,7 +47,7 @@ module.exports = {
         const sensorType = d6t[this.settings.type];
         d6t.d6t_open_js(this.d6tDevh, sensorType, null);
 
-        this.interval = setInterval(this.querySensor, 500);
+        this.interval = setInterval(this.querySensor, this.settings.interval);
     },
 
     async stopped() {
