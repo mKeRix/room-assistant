@@ -13,6 +13,10 @@
       "__name": "BLE_WHITELIST",
       "__format": "json"
     },
+    "txPowerOverride": {
+      "__name": "BLE_TX_POWER_OVERRIDE",
+      "__format": "json"
+    },
     "maxDistance": "BLE_MAX_DISTANCE",
     "updateFrequency": "BLE_UPDATE_FREQUENCY",
     "processIBeacon": "BLE_PROCESS_IBEACON",

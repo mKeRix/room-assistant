@@ -18,6 +18,7 @@ module.exports = {
 
         channel: config.get('ble.channel'),
         useAddress : config.get('ble.useAddress'),
+        txPowerOverride: config.get('ble.txPowerOverride'),
         maxDistance: config.get('ble.maxDistance'),
         processIBeacon: config.get('ble.processIBeacon'),
         onlyIBeacon: config.get('ble.onlyIBeacon'),
@@ -44,7 +45,11 @@ module.exports = {
             const handle = this.settings.useAddress ? peripheral.address : peripheral.id;
 
             if (this.isOnWhitelist(handle) && !this.isThrottled(handle)) {
-                const power = peripheral.measuredPower || peripheral.advertisement.txPower;
+                let power = peripheral.measuredPower || peripheral.advertisement.txPower;
+                if (this.getConfiguredTxPower(handle) !== null) {
+                    power = this.getConfiguredTxPower(handle);
+                }
+
                 const distance = this.calculateDistance(peripheral.rssi, power);
                 const maxDistance = this.settings.maxDistance;
 
@@ -90,6 +95,10 @@ module.exports = {
             peripheral.id = `${peripheral.uuid}-${peripheral.major & this.settings.majorMask}-${peripheral.minor & this.settings.minorMask}`;
 
             return peripheral;
+        },
+
+        getConfiguredTxPower(id) {
+            return this.settings.txPowerOverride.hasOwnProperty(id) ? this.settings.txPowerOverride[id] : null;
         },
 
         calculateDistance(rssi, txPower) {

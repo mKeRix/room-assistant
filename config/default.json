@@ -11,6 +11,7 @@
     "channel": "room_presence",
     "useAddress": false,
     "whitelist": [],
+    "txPowerOverride": [],
     "maxDistance": 0,
     "updateFrequency": 0,
     "processIBeacon": true,
