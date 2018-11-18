@@ -12,6 +12,9 @@ module.exports = {
                     };
 
                     this.broker.emit('sensor.started', details);
+                })
+                .catch(err => {
+                    this.logger.debug('Could not send auto discovery info, waiting for MQTT service timed out', err);
                 });
         },
 
