@@ -1,5 +1,6 @@
 {
   "room": "ROOM",
+  "autoDiscovery": "AUTO_DISCOVERY",
   "mqtt": {
     "url": "MQTT_URL",
     "username": "MQTT_USERNAME",
@@ -31,7 +32,12 @@
     "interval": "D6T_INTERVAL",
     "threshold": "D6T_THRESHOLD",
     "onlyChanges": "D6T_ONLY_CHANGES",
-    "retain": "D6T_RETAIN"
+    "retain": "D6T_RETAIN",
+    "discoveryType": "D6T_DISCOVERY_TYPE",
+    "discoveryConfig": {
+      "__name": "D6T_DISCOVERY_CONFIG",
+      "__format": "json"
+    }
   },
   "gpio": {
     "__name": "GPIO_PINS",

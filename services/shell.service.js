@@ -6,11 +6,12 @@ const slugify = require('slugify');
 const util = require('util');
 
 const CronService = require('moleculer-cron');
+const DiscoveryService = require('../mixins/discovery.mixin');
 
 module.exports = {
     name: 'shell',
 
-    mixins: [CronService],
+    mixins: [CronService, DiscoveryService],
 
     crons: config.get('shell').map((command) => {
         return {
@@ -81,5 +82,17 @@ module.exports = {
                     });
             }
         }
+    },
+
+    async started() {
+        config.get('shell').forEach((command) => {
+            this.registerSensor(command.channel, command.discoveryType, command.discoveryConfig);
+        });
+    },
+
+    async stopped() {
+        config.get('shell').forEach((command) => {
+            this.unregisterSensor(command.channel, command.discoveryType);
+        });
     }
 };

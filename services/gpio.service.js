@@ -3,8 +3,12 @@
 const config = require('config');
 const Gpio = require('onoff').Gpio;
 
+const DiscoveryService = require('../mixins/discovery.mixin');
+
 module.exports = {
     name: 'gpio',
+
+    mixins: [DiscoveryService],
 
     settings: {
         ports: config.get('gpio')
@@ -43,9 +47,19 @@ module.exports = {
         });
     },
 
-    stopped() {
+    async started() {
+        this.settings.ports.forEach((port) => {
+            this.registerSensor(port.channel, port.discoveryType, port.discoveryConfig);
+        });
+    },
+
+    async stopped() {
         this.gpioMap.forEach(function (gpio) {
             gpio.unexport();
+        });
+
+        this.settings.ports.forEach((port) => {
+            this.unregisterSensor(port.channel, port.discoveryType);
         });
     }
 };

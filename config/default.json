@@ -1,6 +1,7 @@
 {
   "services": [],
   "room": "default-room",
+  "autoDiscovery": true,
   "mqtt": {
     "url": "mqtt://localhost",
     "username": "",
@@ -26,7 +27,15 @@
     "interval": 500,
     "threshold": 21,
     "onlyChanges": true,
-    "retain": true
+    "retain": true,
+    "discoveryType": "binary_sensor",
+    "discoveryConfig": {
+      "name": "D6T Default",
+      "payload_on": true,
+      "payload_off": false,
+      "device_class": "motion",
+      "value_template": "{{ value_json.value }}"
+    }
   },
   "gpio": [],
   "shell": [],

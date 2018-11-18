@@ -1,5 +1,6 @@
 'use strict';
 
+const _ = require('lodash');
 const config = require('config');
 const mqtt = require('mqtt');
 
@@ -8,6 +9,7 @@ module.exports = {
 
     settings: {
         room: config.get('room'),
+        discoveryEnabled: config.get('autoDiscovery'),
 
         url: config.get('mqtt.url'),
         options: {
@@ -18,16 +20,41 @@ module.exports = {
     },
 
     events: {
+        'sensor.started'(details) {
+            if (this.settings.discoveryEnabled && _.isString(details.discoveryType) && _.isObject(details.discoveryConfig)) {
+                const baseTopic = `homeassistant/${details.discoveryType}/${this.settings.room}/${details.channel}`;
+                this.channelRegistry[details.channel] = `${baseTopic}/state`;
+
+                this.logger.debug(`Sending discovery info to ${baseTopic}/config`);
+                this.client.publish(`${baseTopic}/config`, JSON.stringify(details.discoveryConfig), { retain: true });
+            }
+        },
+
+        'sensor.stopped'(details) {
+            if (this.settings.discoveryEnabled && _.isString(details.discoveryType)) {
+                delete this.channelRegistry[details.channel];
+
+                const configTopic = `homeassistant/${details.discoveryType}/${this.settings.room}/${details.channel}`;
+                this.logger.debug(`Removing discovery config from ${configTopic}`);
+                this.client.publish(configTopic, null, { retain: true });
+            }
+        },
+
         'data.found'(payload) {
-            const subTopic = `${payload.channel}/${this.settings.room}`;
+            let subTopic = `${payload.channel}/${this.settings.room}`;
+
+            if (this.channelRegistry.hasOwnProperty(payload.channel)) {
+                subTopic = this.channelRegistry[payload.channel];
+            }
 
             this.client.publish(subTopic, JSON.stringify(payload.data), payload.options);
         }
     },
 
     created() {
-        this.client = mqtt.connect(this.settings.url, this.settings.options);
+        this.channelRegistry = {};
 
+        this.client = mqtt.connect(this.settings.url, this.settings.options);
         this.client.on('connect', () => {
             this.logger.info(`Connected to ${this.settings.url}`);
         });
