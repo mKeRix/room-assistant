@@ -2,12 +2,21 @@
 
 module.exports = {
     settings: {
-        whitelist: []
+        whitelist: [],
+        whitelistRegex: false
     },
 
     methods: {
         isOnWhitelist(item) {
-            return this.settings.whitelist.length < 1 || this.settings.whitelist.includes(item);
+            if (this.settings.whitelist.length < 1) {
+                return true;
+            }
+
+            if (this.settings.whitelistRegex) {
+                return this.settings.whitelist.some(regex => item.match(regex));
+            } else {
+                return this.settings.whitelist.includes(item);
+            }
         }
     }
 };

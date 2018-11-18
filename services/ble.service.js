@@ -15,6 +15,7 @@ module.exports = {
     settings: {
         frequency: config.get('ble.updateFrequency'),
         whitelist: config.get('ble.whitelist'),
+        whitelistRegex: config.get('ble.whitelistRegex'),
 
         channel: config.get('ble.channel'),
         useAddress : config.get('ble.useAddress'),
