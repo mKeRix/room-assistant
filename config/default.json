@@ -12,7 +12,7 @@
     "useAddress": false,
     "whitelist": [],
     "whitelistRegex": false,
-    "txPowerOverride": [],
+    "txPowerOverride": {},
     "maxDistance": 0,
     "updateFrequency": 0,
     "processIBeacon": true,
