@@ -16,7 +16,7 @@
   "host_network": true,
   "gpio": true,
   "ports": {
-    "3000/tcp": 3000
+    "3030/tcp": 3030
   },
   "options": {
     "services": [],
