@@ -3,7 +3,7 @@
 module.exports = {
     methods: {
         registerSensor(channel, type, config) {
-            this.waitForServices('mqtt', 10 * 1000)
+            this.waitForServices('mqtt', 5 * 1000)
                 .then(() => {
                     const details = {
                         channel: channel,
