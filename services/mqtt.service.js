@@ -1,5 +1,6 @@
 'use strict';
 
+const _ = require('lodash');
 const config = require('config');
 const mqtt = require('mqtt');
 
@@ -20,7 +21,7 @@ module.exports = {
 
     events: {
         'sensor.started'(details) {
-            if (this.settings.discoveryEnabled) {
+            if (this.settings.discoveryEnabled && _.isString(details.discoveryType) && _.isObject(details.discoveryConfig)) {
                 const baseTopic = `homeassistant/${details.discoveryType}/${this.settings.room}/${details.channel}`;
                 this.channelRegistry[details.channel] = `${baseTopic}/state`;
 
@@ -30,7 +31,7 @@ module.exports = {
         },
 
         'sensor.stopped'(details) {
-            if (this.settings.discoveryEnabled) {
+            if (this.settings.discoveryEnabled && _.isString(details.discoveryType)) {
                 delete this.channelRegistry[details.channel];
 
                 const configTopic = `homeassistant/${details.discoveryType}/${this.settings.room}/${details.channel}`;
