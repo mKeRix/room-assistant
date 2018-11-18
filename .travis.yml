@@ -7,10 +7,6 @@ cache:
   directories:
     - "node_modules"
 
-branches:
-  only:
-  - master
-
 jobs:
   include:
     - stage: lint
