@@ -3,7 +3,7 @@
     "mqtt@2.18.8"
   ],
   "ble": [
-    "noble@1.9.1"
+    "@abandonware/noble@1.9.2-1"
   ],
   "gpio": [
     "onoff@3.2.2"
