@@ -1,6 +1,6 @@
 {
   "name": "room-assistant",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Companion client for Home Assistant to handle sensors in multiple rooms",
   "homepage": "https://github.com/mKeRix/room-assistant#readme",
   "bugs": {

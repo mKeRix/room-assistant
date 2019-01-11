@@ -1,7 +1,7 @@
 'use strict';
 
 const config = require('config');
-const noble = require('noble');
+const noble = require('@abandonware/noble');
 
 const KalmanService = require('../mixins/kalman.mixin');
 const ThrottledService = require('../mixins/throttled.mixin');
