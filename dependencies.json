@@ -3,7 +3,7 @@
     "mqtt@2.18.8"
   ],
   "ble": [
-    "@abandonware/noble@1.9.2-1"
+    "@abandonware/noble@1.9.2-3"
   ],
   "gpio": [
     "onoff@3.2.2"
@@ -12,6 +12,6 @@
     "d6t@0.0.5"
   ],
   "prometheus": [
-    "moleculer-prometheus@0.2.0"
+    "moleculer-prometheus@0.2.1"
   ]
 }

@@ -1,6 +1,6 @@
 'use strict';
 
-const KalmanFilter = require('kalmanjs').default;
+const KalmanFilter = require('kalmanjs');
 
 module.exports = {
     methods: {
