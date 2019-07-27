@@ -1,6 +1,6 @@
 {
   "name": "room-assistant",
-  "version": "1.1.2-dev",
+  "version": "1.2.0-dev",
   "slug": "room-assistant",
   "description": "room-assistant tracks presence and more on a room level",
   "url": "https://github.com/mKeRix/room-assistant",
