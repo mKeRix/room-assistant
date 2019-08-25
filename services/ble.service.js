@@ -33,7 +33,7 @@ module.exports = {
     },
 
     events: {
-        'bluetooth.ble.scan.externalDiscovery'(peripheral) {
+        'bluetooth.ble.scan.external-discovery'(peripheral) {
             if (this.settings.processIBeacon && this.isIBeacon(peripheral)) {
                 peripheral = this.extractIBeacon(peripheral);
             } else if (this.settings.onlyIBeacon) {

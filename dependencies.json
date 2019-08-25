@@ -14,5 +14,8 @@
   ],
   "prometheus": [
     "moleculer-prometheus@0.2.1"
+  ],
+  "web": [
+    "moleculer-web@0.8.5"
   ]
 }

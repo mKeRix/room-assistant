@@ -1,14 +1,14 @@
-"use strict";
+'use strict';
 
 module.exports = {
-	namespace: "rass",
+	namespace: 'rass',
 	nodeID: null,
 
 	logger: true,
-	logLevel: "info",
-	logFormatter: "default",
+	logLevel: 'info',
+	logFormatter: 'default',
 
-	serializer: "JSON",
+	serializer: 'JSON',
 
 	requestTimeout: 20 * 1000,
 	requestRetry: 0,
@@ -18,8 +18,12 @@ module.exports = {
 
 	disableBalancer: false,
 
+	transporter: {
+		type: 'TCP'
+	},
+
 	registry: {
-		strategy: "RoundRobin",
+		strategy: 'RoundRobin',
 		preferLocal: true
 	},
 

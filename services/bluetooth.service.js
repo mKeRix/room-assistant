@@ -69,7 +69,7 @@ module.exports = {
             const type = peripheral.advertisement.localName != null
                 && peripheral.advertisement.localName.startsWith(this.broker.namespace) ? 'internal' : 'external';
 
-            this.broker.broadcastLocal(`bluetooth.ble.scan.${type}Discovery`, peripheral);
+            this.broker.broadcastLocal(`bluetooth.ble.scan.${type}-discovery`, peripheral);
         }
     },
 
