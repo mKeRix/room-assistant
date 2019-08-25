@@ -2,6 +2,9 @@
   "services": [],
   "room": "default-room",
   "autoDiscovery": true,
+  "election": {
+    "majoritySize": 1
+  },
   "mqtt": {
     "url": "mqtt://localhost",
     "username": "",
