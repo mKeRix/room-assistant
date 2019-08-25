@@ -1,9 +1,10 @@
 {
+  "bluetooth": [
+    "@abandonware/noble@1.9.2-3",
+    "@abandonware/bleno@0.5.1-0"
+  ],
   "mqtt": [
     "mqtt@2.18.8"
-  ],
-  "ble": [
-    "@abandonware/noble@1.9.2-3"
   ],
   "gpio": [
     "onoff@3.2.2"

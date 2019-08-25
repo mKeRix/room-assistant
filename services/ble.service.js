@@ -1,7 +1,6 @@
 'use strict';
 
 const config = require('config');
-const noble = require('@abandonware/noble');
 
 const KalmanService = require('../mixins/kalman.mixin');
 const ThrottledService = require('../mixins/throttled.mixin');
@@ -11,6 +10,12 @@ module.exports = {
     name: 'ble',
 
     mixins: [KalmanService, ThrottledService, WhitelistService],
+
+    metadata: {
+        bluetooth: {
+            requiresScanLE: true
+        }
+    },
 
     settings: {
         frequency: config.get('ble.updateFrequency'),
@@ -27,16 +32,8 @@ module.exports = {
         minorMask: parseInt(config.get('ble.minorMask'))
     },
 
-    methods: {
-        handleStateChange(state) {
-            if (state === 'poweredOn') {
-                noble.startScanning([], true);
-            } else {
-                noble.stopScanning();
-            }
-        },
-
-        handleDiscovery(peripheral) {
+    events: {
+        'bluetooth.ble.scan.externalDiscovery'(peripheral) {
             if (this.settings.processIBeacon && this.isIBeacon(peripheral)) {
                 peripheral = this.extractIBeacon(peripheral);
             } else if (this.settings.onlyIBeacon) {
@@ -74,8 +71,10 @@ module.exports = {
                     this.broker.emit('data.found', payload);
                 }
             }
-        },
+        }
+    },
 
+    methods: {
         isIBeacon(peripheral) {
             const manufacturerData = peripheral.advertisement.manufacturerData;
 
@@ -118,10 +117,5 @@ module.exports = {
                 return (0.89976) * Math.pow(ratio, 7.7095) + 0.111;
             }
         }
-    },
-
-    created() {
-        noble.on('stateChange', this.handleStateChange);
-        noble.on('discover', this.handleDiscovery);
     }
 };

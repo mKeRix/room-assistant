@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = {
-	namespace: "",
+	namespace: "rass",
 	nodeID: null,
 
 	logger: true,
