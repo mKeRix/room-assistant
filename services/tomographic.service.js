@@ -8,6 +8,8 @@ const KalmanService = require('../mixins/kalman.mixin');
 module.exports = {
     name: 'tomographic',
 
+    dependencies: ['election', 'bluetooth'],
+
     mixins: [KalmanService],
 
     metadata: {
@@ -42,7 +44,7 @@ module.exports = {
                 if (state.tripped !== isTripped) {
                     state.count += 1;
 
-                    if (state.count > 2) {
+                    if (state.count > 4) {
                         this.broker.broadcast('tomographic.connections.state-changed', {
                             from: `${this.broker.namespace}-${this.settings.room}`,
                             to: reading.target,
@@ -59,6 +61,28 @@ module.exports = {
         },
 
         'tomographic.connections.state-changed'(payload) {
+            const path = [payload.from, payload.to].sort().join('-');
+            const originalPathTripCount = this.pathTripCountMap.get(path) || 0;
+            let newPathTripCount = payload.tripped ? originalPathTripCount + 1 : originalPathTripCount - 1;
+            newPathTripCount = _.clamp(newPathTripCount, 0, 2);
+            this.pathTripCountMap.set(path, newPathTripCount);
+
+            const eventEmissionRequired = (originalPathTripCount === 0 && newPathTripCount > 0)
+                || (newPathTripCount === 0 && originalPathTripCount > 0);
+            if (eventEmissionRequired) {
+                this.broker.call('election.amILeader')
+                    .then(isLeader => {
+                        if (isLeader) {
+                            this.broker.emit('tomographic.path.state-changed', {
+                                path,
+                                tripped: newPathTripCount > 0
+                            });
+                        }
+                    });
+            }
+        },
+
+        'tomographic.path.state-changed'(payload) {
             console.log(payload);
         },
 
@@ -131,6 +155,7 @@ module.exports = {
         this.isCalibrating = false;
         this.calibrationCache = new Map();
 
+        this.pathTripCountMap = new Map();
         this.stateMap = new Map();
         this.rssiCache = new Map();
         setInterval(this.publishReadings, 500);

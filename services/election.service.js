@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const config = require('config');
+const { ServiceNotFoundError, ServiceNotAvailableError } = require('moleculer').Errors;
 
 module.exports = {
     name: 'election',
@@ -25,7 +26,7 @@ module.exports = {
         'election.leadership.resign'(payload) {
             if (this.currentLeaderNodeId === payload.nodeId) {
                 this.currentLeaderNodeId = null;
-                this.startElection();
+                this.requestLeadership();
             }
         },
 
@@ -89,7 +90,7 @@ module.exports = {
         requestLeadership() {
              this.broker.broadcast('election.leadership.request', {});
 
-             return new Promise((resolve) => setTimeout(resolve, 2 * 1000))
+             new Promise((resolve) => setTimeout(resolve, 2 * 1000))
                 .then(() => {
                     if (this.currentLeaderNodeId == null) {
                         this.startElection();
@@ -97,18 +98,18 @@ module.exports = {
                         return this.currentLeaderNodeId;
                     }
                 });
+
+            setTimeout(() => {
+                // repeat until we have a new leader
+                if (this.currentLeaderNodeId == null) {
+                    this.requestLeadership();
+                }
+            }, 30 * 1000);
         },
 
         async startElection() {
             const newLeaderId = await this.determineNewLeader();
             this.castVote(newLeaderId);
-
-            setTimeout(() => {
-                // repeat until we have a new leader
-                if (this.currentLeaderNodeId == null) {
-                    this.startElection();
-                }
-            }, 30 * 1000);
         },
 
         determineNewLeader() {
@@ -124,8 +125,15 @@ module.exports = {
 
         castVote(nodeId) {
             if (this.leaderVoteNodeId != null) {
-                this.logger.info(`Rescinding vote for ${nodeId}.`);
-                this.broker.call('election.rescindVote', {}, { nodeID: nodeId });
+                this.logger.info(`Rescinding vote for ${this.leaderVoteNodeId}.`);
+                this.broker.call('election.rescindVote', {}, { nodeID: this.leaderVoteNodeId })
+                    .catch(error => {
+                        if (!(error instanceof ServiceNotFoundError || error instanceof ServiceNotAvailableError)) {
+                            // we can ignore service availability issues, these occur when the node we voted for has gone offline
+                            // other stuff we still need to throw
+                            throw error;
+                        }
+                    });
             }
 
             this.logger.info(`Voting for ${nodeId} as the new leader.`);
