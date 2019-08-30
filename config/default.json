@@ -40,6 +40,9 @@
       "value_template": "{{ value_json.value }}"
     }
   },
+  "grideye": {
+    "i2cDevice": 1
+  },
   "gpio": [],
   "shell": [],
   "prometheus": {
