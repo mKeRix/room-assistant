@@ -13,7 +13,7 @@
     "i2c-bus@4.0.10"
   ],
   "d6t": [
-    "d6t@0.0.5"
+    "i2c-bus@4.0.10"
   ],
   "prometheus": [
     "moleculer-prometheus@0.2.1"

@@ -1,9 +1,14 @@
 'use strict';
 
 const config = require('config');
-const d6t = require('d6t').d6t;
+const i2c = require('i2c-bus');
+const math = require('mathjs');
 
+const filters = require('../utils/filters');
 const DiscoveryService = require('../mixins/discovery.mixin');
+
+const D6T_ADDRESS = 0x0a;
+const TEMPERATURE_COMMAND = 0x4c;
 
 module.exports = {
     name: 'd6t',
@@ -11,58 +16,93 @@ module.exports = {
     mixins: [DiscoveryService],
 
     settings: {
-        channel: config.get('d6t.channel'),
-        type: config.get('d6t.type'),
-        interval: config.get('d6t.interval'),
-        threshold: config.get('d6t.threshold'),
-        onlyChanges: config.get('d6t.onlyChanges'),
+        edgeThreshold: config.get('d6t.edgeThreshold'),
         retain: config.get('d6t.retain'),
         discoveryType: config.get('d6t.discoveryType'),
         discoveryConfig: config.get('d6t.discoveryConfig')
     },
 
     methods: {
-        querySensor() {
-            const data = d6t.d6t_read_js(this.d6tDevh);
-            const presence = data.slice(1, -1).some(temp => temp >= this.settings.threshold);
+        updateState() {
+            const newState = this.isPresent();
 
-            if (this.presence !== presence || !this.settings.onlyChanges) {
-                this.presence = presence;
-
-                const payload = {
+            if (newState !== this.state) {
+                this.state = newState;
+                this.broker.emit('data.found', {
                     channel: 'd6t',
                     data: {
-                        value: presence,
-                        raw: data
+                        value: newState
                     },
                     options: {
                         retain: this.settings.retain
                     }
-                };
-                this.broker.emit('data.found', payload);
+                });
             }
+        },
+
+        isPresent() {
+            if (this.measurementsCache.length === 0) {
+                return false;
+            }
+
+            const temperatures = math.round(math.divide(math.add(...this.measurementsCache), this.measurementsCache.length), 1);
+            const temperatureEdges = filters.applySobel(temperatures);
+            const maxEdge = math.max(temperatureEdges);
+            const isPresent = maxEdge >= this.settings.edgeThreshold;
+
+            this.logger.debug(`Evaluating presence as ${isPresent} with a maximum edge of ${maxEdge}. Got temperatures:\n${temperatures}`);
+
+            return isPresent;
+        },
+
+        updateMeasurementsCache() {
+            if (this.measurementsCache.length >= 10) {
+                this.measurementsCache.shift();
+            }
+
+            const temperatures = this.getPixelTemperatures();
+            // occasionally the data is invalid - then we can just discard it
+            // TODO: use the PEC check instead
+            if (math.max(temperatures) <= 50) {
+                this.measurementsCache.push(temperatures);
+            }
+        },
+
+        getPixelTemperatures() {
+            // TODO: support D6T-8L-09
+            const commandBuffer = Buffer.alloc(1);
+            commandBuffer.writeUInt8(TEMPERATURE_COMMAND, 0);
+            const resultBuffer = Buffer.alloc(35);
+
+            this.i2cBus.i2cWriteSync(D6T_ADDRESS, commandBuffer.length, commandBuffer);
+            this.i2cBus.i2cReadSync(D6T_ADDRESS, resultBuffer.length, resultBuffer);
+
+            const pixelTemperatures = [];
+            for (let i = 2; i < resultBuffer.length - 1; i += 2) {
+                const temperature = (256 * resultBuffer.readUInt8(i + 1) + resultBuffer.readUInt8(i)) / 10;
+                pixelTemperatures.push(temperature);
+            }
+
+            return math.reshape(pixelTemperatures, [4, 4]);
         }
     },
 
     created() {
-        this.presence = null;
-        this.d6tDevh = new d6t.d6t_devh_t();
+        this.measurementsCache = [];
     },
 
     async started() {
         this.registerSensor(this.settings.channel, this.settings.discoveryType, this.settings.discoveryConfig);
-
-        const sensorType = d6t[this.settings.type];
-        d6t.d6t_open_js(this.d6tDevh, sensorType, null);
-
-        this.interval = setInterval(this.querySensor, this.settings.interval);
+        this.i2cBus = i2c.openSync(1);
+        this.measurementInterval = setInterval(this.updateMeasurementsCache, 100);
+        // TODO: try out different intervals
+        this.updateInterval = setInterval(this.updateState, 1000);
     },
 
     async stopped() {
-        clearInterval(this.interval);
-
-        d6t.d6t_close_js(this.d6tDevh);
-
+        clearInterval(this.updateInterval);
+        clearInterval(this.measurementInterval);
+        this.i2cBus.closeSync();
         this.unregisterSensor(this.settings.channel, this.settings.discoveryType);
     }
 };
