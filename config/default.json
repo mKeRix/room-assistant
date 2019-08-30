@@ -41,7 +41,9 @@
     }
   },
   "grideye": {
-    "i2cDevice": 1
+    "i2cDevice": 1,
+    "edgeThreshold": 15,
+    "retain": true
   },
   "gpio": [],
   "shell": [],

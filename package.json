@@ -36,6 +36,7 @@
     "global-npm": "^0.3.0",
     "kalmanjs": "^1.1.0",
     "lodash": "^4.17.15",
+    "mathjs": "^6.2.0",
     "moleculer": "^0.13.9",
     "moleculer-cron": "0.0.2",
     "slugify": "^1.3.4"
