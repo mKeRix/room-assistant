@@ -24,6 +24,10 @@
     "majorMask": "0xFFFF",
     "minorMask": "0xFFFF"
   },
+  "bluetoothInquiries": {
+    "addresses": [],
+    "timeout": 60
+  },
   "d6t": {
     "channel": "d6t",
     "type": "D6T_44L_06",
