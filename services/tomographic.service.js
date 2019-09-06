@@ -83,7 +83,23 @@ module.exports = {
         },
 
         'tomographic.path.state-changed'(payload) {
-            console.log(payload);
+            let newState = false;
+
+            for (const [path, tripCount] of this.pathTripCountMap) {
+                if (tripCount > 0) {
+                    newState = true;
+                }
+            }
+
+            if (this.state !== newState) {
+                this.state = newState;
+                this.broker.emit('data.found', {
+                    channel: 'tomographic',
+                    data: {
+                        value: newState
+                    }
+                });
+            }
         },
 
         'tomographic.calibration.start'() {
@@ -152,6 +168,8 @@ module.exports = {
     },
 
     created() {
+        this.state = false;
+
         this.isCalibrating = false;
         this.calibrationCache = new Map();
 

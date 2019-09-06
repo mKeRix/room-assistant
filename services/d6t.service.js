@@ -1,5 +1,6 @@
 'use strict';
 
+const _ = require('lodash');
 const config = require('config');
 const i2c = require('i2c-bus');
 const math = require('mathjs');
@@ -41,26 +42,52 @@ module.exports = {
         },
 
         isPresent() {
-            if (this.measurementsCache.length === 0) {
+            if (this.measurementsCache.length < 2) {
                 return false;
             }
 
             const temperatures = math.round(math.divide(math.add(...this.measurementsCache), this.measurementsCache.length), 1);
-            const temperatureEdges = filters.applySobel(temperatures);
-            const maxEdge = math.max(temperatureEdges);
-            const isPresent = maxEdge >= this.settings.edgeThreshold;
+            const temperatureMedian = math.median(temperatures);
+            const temperatureDeviations = math.subtract(temperatures, temperatureMedian);
+            const temperatureEdges = filters.applySobel(temperatureDeviations);
 
-            this.logger.debug(`Evaluating presence as ${isPresent} with a maximum edge of ${maxEdge}. Got temperatures:\n${temperatures}`);
+            let isPresent = false;
+            const edgesSize = math.size(temperatureEdges);
+            math.forEach(temperatureEdges, (edge, index) => {
+                if (edge >= this.settings.edgeThreshold) {
+                    const neighbors = math.subset(temperatures, math.index([
+                        _.clamp(index[0] - 1, 0, edgesSize[0] - 1),
+                        _.clamp(index[0] + 1, 0, edgesSize[0] - 1),
+                    ], [
+                        _.clamp(index[1] - 1, 0, edgesSize[1] - 1),
+                        _.clamp(index[1] + 1, 0, edgesSize[1] - 1),
+                    ]));
+
+                    const presenceHit = _.some(math.flatten(neighbors), t => t > temperatureMedian);
+                    if (presenceHit) {
+                        isPresent = true;
+                    }
+                }
+            });
+
+            this.logger.debug(`Evaluating presence as ${isPresent}. Maximum edge was ${math.max(temperatureEdges)}. Got temperatures:\n${temperatures}`);
 
             return isPresent;
         },
 
         updateMeasurementsCache() {
-            if (this.measurementsCache.length >= 10) {
+            if (this.measurementsCache.length >= 3) {
                 this.measurementsCache.shift();
             }
 
-            const temperatures = this.getPixelTemperatures();
+            let temperatures;
+            try {
+                temperatures = this.getPixelTemperatures();
+            } catch (e) {
+                this.logger.error(e);
+                return;
+            }
+
             // occasionally the data is invalid - then we can just discard it
             // TODO: use the PEC check instead
             if (math.max(temperatures) <= 50) {
@@ -73,7 +100,6 @@ module.exports = {
             const commandBuffer = Buffer.alloc(1);
             commandBuffer.writeUInt8(TEMPERATURE_COMMAND, 0);
             const resultBuffer = Buffer.alloc(35);
-
             this.i2cBus.i2cWriteSync(D6T_ADDRESS, commandBuffer.length, commandBuffer);
             this.i2cBus.i2cReadSync(D6T_ADDRESS, resultBuffer.length, resultBuffer);
 
@@ -96,7 +122,7 @@ module.exports = {
         this.i2cBus = i2c.openSync(1);
         this.measurementInterval = setInterval(this.updateMeasurementsCache, 100);
         // TODO: try out different intervals
-        this.updateInterval = setInterval(this.updateState, 1000);
+        this.updateInterval = setInterval(this.updateState, 300);
     },
 
     async stopped() {
