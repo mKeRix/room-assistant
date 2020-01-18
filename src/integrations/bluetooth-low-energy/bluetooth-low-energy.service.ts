@@ -6,14 +6,14 @@ import {
 import noble, { Peripheral } from '@abandonware/noble';
 import * as _ from 'lodash';
 import slugify from 'slugify';
-import { EntitiesService } from '../entities/entities.service';
-import { Sensor } from '../entities/sensor.entity';
+import { EntitiesService } from '../../entities/entities.service';
+import { Sensor } from '../../entities/sensor.entity';
 import { IBeacon } from './i-beacon.entity';
 import { Tag } from './tag.entity';
-import { ConfigService } from '../config/config.service';
-import { Entity } from '../entities/entity.entity';
+import { ConfigService } from '../../config/config.service';
+import { Entity } from '../../entities/entity.entity';
 import { BluetoothLowEnergyConfig } from './bluetooth-low-energy.config';
-import { ClusterService } from '../cluster/cluster.service';
+import { ClusterService } from '../../cluster/cluster.service';
 import { NewDistanceEvent } from './new-distance.event';
 import { BluetoothLowEnergyDistributedService } from './bluetooth-low-energy-distributed.service';
 

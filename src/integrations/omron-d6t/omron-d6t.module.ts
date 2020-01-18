@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OmronD6tService } from './omron-d6t.service';
-import { EntitiesModule } from '../entities/entities.module';
-import { ConfigModule } from '../config/config.module';
+import { EntitiesModule } from '../../entities/entities.module';
+import { ConfigModule } from '../../config/config.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({

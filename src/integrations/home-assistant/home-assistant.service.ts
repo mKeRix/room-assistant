@@ -2,27 +2,28 @@ import {
   Injectable,
   Logger,
   OnApplicationBootstrap,
-  OnApplicationShutdown
+  OnApplicationShutdown,
+  OnModuleInit
 } from '@nestjs/common';
-import { Publisher } from '../publishers/publisher.interface';
-import { Entity } from '../entities/entity.entity';
-import { Sensor } from '../entities/sensor.entity';
+import { Entity } from '../../entities/entity.entity';
+import { Sensor } from '../../entities/sensor.entity';
 import { EntityConfig } from './entity-config';
 import { SensorConfig } from './sensor-config';
 import * as _ from 'lodash';
-import { ConfigService } from '../config/config.service';
-import { AsyncMqttClient } from 'async-mqtt';
+import { ConfigService } from '../../config/config.service';
+import mqtt, { AsyncMqttClient } from 'async-mqtt';
 import { HomeAssistantConfig } from './home-assistant.config';
-import mqtt from 'async-mqtt';
 import { Device } from './device';
 import { system } from 'systeminformation';
-import { EntityOptions } from '../publishers/entity-options.entity';
+import { EntityOptions } from '../../entities/entity-options.entity';
+import { InjectEventEmitter } from 'nest-emitter';
+import { EntitiesEventEmitter } from '../../entities/entities.events';
 
 const PROPERTY_BLACKLIST = ['component', 'configTopic'];
 
 @Injectable()
 export class HomeAssistantService
-  implements Publisher, OnApplicationBootstrap, OnApplicationShutdown {
+  implements OnModuleInit, OnApplicationBootstrap, OnApplicationShutdown {
   private config: HomeAssistantConfig;
   private device: Device;
   private entityConfigs = new Map<string, EntityConfig>();
@@ -30,8 +31,17 @@ export class HomeAssistantService
   private mqttClient: AsyncMqttClient;
   private readonly logger: Logger = new Logger(HomeAssistantService.name);
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectEventEmitter() private readonly emitter: EntitiesEventEmitter
+  ) {
     this.config = this.configService.get('homeAssistant');
+  }
+
+  onModuleInit(): void {
+    this.emitter.on('newEntity', this.handleNewEntity.bind(this));
+    this.emitter.on('stateUpdate', this.handleNewState.bind(this));
+    this.emitter.on('attributesUpdate', this.handleNewAttributes.bind(this));
   }
 
   async onApplicationBootstrap(): Promise<void> {
@@ -61,15 +71,16 @@ export class HomeAssistantService
     const combinedId = this.getCombinedId(entity.id, entity.distributed);
     let config: EntityConfig;
     if (entity instanceof Sensor) {
-      config = {
-        ...new SensorConfig(combinedId, entity.name),
-        ...(entityOptions.homeAssistant as SensorConfig)
-      };
+      config = new SensorConfig(combinedId, entity.name);
     } else {
       this.logger.warn(
         `${combinedId} cannot be matched to a Home Assistant type and will not be transferred`
       );
       return;
+    }
+
+    if (entityOptions !== undefined) {
+      Object.assign(config, entityOptions.homeAssistant);
     }
 
     if (entity.distributed) {

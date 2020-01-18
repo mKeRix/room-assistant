@@ -5,16 +5,16 @@ import {
   OnApplicationBootstrap,
   OnApplicationShutdown
 } from '@nestjs/common';
-import { EntitiesService } from '../entities/entities.service';
-import { ConfigService } from '../config/config.service';
+import { EntitiesService } from '../../entities/entities.service';
+import { ConfigService } from '../../config/config.service';
 import { OmronD6tConfig } from './omron-d6t.config';
 import i2cBus, { PromisifiedBus } from 'i2c-bus';
 import { Interval } from '@nestjs/schedule';
 import * as math from 'mathjs';
 import { Pixel } from './pixel.entity';
 import { Cluster } from './cluster.entity';
-import { Sensor } from '../entities/sensor.entity';
-import { Entity } from '../entities/entity.entity';
+import { Sensor } from '../../entities/sensor.entity';
+import { Entity } from '../../entities/entity.entity';
 import { I2CError } from './i2c.error';
 import { SensorConfig } from '../home-assistant/sensor-config';
 

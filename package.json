@@ -8,7 +8,7 @@
   "bin": "./bin/room-assistant.js",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "nest build",
+    "build": "nest build && npm run copy:assets",
     "format": "prettier --single-quote --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -19,7 +19,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "copy:assets": "cp package-lock.json dist/ && cp -r bin/ dist/bin/"
   },
   "dependencies": {
     "@nestjs/common": "^6.7.2",
@@ -34,6 +35,7 @@
     "lodash": "^4.17.15",
     "mathjs": "^6.5.0",
     "mdns": "^2.5.1",
+    "nest-emitter": "^1.1.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
     "rxjs": "^6.5.3",

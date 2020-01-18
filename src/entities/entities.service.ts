@@ -1,14 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { Entity } from './entity.entity';
-import { PublishersService } from '../publishers/publishers.service';
 import { EntityProxyHandler } from './entity.proxy';
-import { EntityOptions } from '../publishers/entity-options.entity';
+import { EntityOptions } from './entity-options.entity';
+import { InjectEventEmitter } from 'nest-emitter';
+import { EntitiesEventEmitter } from './entities.events';
 
 @Injectable()
 export class EntitiesService {
   private readonly entities = new Map<string, Entity>();
 
-  constructor(private readonly publishersService: PublishersService) {}
+  constructor(
+    @InjectEventEmitter() private readonly emitter: EntitiesEventEmitter
+  ) {}
 
   has(id: string): boolean {
     return this.entities.has(id);
@@ -25,13 +28,10 @@ export class EntitiesService {
 
     const proxy = new Proxy<Entity>(
       entity,
-      new EntityProxyHandler(
-        this.publishersService.publishNewState.bind(this.publishersService),
-        this.publishersService.publishNewAttributes.bind(this.publishersService)
-      )
+      new EntityProxyHandler(this.emitter)
     );
     this.entities.set(entity.id, proxy);
-    this.publishersService.publishNewEntity(proxy, entityOptions);
+    this.emitter.emit('newEntity', proxy, entityOptions);
     return proxy;
   }
 }

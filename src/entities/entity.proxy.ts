@@ -1,29 +1,15 @@
 import { Entity } from './entity.entity';
 import { AttributesProxyHandler } from './attributes.proxy';
+import { EntitiesEventEmitter } from './entities.events';
 
 export class EntityProxyHandler implements ProxyHandler<Entity> {
-  constructor(
-    private readonly stateCallback: (
-      id: string,
-      state: string | number | boolean,
-      distributed?: boolean
-    ) => void,
-    private readonly attributesCallback: (
-      entityId: string,
-      attributes: { [key: string]: any },
-      distributed?: boolean
-    ) => void
-  ) {}
+  constructor(private readonly emitter: EntitiesEventEmitter) {}
 
   get(target: Entity, p: string | number | symbol, receiver: any): any {
     if (p === 'attributes') {
       return new Proxy(
         target[p],
-        new AttributesProxyHandler(
-          target.id,
-          target.distributed,
-          this.attributesCallback
-        )
+        new AttributesProxyHandler(target.id, target.distributed, this.emitter)
       );
     } else {
       return target[p];
@@ -40,7 +26,7 @@ export class EntityProxyHandler implements ProxyHandler<Entity> {
     target[p] = value;
 
     if (p === 'state' && oldValue !== value) {
-      this.stateCallback(target.id, value, target.distributed);
+      this.emitter.emit('stateUpdate', target.id, value, target.distributed);
     }
 
     return true;

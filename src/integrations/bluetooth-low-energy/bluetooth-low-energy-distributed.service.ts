@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { NewDistanceEvent } from './new-distance.event';
-import { ConfigService } from '../config/config.service';
-import { EntitiesService } from '../entities/entities.service';
+import { ConfigService } from '../../config/config.service';
+import { EntitiesService } from '../../entities/entities.service';
 import { BluetoothLowEnergyConfig } from './bluetooth-low-energy.config';
 import slugify from 'slugify';
 import _ from 'lodash';
 import { BluetoothLowEnergyDistributedSensor } from './bluetooth-low-energy-distributed.sensor';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { Entity } from '../entities/entity.entity';
+import { Entity } from '../../entities/entity.entity';
 
 @Injectable()
 export class BluetoothLowEnergyDistributedService {

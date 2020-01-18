@@ -1,4 +1,4 @@
-import { Sensor } from '../entities/sensor.entity';
+import { Sensor } from '../../entities/sensor.entity';
 
 export class BluetoothLowEnergyDistributedSensor extends Sensor {
   timeout: number;
