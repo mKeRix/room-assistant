@@ -1,0 +1,6 @@
+version: '3'
+services:
+  mqtt:
+    image: eclipse-mosquitto:1.6
+    ports:
+      - 1883:1883

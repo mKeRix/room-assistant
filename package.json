@@ -1,0 +1,92 @@
+{
+  "name": "room-assistant",
+  "version": "0.0.1",
+  "description": "",
+  "author": "Heiko Rothe <me@heikorothe.com>",
+  "license": "MIT",
+  "repository": "github:mKeRix/room-assistant",
+  "bin": "./bin/room-assistant.js",
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "nest build",
+    "format": "prettier --single-quote --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "lint": "tslint -p tsconfig.json -c tslint.json",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
+  },
+  "dependencies": {
+    "@nestjs/common": "^6.7.2",
+    "@nestjs/core": "^6.7.2",
+    "@nestjs/platform-express": "^6.10.14",
+    "@nestjs/schedule": "^0.1.1",
+    "async-mqtt": "^2.4.2",
+    "config": "^3.2.4",
+    "democracy": "^3.1.3",
+    "ipaddr.js": "^1.9.1",
+    "js-yaml": "^3.13.1",
+    "lodash": "^4.17.15",
+    "mathjs": "^6.5.0",
+    "mdns": "^2.5.1",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^3.0.0",
+    "rxjs": "^6.5.3",
+    "slugify": "^1.3.6",
+    "systeminformation": "^4.19.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^6.9.0",
+    "@nestjs/schematics": "^6.7.0",
+    "@nestjs/testing": "^6.7.1",
+    "@types/config": "0.0.36",
+    "@types/express": "^4.17.1",
+    "@types/i2c-bus": "^1.0.27",
+    "@types/jest": "^24.0.18",
+    "@types/lodash": "^4.14.149",
+    "@types/mathjs": "^6.0.3",
+    "@types/mdns": "0.0.33",
+    "@types/noble": "0.0.39",
+    "@types/node": "^12.7.5",
+    "@types/supertest": "^2.0.8",
+    "husky": "^4.0.10",
+    "jest": "^24.9.0",
+    "prettier": "^1.19.1",
+    "supertest": "^4.0.2",
+    "ts-jest": "^24.1.0",
+    "ts-loader": "^6.1.1",
+    "ts-node": "^8.4.1",
+    "tsconfig-paths": "^3.9.0",
+    "tslint": "^5.20.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.6.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run format"
+    }
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts",
+      "node"
+    ],
+    "rootDir": "src",
+    "testRegex": ".spec.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
+  },
+  "optionalDependencies": {
+    "@abandonware/noble": "^1.9.2-5",
+    "i2c-bus": "^5.1.0"
+  }
+}

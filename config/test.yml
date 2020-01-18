@@ -1,0 +1,4 @@
+global:
+  instanceName: test-instance
+  integrations:
+    - bluetoothLowEnergy
