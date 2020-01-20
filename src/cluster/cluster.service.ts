@@ -5,13 +5,20 @@ import {
   OnApplicationShutdown
 } from '@nestjs/common';
 import Democracy, { Node } from 'democracy';
-import * as mdns from 'mdns';
 import { Advertisement, Browser, Service } from 'mdns';
 import _ from 'lodash';
 import * as os from 'os';
 import { NetworkInterfaceInfo } from 'os';
 import { ConfigService } from '../config/config.service';
 import { ClusterConfig } from './cluster.config';
+
+let mdns;
+try {
+  // tslint:disable-next-line:no-var-requires
+  mdns = require('mdns');
+} catch (e) {
+  mdns = undefined;
+}
 
 @Injectable()
 export class ClusterService extends Democracy
@@ -47,6 +54,25 @@ export class ClusterService extends Democracy
   }
 
   onApplicationBootstrap(): any {
+    if (mdns !== undefined) {
+      this.startBonjourDiscovery();
+    } else {
+      this.logger.warn(
+        'Dependency "mdns" was not found, automatic discovery has been disabled. You will have to provide the addresses of other room-assistant nodes manually in the config.'
+      );
+    }
+
+    this.on('added', this.handleNodeAdded);
+    this.on('removed', this.handleNodeRemoved);
+    this.on('elected', this.handleNodeElected);
+  }
+
+  onApplicationShutdown(signal?: string): any {
+    this.advertisement?.stop();
+    this.browser?.stop();
+  }
+
+  protected startBonjourDiscovery(): void {
     this.advertisement = mdns.createAdvertisement(
       mdns.udp('room-assistant'),
       this.config.port,
@@ -71,15 +97,6 @@ export class ClusterService extends Democracy
 
     this.advertisement.start();
     this.browser.start();
-
-    this.on('added', this.handleNodeAdded);
-    this.on('removed', this.handleNodeRemoved);
-    this.on('elected', this.handleNodeElected);
-  }
-
-  onApplicationShutdown(signal?: string): any {
-    this.advertisement.stop();
-    this.browser.stop();
   }
 
   private handleNodeDiscovery(service: Service) {
