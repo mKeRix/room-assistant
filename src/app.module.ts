@@ -11,7 +11,8 @@ import { EventEmitter } from 'events';
 
 export const CONFIGURED_INTEGRATIONS = c
   .get<string[]>('global.integrations')
-  .map(id => _.kebabCase(id));
+  // lodash separates numbers in the case functions - we want them to stick together, hence we remove the dashes around numbers
+  .map(id => _.kebabCase(id).replace(/-([1-9]+)-/, '$1'));
 
 @Module({
   imports: [
