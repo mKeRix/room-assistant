@@ -10,7 +10,6 @@ import { Advertisement, Browser, Service } from 'mdns';
 import _ from 'lodash';
 import * as os from 'os';
 import { NetworkInterfaceInfo } from 'os';
-import ipaddr, { IPv4 } from 'ipaddr.js';
 import { ConfigService } from '../config/config.service';
 import { ClusterConfig } from './cluster.config';
 
@@ -34,9 +33,7 @@ export class ClusterService extends Democracy
         : os.networkInterfaces()
     );
     const ip = networkInterfaces.find(
-      address =>
-        address.internal === false &&
-        ipaddr.parse(address.address) instanceof IPv4
+      address => address.internal === false && address.family === 'IPv4'
     ).address;
     super({
       source: `${ip}:${config.port}`,
@@ -64,7 +61,9 @@ export class ClusterService extends Democracy
         : mdns.rst.getaddrinfo({ families: [0] }),
       mdns.rst.makeAddressesUnique()
     ];
-    this.browser = mdns.createBrowser(mdns.udp('room-assistant'));
+    this.browser = mdns.createBrowser(mdns.udp('room-assistant'), {
+      resolverSequence: sequence
+    });
     this.browser.on('serviceUp', this.handleNodeDiscovery.bind(this));
     this.browser.on('error', e => {
       this.logger.error(e.message, e.trace);
