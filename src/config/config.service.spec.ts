@@ -1,7 +1,7 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { ConfigService } from "./config.service";
+import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from './config.service';
 
-describe("ConfigService", () => {
+describe('ConfigService', () => {
   let service: ConfigService;
 
   beforeEach(async () => {
@@ -12,13 +12,13 @@ describe("ConfigService", () => {
     service = module.get<ConfigService>(ConfigService);
   });
 
-  it("should return values from environment yaml configuration", () => {
-    const globalConfig = service.get("global");
-    expect(globalConfig.instanceName).toBe("test-instance");
+  it('should return values from environment yaml configuration', () => {
+    const globalConfig = service.get('global');
+    expect(globalConfig.instanceName).toBe('test-instance');
   });
 
-  it("should return default values from TS files", () => {
-    const clusterConfig = service.get("cluster");
+  it('should return default values from TS files', () => {
+    const clusterConfig = service.get('cluster');
     expect(clusterConfig.port).toBe(6425);
   });
 });

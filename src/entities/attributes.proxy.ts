@@ -1,5 +1,5 @@
-import _ from "lodash";
-import { EntitiesEventEmitter } from "./entities.events";
+import _ from 'lodash';
+import { EntitiesEventEmitter } from './entities.events';
 
 export class AttributesProxyHandler
   implements ProxyHandler<{ [key: string]: string | number | boolean }> {
@@ -21,7 +21,7 @@ export class AttributesProxyHandler
 
     if (!_.isEqual(value, oldValue) && (!this.distributed || this.isLeader())) {
       this.emitter.emit(
-        "attributesUpdate",
+        'attributesUpdate',
         this.entityId,
         target,
         this.distributed

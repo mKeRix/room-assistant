@@ -1,6 +1,6 @@
-import { Entity } from "./entity.entity";
-import { AttributesProxyHandler } from "./attributes.proxy";
-import { EntitiesEventEmitter } from "./entities.events";
+import { Entity } from './entity.entity';
+import { AttributesProxyHandler } from './attributes.proxy';
+import { EntitiesEventEmitter } from './entities.events';
 
 export class EntityProxyHandler implements ProxyHandler<Entity> {
   constructor(
@@ -9,7 +9,7 @@ export class EntityProxyHandler implements ProxyHandler<Entity> {
   ) {}
 
   get(target: Entity, p: string | number | symbol, receiver: any): any {
-    if (p === "attributes") {
+    if (p === 'attributes') {
       return new Proxy(
         target[p],
         new AttributesProxyHandler(
@@ -34,11 +34,11 @@ export class EntityProxyHandler implements ProxyHandler<Entity> {
     target[p] = value;
 
     if (
-      p === "state" &&
+      p === 'state' &&
       oldValue !== value &&
       (!target.distributed || this.isLeader())
     ) {
-      this.emitter.emit("stateUpdate", target.id, value, target.distributed);
+      this.emitter.emit('stateUpdate', target.id, value, target.distributed);
     }
 
     return true;
