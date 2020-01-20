@@ -1,69 +1,83 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { EntitiesService } from './entities.service';
-import { PublishersService } from '../publishers/publishers.service';
-import { PublishersModule } from '../publishers/publishers.module';
-import { Sensor } from './sensor.entity';
-import * as util from 'util';
-import { ClusterService } from '../cluster/cluster.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { EntitiesService } from "./entities.service";
+import { Sensor } from "./sensor.entity";
+import * as util from "util";
+import { ClusterService } from "../cluster/cluster.service";
+import { NestEmitterModule } from "nest-emitter";
+import { EventEmitter } from "events";
+import { EntityCustomization } from "./entity-customization.interface";
+import { SensorConfig } from "../integrations/home-assistant/sensor-config";
+import { ClusterModule } from "../cluster/cluster.module";
 
-describe('EntitiesService', () => {
+describe("EntitiesService", () => {
   let service: EntitiesService;
-  const publishersService = {
-    publishNewEntity: () => undefined,
-    publishNewState: () => undefined,
-    publishNewAttributes: () => undefined
-  };
+  const emitter: EventEmitter = new EventEmitter();
   const clusterService = {
-    isLeader: () => true
+    isLeader: jest.fn()
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [PublishersModule],
+      imports: [NestEmitterModule.forRoot(emitter), ClusterModule],
       providers: [EntitiesService]
     })
-      .overrideProvider(PublishersService)
-      .useValue(publishersService)
       .overrideProvider(ClusterService)
       .useValue(clusterService)
       .compile();
 
     service = module.get<EntitiesService>(EntitiesService);
+    jest.resetAllMocks();
   });
 
-  it('should return information about whether entity ids are registered or not', () => {
-    const entity = new Sensor('test_sensor', 'Test Sensor');
+  it("should return information about whether entity ids are registered or not", () => {
+    const entity = new Sensor("test_sensor", "Test Sensor");
     service.add(entity);
 
-    expect(service.has('test_sensor')).toBeTruthy();
-    expect(service.has('random_sensor')).toBeFalsy();
+    expect(service.has("test_sensor")).toBeTruthy();
+    expect(service.has("random_sensor")).toBeFalsy();
   });
 
-  it('should return added sensors as proxies', () => {
-    const entity = new Sensor('example', 'Example Sensor');
+  it("should return added sensors as proxies", () => {
+    const entity = new Sensor("example", "Example Sensor");
     const returnedEntity = service.add(entity);
 
     expect(util.types.isProxy(returnedEntity)).toBeTruthy();
   });
 
-  it('should throw an exception when adding a sensor with an existing id', () => {
-    const entity = new Sensor('duplicate_sensor', 'Duplicate');
+  it("should throw an exception when adding a sensor with an existing id", () => {
+    const entity = new Sensor("duplicate_sensor", "Duplicate");
     service.add(entity);
 
     expect(() => service.add(entity)).toThrow(Error);
   });
 
-  it('should announce new entities to publishers', () => {
-    const entity = new Sensor('vip_sensor', 'VIP');
-    const spy = jest.spyOn(publishersService, 'publishNewEntity');
+  it("should announce new entities to publishers", () => {
+    const entity = new Sensor("vip_sensor", "VIP");
+    const spy = jest.spyOn(emitter, "emit");
 
     service.add(entity);
-    expect(spy).toHaveBeenCalledWith(entity);
+    expect(spy).toHaveBeenCalledWith("newEntity", entity, undefined);
   });
 
-  it('should get sensor objects by id', () => {
-    const id = '123_sensor';
-    const entity = new Sensor(id, 'Numbers Sensor');
+  it("should include entity customizations with new entities", () => {
+    const entity = new Sensor("customized_sensor", "custom");
+    const customizations: Array<EntityCustomization<any>> = [
+      {
+        for: SensorConfig,
+        overrides: {
+          icon: "mdi:test"
+        }
+      }
+    ];
+    const spy = jest.spyOn(emitter, "emit");
+
+    service.add(entity, customizations);
+    expect(spy).toHaveBeenCalledWith("newEntity", entity, customizations);
+  });
+
+  it("should get sensor objects by id", () => {
+    const id = "123_sensor";
+    const entity = new Sensor(id, "Numbers Sensor");
     service.add(entity);
 
     const returnedEntity = service.get(id);
@@ -72,45 +86,74 @@ describe('EntitiesService', () => {
     expect(returnedEntity).toBeInstanceOf(Sensor);
   });
 
-  it('should return undefined for non-existent entities', () => {
-    expect(service.get('ghost_entity')).toBeUndefined();
+  it("should return undefined for non-existent entities", () => {
+    expect(service.get("ghost_entity")).toBeUndefined();
   });
 
-  it('should send state updates to publishers', () => {
-    const entity = new Sensor('test_sensor', 'Test Sensor');
-    const spy = jest.spyOn(publishersService, 'publishNewState');
+  it("should send state updates to publishers", () => {
+    const entity = new Sensor("test_sensor", "Test Sensor");
+    const spy = jest.spyOn(emitter, "emit");
 
     const entityProxy = service.add(entity);
     entityProxy.state = 1337;
-    expect(spy).toHaveBeenCalledWith('test_sensor', 1337, false);
+    expect(spy).toHaveBeenCalledWith("stateUpdate", "test_sensor", 1337, false);
   });
 
-  it('should send attribute updates to publishers', () => {
-    const entity = new Sensor('attributes_sensor', 'Sensor with attributes');
-    const spy = jest.spyOn(publishersService, 'publishNewAttributes');
+  it("should send attribute updates to publishers", () => {
+    const entity = new Sensor("attributes_sensor", "Sensor with attributes");
+    const spy = jest.spyOn(emitter, "emit");
 
     const entityProxy = service.add(entity);
-    entityProxy.attributes.test = '123';
+    entityProxy.attributes.test = "123";
     expect(spy).toHaveBeenCalledWith(
-      'attributes_sensor',
-      { test: '123' },
+      "attributesUpdate",
+      "attributes_sensor",
+      { test: "123" },
       false
     );
   });
 
-  it('should pass distributed information to publishers', () => {
-    const entity = new Sensor('distributed_sensor', 'Distribution', true);
-    const stateSpy = jest.spyOn(publishersService, 'publishNewState');
-    const attributesSpy = jest.spyOn(publishersService, 'publishNewAttributes');
+  it("should pass distributed information to publishers", () => {
+    const entity = new Sensor("distributed_sensor", "Distribution", true);
+    const spy = jest.spyOn(emitter, "emit");
+    clusterService.isLeader.mockReturnValue(true);
 
     const entityProxy = service.add(entity);
-    entityProxy.state = 'test';
+    entityProxy.state = "test";
     entityProxy.attributes.tested = true;
-    expect(stateSpy).toHaveBeenCalledWith('distributed_sensor', 'test', true);
-    expect(attributesSpy).toHaveBeenCalledWith(
-      'distributed_sensor',
+    expect(spy).toHaveBeenCalledWith(
+      "stateUpdate",
+      "distributed_sensor",
+      "test",
+      true
+    );
+    expect(spy).toHaveBeenCalledWith(
+      "attributesUpdate",
+      "distributed_sensor",
       { tested: true },
       true
+    );
+  });
+
+  it("should not emit updates for distributed sensors if not the leader", () => {
+    const entity = new Sensor("distributed_sensor", "Distribution", true);
+    const spy = jest.spyOn(emitter, "emit");
+    clusterService.isLeader.mockReturnValue(false);
+
+    const entityProxy = service.add(entity);
+    entityProxy.state = true;
+    entityProxy.attributes.awesome = "yes";
+    expect(spy).not.toHaveBeenCalledWith(
+      "stateUpdate",
+      expect.anything(),
+      expect.anything(),
+      expect.anything()
+    );
+    expect(spy).not.toHaveBeenCalledWith(
+      "attributesUpdate",
+      expect.anything(),
+      expect.anything(),
+      expect.anything()
     );
   });
 });
