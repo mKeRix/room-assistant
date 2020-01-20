@@ -1,15 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { Entity } from './entity.entity';
-import { EntityProxyHandler } from './entity.proxy';
-import { InjectEventEmitter } from 'nest-emitter';
-import { EntitiesEventEmitter } from './entities.events';
-import { EntityCustomization } from './entity-customization.interface';
+import { Injectable } from "@nestjs/common";
+import { Entity } from "./entity.entity";
+import { EntityProxyHandler } from "./entity.proxy";
+import { InjectEventEmitter } from "nest-emitter";
+import { EntitiesEventEmitter } from "./entities.events";
+import { EntityCustomization } from "./entity-customization.interface";
+import { ClusterService } from "../cluster/cluster.service";
 
 @Injectable()
 export class EntitiesService {
   private readonly entities: Map<string, Entity> = new Map<string, Entity>();
 
   constructor(
+    private readonly clusterService: ClusterService,
     @InjectEventEmitter() private readonly emitter: EntitiesEventEmitter
   ) {}
 
@@ -31,10 +33,10 @@ export class EntitiesService {
 
     const proxy = new Proxy<Entity>(
       entity,
-      new EntityProxyHandler(this.emitter)
+      new EntityProxyHandler(this.emitter, this.clusterService.isLeader)
     );
     this.entities.set(entity.id, proxy);
-    this.emitter.emit('newEntity', proxy, customizations);
+    this.emitter.emit("newEntity", proxy, customizations);
     return proxy;
   }
 }
