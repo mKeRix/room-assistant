@@ -1,4 +1,4 @@
-import { Pixel } from './pixel.entity';
+import { Pixel } from './pixel';
 
 export class Cluster {
   pixels: Pixel[];

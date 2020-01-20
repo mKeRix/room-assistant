@@ -11,17 +11,16 @@ import { OmronD6tConfig } from './omron-d6t.config';
 import i2cBus, { PromisifiedBus } from 'i2c-bus';
 import { Interval } from '@nestjs/schedule';
 import * as math from 'mathjs';
-import { Pixel } from './pixel.entity';
-import { Cluster } from './cluster.entity';
 import { Sensor } from '../../entities/sensor.entity';
 import { Entity } from '../../entities/entity.entity';
 import { I2CError } from './i2c.error';
 import { SensorConfig } from '../home-assistant/sensor-config';
+import { ThermopileOccupancySensor } from '../../util/thermopile/thermopile-occupancy.sensor';
 
 const TEMPERATURE_COMMAND = 0x4c;
 
 @Injectable()
-export class OmronD6tService
+export class OmronD6tService extends ThermopileOccupancySensor
   implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly config: OmronD6tConfig;
   private i2cBus: PromisifiedBus;
@@ -32,6 +31,7 @@ export class OmronD6tService
     private readonly entitiesService: EntitiesService,
     private readonly configService: ConfigService
   ) {
+    super();
     this.config = this.configService.get('omronD6t');
     this.logger = new Logger(OmronD6tService.name);
   }
@@ -56,19 +56,12 @@ export class OmronD6tService
   }
 
   @Interval(250)
-  async updateState() {
+  async updateState(): Promise<void> {
     try {
-      const temperatures = await this.getPixelTemperatures();
-      const relevantPixels = this.findRelevantPixels(
-        temperatures as number[][]
-      );
-      const clusters = this.clusterPixels(relevantPixels);
+      const coordinates = await this.getCoordinates(this.config.deltaThreshold);
 
-      this.sensor.state = clusters.length;
-      this.sensor.attributes.coordinates = clusters.map(cluster => [
-        cluster.center.x,
-        cluster.center.y
-      ]);
+      this.sensor.state = coordinates.length;
+      this.sensor.attributes.coordinates = coordinates;
     } catch (e) {
       if (e instanceof I2CError) {
         this.logger.debug(`Error during I2C communication: ${e.message}`);
@@ -81,7 +74,7 @@ export class OmronD6tService
     }
   }
 
-  async getPixelTemperatures() {
+  async getPixelTemperatures(): Promise<number[][]> {
     const commandBuffer = Buffer.alloc(1);
     const resultBuffer = Buffer.alloc(35);
 
@@ -108,10 +101,10 @@ export class OmronD6tService
       pixelTemperatures.push(temperature);
     }
 
-    return math.reshape(pixelTemperatures, [4, 4]);
+    return math.reshape(pixelTemperatures, [4, 4]) as number[][];
   }
 
-  checkPEC(buffer: Buffer, pecIndex: number) {
+  checkPEC(buffer: Buffer, pecIndex: number): boolean {
     let crc = this.calculateCRC(0x15);
     for (let i = 0; i < pecIndex; i++) {
       crc = this.calculateCRC(buffer.readUInt8(i) ^ crc);
@@ -131,35 +124,5 @@ export class OmronD6tService
     }
 
     return crc[0];
-  }
-
-  findRelevantPixels(data: number[][]): Pixel[] {
-    const mean = math.mean(data);
-    const threshold = mean + this.config.deltaThreshold;
-
-    const relevantPixels: Pixel[] = [];
-    for (const [x, row] of data.entries()) {
-      for (const [y, value] of row.entries()) {
-        if (value >= threshold) {
-          relevantPixels.push(new Pixel(x, y, value));
-        }
-      }
-    }
-
-    return relevantPixels;
-  }
-
-  clusterPixels(pixels: Pixel[]) {
-    const clusters: Cluster[] = [];
-    pixels.forEach(pixel => {
-      const neighbor = clusters.find(cluster => cluster.isNeighboredTo(pixel));
-      if (neighbor === undefined) {
-        clusters.push(new Cluster([pixel]));
-      } else {
-        neighbor.pixels.push(pixel);
-      }
-    });
-
-    return clusters;
   }
 }
