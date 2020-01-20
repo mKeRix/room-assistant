@@ -99,7 +99,7 @@ export class ClusterService extends Democracy
     this.browser.start();
   }
 
-  private handleNodeDiscovery(service: Service) {
+  private handleNodeDiscovery(service: Service): void {
     const ownIps = this.networkInterfaces.map(info => info.address);
     if (
       _.some(service.addresses, address => ownIps.includes(address)) ||

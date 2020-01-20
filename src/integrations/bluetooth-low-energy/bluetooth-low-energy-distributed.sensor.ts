@@ -8,7 +8,7 @@ export class BluetoothLowEnergyDistributedSensor extends Sensor {
     this.timeout = timeout;
   }
 
-  handleNewDistance(instanceName: string, distance: number) {
+  handleNewDistance(instanceName: string, distance: number): void {
     const lastDistance = this.attributes.distance as number;
     const lastUpdate = Date.parse(this.attributes.last_updated_at as string);
     const timeoutLimit = new Date(lastUpdate + this.timeout * 1000);
@@ -29,7 +29,7 @@ export class BluetoothLowEnergyDistributedSensor extends Sensor {
     }
   }
 
-  checkForTimeout() {
+  checkForTimeout(): void {
     if (this.state !== 'not_home') {
       const lastUpdate = Date.parse(this.attributes.last_updated_at as string);
       const timeoutLimit = new Date(lastUpdate + this.timeout * 1000);

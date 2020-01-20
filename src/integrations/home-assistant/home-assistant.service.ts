@@ -26,8 +26,14 @@ export class HomeAssistantService
   implements OnModuleInit, OnApplicationBootstrap, OnApplicationShutdown {
   private config: HomeAssistantConfig;
   private device: Device;
-  private entityConfigs = new Map<string, EntityConfig>();
-  private debounceFunctions = new Map<string, () => void>();
+  private entityConfigs: Map<string, EntityConfig> = new Map<
+    string,
+    EntityConfig
+  >();
+  private debounceFunctions: Map<string, () => void> = new Map<
+    string,
+    () => void
+  >();
   private mqttClient: AsyncMqttClient;
   private readonly logger: Logger = new Logger(HomeAssistantService.name);
 
@@ -107,7 +113,7 @@ export class HomeAssistantService
     id: string,
     state: number | string | boolean,
     distributed: boolean = false
-  ) {
+  ): void {
     const config = this.entityConfigs.get(this.getCombinedId(id, distributed));
     if (config === undefined) {
       return;
@@ -120,7 +126,7 @@ export class HomeAssistantService
     entityId: string,
     attributes: { [key: string]: any },
     distributed: boolean = false
-  ) {
+  ): void {
     const config = this.entityConfigs.get(
       this.getCombinedId(entityId, distributed)
     );
@@ -161,7 +167,7 @@ export class HomeAssistantService
     });
   }
 
-  private deepMap(obj: object, mapper: (v: object) => object) {
+  private deepMap(obj: object, mapper: (v: object) => object): object {
     return mapper(
       _.mapValues(obj, v => {
         return _.isObject(v) && !_.isArray(v) ? this.deepMap(v, mapper) : v;

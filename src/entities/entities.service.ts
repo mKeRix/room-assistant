@@ -7,7 +7,7 @@ import { EntitiesEventEmitter } from './entities.events';
 
 @Injectable()
 export class EntitiesService {
-  private readonly entities = new Map<string, Entity>();
+  private readonly entities: Map<string, Entity> = new Map<string, Entity>();
 
   constructor(
     @InjectEventEmitter() private readonly emitter: EntitiesEventEmitter

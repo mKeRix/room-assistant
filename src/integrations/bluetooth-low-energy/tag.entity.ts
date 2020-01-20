@@ -12,13 +12,13 @@ export class Tag {
   rssi: number;
   measuredPower: number;
 
-  get id() {
+  get id(): string {
     return this.peripheral.id;
   }
 
-  get distance() {
+  get distance(): string {
     if (this.rssi === 0) {
-      return -1;
+      return '-1';
     }
 
     const ratio = this.rssi / this.measuredPower;

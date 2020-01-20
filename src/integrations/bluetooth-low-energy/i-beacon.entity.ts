@@ -26,7 +26,7 @@ export class IBeacon extends Tag {
   major: number;
   minor: number;
 
-  get id() {
+  get id(): string {
     return `${this.uuid}-${this.major}-${this.minor}`;
   }
 }

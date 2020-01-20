@@ -21,7 +21,7 @@ export class BluetoothLowEnergyDistributedService {
     this.config = this.configService.get('bluetoothLowEnergy');
   }
 
-  handleNewDistance(event: NewDistanceEvent) {
+  handleNewDistance(event: NewDistanceEvent): void {
     const sensorId = slugify(_.lowerCase(`ble ${event.tagId} room presence`));
     let sensor: Entity;
     if (this.entitiesService.has(sensorId)) {
