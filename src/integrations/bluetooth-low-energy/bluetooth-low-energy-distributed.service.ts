@@ -8,6 +8,8 @@ import _ from 'lodash';
 import { BluetoothLowEnergyDistributedSensor } from './bluetooth-low-energy-distributed.sensor';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Entity } from '../../entities/entity.entity';
+import { EntityCustomization } from '../../entities/entity-customization.interface';
+import { SensorConfig } from '../home-assistant/sensor-config';
 
 @Injectable()
 export class BluetoothLowEnergyDistributedService {
@@ -28,12 +30,21 @@ export class BluetoothLowEnergyDistributedService {
       sensor = this.entitiesService.get(sensorId);
     } else {
       const sensorName = `${event.tagId} Room Presence`;
+      const customizations: Array<EntityCustomization<any>> = [
+        {
+          for: SensorConfig,
+          overrides: {
+            unitOfMeasurement: 'm'
+          }
+        }
+      ];
       sensor = this.entitiesService.add(
         new BluetoothLowEnergyDistributedSensor(
           sensorId,
           sensorName,
           this.config.timeout
-        )
+        ),
+        customizations
       );
       const interval = setInterval(
         (sensor as BluetoothLowEnergyDistributedSensor).checkForTimeout.bind(

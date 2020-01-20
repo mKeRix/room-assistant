@@ -13,6 +13,8 @@ import { Interval } from '@nestjs/schedule';
 import { ThermopileOccupancySensor } from '../../util/thermopile/thermopile-occupancy.sensor';
 import { GridEyeConfig } from './grid-eye.config';
 import { ConfigService } from '../../config/config.service';
+import { SensorConfig } from '../home-assistant/sensor-config';
+import { EntityCustomization } from '../../entities/entity-customization.interface';
 
 const TEMPERATURE_REGISTER_START = 0x80;
 const FRAMERATE_REGISTER = 0x02;
@@ -35,8 +37,19 @@ export class GridEyeService extends ThermopileOccupancySensor
   async onApplicationBootstrap(): Promise<void> {
     this.i2cBus = await i2cBus.openPromisified(this.config.busNumber);
     this.setRegister(FRAMERATE_REGISTER, 1); // set framerate to 1 FPS -> less noise
+
+    const customizations: Array<EntityCustomization<any>> = [
+      {
+        for: SensorConfig,
+        overrides: {
+          icon: 'mdi:account',
+          unitOfMeasurement: 'person'
+        }
+      }
+    ];
     this.sensor = this.entitiesService.add(
-      new Sensor('grideye_occupancy_count', 'GridEYE Occupancy Count')
+      new Sensor('grideye_occupancy_count', 'GridEYE Occupancy Count'),
+      customizations
     );
   }
 

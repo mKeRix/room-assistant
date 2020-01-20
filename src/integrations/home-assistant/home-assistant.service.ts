@@ -15,9 +15,9 @@ import mqtt, { AsyncMqttClient } from 'async-mqtt';
 import { HomeAssistantConfig } from './home-assistant.config';
 import { Device } from './device';
 import { system } from 'systeminformation';
-import { EntityOptions } from '../../entities/entity-options.entity';
 import { InjectEventEmitter } from 'nest-emitter';
 import { EntitiesEventEmitter } from '../../entities/entities.events';
+import { EntityCustomization } from '../../entities/entity-customization.interface';
 
 const PROPERTY_BLACKLIST = ['component', 'configTopic'];
 
@@ -73,7 +73,10 @@ export class HomeAssistantService
     return this.mqttClient.end();
   }
 
-  handleNewEntity(entity: Entity, entityOptions?: EntityOptions): void {
+  handleNewEntity(
+    entity: Entity,
+    customizations: Array<EntityCustomization<any>> = []
+  ): void {
     const combinedId = this.getCombinedId(entity.id, entity.distributed);
     let config: EntityConfig;
     if (entity instanceof Sensor) {
@@ -85,8 +88,11 @@ export class HomeAssistantService
       return;
     }
 
-    if (entityOptions !== undefined) {
-      Object.assign(config, entityOptions.homeAssistant);
+    const customization = customizations.find(
+      value => value.for.prototype instanceof EntityConfig
+    );
+    if (customization !== undefined) {
+      Object.assign(config, customization.overrides);
     }
 
     if (entity.distributed) {

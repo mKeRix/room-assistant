@@ -16,6 +16,7 @@ import { Entity } from '../../entities/entity.entity';
 import { I2CError } from './i2c.error';
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { ThermopileOccupancySensor } from '../../util/thermopile/thermopile-occupancy.sensor';
+import { EntityCustomization } from '../../entities/entity-customization.interface';
 
 const TEMPERATURE_COMMAND = 0x4c;
 
@@ -39,15 +40,18 @@ export class OmronD6tService extends ThermopileOccupancySensor
   async onApplicationBootstrap(): Promise<void> {
     this.i2cBus = await i2cBus.openPromisified(this.config.busNumber);
 
-    const homeAssistantOptions: Partial<SensorConfig> = {
-      icon: 'mdi:account',
-      unitOfMeasurement: 'person'
-    };
+    const customizations = [
+      {
+        for: SensorConfig,
+        overrides: {
+          icon: 'mdi:account',
+          unitOfMeasurement: 'person'
+        }
+      }
+    ];
     this.sensor = this.entitiesService.add(
       new Sensor('d6t_occupancy_count', 'D6T Occupancy Count'),
-      {
-        homeAssistant: homeAssistantOptions
-      }
+      customizations
     );
   }
 

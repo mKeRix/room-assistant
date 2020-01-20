@@ -16,6 +16,8 @@ import { BluetoothLowEnergyConfig } from './bluetooth-low-energy.config';
 import { ClusterService } from '../../cluster/cluster.service';
 import { NewDistanceEvent } from './new-distance.event';
 import { BluetoothLowEnergyDistributedService } from './bluetooth-low-energy-distributed.service';
+import { EntityCustomization } from '../../entities/entity-customization.interface';
+import { SensorConfig } from '../home-assistant/sensor-config';
 
 const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 
@@ -81,7 +83,18 @@ export class BluetoothLowEnergyService
         const sensorName = `Distance ${
           globalSettings.instanceName
         } - ${peripheral.advertisement.localName || peripheral.id}`;
-        sensor = this.entitiesService.add(new Sensor(sensorId, sensorName));
+        const customizations: Array<EntityCustomization<any>> = [
+          {
+            for: SensorConfig,
+            overrides: {
+              unitOfMeasurement: 'm'
+            }
+          }
+        ];
+        sensor = this.entitiesService.add(
+          new Sensor(sensorId, sensorName),
+          customizations
+        );
       }
 
       sensor.state = tag.distance;

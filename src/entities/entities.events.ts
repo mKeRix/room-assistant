@@ -1,10 +1,13 @@
 import { Entity } from './entity.entity';
-import { EntityOptions } from './entity-options.entity';
 import { StrictEventEmitter } from 'nest-emitter';
 import EventEmitter = NodeJS.EventEmitter;
+import { EntityCustomization } from './entity-customization.interface';
 
 interface EntitiesEvents {
-  newEntity: (entity: Entity, publisherOptions?: EntityOptions) => void;
+  newEntity: (
+    entity: Entity,
+    customizations?: Array<EntityCustomization<any>>
+  ) => void;
 
   stateUpdate: (
     id: string,

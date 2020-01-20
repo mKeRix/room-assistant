@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Entity } from './entity.entity';
 import { EntityProxyHandler } from './entity.proxy';
-import { EntityOptions } from './entity-options.entity';
 import { InjectEventEmitter } from 'nest-emitter';
 import { EntitiesEventEmitter } from './entities.events';
+import { EntityCustomization } from './entity-customization.interface';
 
 @Injectable()
 export class EntitiesService {
@@ -21,7 +21,10 @@ export class EntitiesService {
     return this.entities.get(id);
   }
 
-  add(entity: Entity, entityOptions?: EntityOptions): Entity {
+  add(
+    entity: Entity,
+    customizations?: Array<EntityCustomization<any>>
+  ): Entity {
     if (this.entities.has(entity.id)) {
       throw new Error(`Entity with id ${entity.id} already exists!`);
     }
@@ -31,7 +34,7 @@ export class EntitiesService {
       new EntityProxyHandler(this.emitter)
     );
     this.entities.set(entity.id, proxy);
-    this.emitter.emit('newEntity', proxy, entityOptions);
+    this.emitter.emit('newEntity', proxy, customizations);
     return proxy;
   }
 }
