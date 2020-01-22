@@ -6,16 +6,19 @@ const noble = require('@abandonware/noble');
 const KalmanService = require('../mixins/kalman.mixin');
 const ThrottledService = require('../mixins/throttled.mixin');
 const WhitelistService = require('../mixins/whitelist.mixin');
+const BlacklistService = require('../mixins/blacklist.mixin');
 
 module.exports = {
     name: 'ble',
 
-    mixins: [KalmanService, ThrottledService, WhitelistService],
+    mixins: [KalmanService, ThrottledService, WhitelistService, BlacklistService],
 
     settings: {
         frequency: config.get('ble.updateFrequency'),
         whitelist: config.get('ble.whitelist'),
         whitelistRegex: config.get('ble.whitelistRegex'),
+        blacklist: config.get('ble.blacklist'),
+        blacklistRegex: config.get('ble.blackistRegex'),
 
         channel: config.get('ble.channel'),
         useAddress : config.get('ble.useAddress'),
@@ -45,7 +48,7 @@ module.exports = {
 
             const handle = this.settings.useAddress ? peripheral.address : peripheral.id;
 
-            if (this.isOnWhitelist(handle) && !this.isThrottled(handle)) {
+            if (this.isOnWhitelist(handle) && !this.isOnBlacklist(handle) && !this.isThrottled(handle)) {
                 let power = peripheral.measuredPower || peripheral.advertisement.txPower;
                 if (this.getConfiguredTxPower(handle) !== null) {
                     power = this.getConfiguredTxPower(handle);

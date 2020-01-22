@@ -15,6 +15,11 @@
       "__format": "json"
     },
     "whitelistRegex": "BLE_WHITELIST_REGEX",
+    "blacklist": {
+      "__name": "BLE_BLACKLIST",
+      "__format": "json"
+    },
+    "blacklistRegex": "BLE_BLACKLIST_REGEX",
     "txPowerOverride": {
       "__name": "BLE_TX_POWER_OVERRIDE",
       "__format": "json"

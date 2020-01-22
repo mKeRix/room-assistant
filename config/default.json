@@ -13,6 +13,8 @@
     "useAddress": false,
     "whitelist": [],
     "whitelistRegex": false,
+    "blacklist": [],
+    "blacklistRegex": false,
     "txPowerOverride": {},
     "maxDistance": 0,
     "updateFrequency": 0,
