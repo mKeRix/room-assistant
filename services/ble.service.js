@@ -18,7 +18,7 @@ module.exports = {
         whitelist: config.get('ble.whitelist'),
         whitelistRegex: config.get('ble.whitelistRegex'),
         blacklist: config.get('ble.blacklist'),
-        blacklistRegex: config.get('ble.blackistRegex'),
+        blacklistRegex: config.get('ble.blacklistRegex'),
 
         channel: config.get('ble.channel'),
         useAddress : config.get('ble.useAddress'),
