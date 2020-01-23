@@ -1,14 +1,16 @@
-import { BluetoothLowEnergyConfig } from "../src/integrations/bluetooth-low-energy/bluetooth-low-energy.config";
-import { ClusterConfig } from "../src/cluster/cluster.config";
-import { GlobalConfig } from "../src/config/global.config";
-import { HomeAssistantConfig } from "../src/integrations/home-assistant/home-assistant.config";
-import { OmronD6tConfig } from "../src/integrations/omron-d6t/omron-d6t.config";
-import { GridEyeConfig } from "../src/integrations/grid-eye/grid-eye.config";
+import { BluetoothLowEnergyConfig } from '../src/integrations/bluetooth-low-energy/bluetooth-low-energy.config';
+import { ClusterConfig } from '../src/cluster/cluster.config';
+import { GlobalConfig } from '../src/config/global.config';
+import { HomeAssistantConfig } from '../src/integrations/home-assistant/home-assistant.config';
+import { OmronD6tConfig } from '../src/integrations/omron-d6t/omron-d6t.config';
+import { GridEyeConfig } from '../src/integrations/grid-eye/grid-eye.config';
+import { BluetoothClassicConfig } from '../src/integrations/bluetooth-classic/bluetooth-classic.config';
 
 export class AppConfig {
   global: GlobalConfig = new GlobalConfig();
   cluster: ClusterConfig = new ClusterConfig();
   bluetoothLowEnergy: BluetoothLowEnergyConfig = new BluetoothLowEnergyConfig();
+  bluetoothClassic: BluetoothClassicConfig = new BluetoothClassicConfig();
   omronD6t: OmronD6tConfig = new OmronD6tConfig();
   gridEye: GridEyeConfig = new GridEyeConfig();
   homeAssistant: HomeAssistantConfig = new HomeAssistantConfig();
