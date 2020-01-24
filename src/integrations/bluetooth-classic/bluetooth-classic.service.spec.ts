@@ -171,7 +171,7 @@ describe('BluetoothClassicService', () => {
     entitiesService.has.mockReturnValue(false);
     entitiesService.add.mockImplementation(entity => entity);
     clusterService.nodes.mockReturnValue({
-      abcd: {}
+      abcd: { channels: [NEW_RSSI_CHANNEL] }
     });
     jest.spyOn(service, 'inquireDeviceName').mockResolvedValue('Test iPhone');
     jest.useFakeTimers();
@@ -200,7 +200,7 @@ describe('BluetoothClassicService', () => {
 
   it('should rotate inquiries correctly when there are more addresses than nodes', () => {
     clusterService.nodes.mockReturnValue({
-      abcd: {}
+      abcd: { channels: [NEW_RSSI_CHANNEL] }
     });
     clusterService.isLeader.mockReturnValue(true);
     const inquireSpy = jest
@@ -219,8 +219,8 @@ describe('BluetoothClassicService', () => {
 
   it('should rotate inquiries correctly when there are exactly as many addresses as nodes', () => {
     clusterService.nodes.mockReturnValue({
-      abcd: { id: 'abcd' },
-      def: { id: 'def', last: new Date() }
+      abcd: { id: 'abcd', channels: [NEW_RSSI_CHANNEL] },
+      def: { id: 'def', channels: [NEW_RSSI_CHANNEL], last: new Date() }
     });
     clusterService.isLeader.mockReturnValue(true);
     const inquireSpy = jest
@@ -254,9 +254,9 @@ describe('BluetoothClassicService', () => {
 
   it('should rotate inquiries correctly when there are more nodes than addresses', () => {
     clusterService.nodes.mockReturnValue({
-      abcd: { id: 'abcd' },
-      def: { id: 'def', last: new Date() },
-      xyz: { id: 'xyz', last: new Date() }
+      abcd: { id: 'abcd', channels: [NEW_RSSI_CHANNEL] },
+      def: { id: 'def', channels: [NEW_RSSI_CHANNEL], last: new Date() },
+      xyz: { id: 'xyz', channels: [NEW_RSSI_CHANNEL], last: new Date() }
     });
     clusterService.isLeader.mockReturnValue(true);
     const inquireSpy = jest
@@ -309,5 +309,19 @@ describe('BluetoothClassicService', () => {
       'def'
     );
     expect(clusterService.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('should only account for nodes that have the integration enabled', () => {
+    clusterService.nodes.mockReturnValue({
+      abcd: { id: 'abcd', channels: [NEW_RSSI_CHANNEL] },
+      def: { id: 'def', channels: [NEW_RSSI_CHANNEL], last: new Date() },
+      xyz: { id: 'xyz', last: new Date() }
+    });
+
+    const nodes = service.getParticipatingNodes();
+    expect(nodes).toHaveLength(2);
+    expect(nodes.find(node => node.id === 'abcd')).not.toBeUndefined();
+    expect(nodes.find(node => node.id === 'def')).not.toBeUndefined();
+    expect(nodes.find(node => node.id === 'xyz')).toBeUndefined();
   });
 });

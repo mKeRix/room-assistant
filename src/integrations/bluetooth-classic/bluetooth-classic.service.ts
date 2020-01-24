@@ -94,7 +94,7 @@ export class BluetoothClassicService
   @Interval(10 * 1000)
   distributeInquiries(): void {
     if (this.clusterService.isLeader()) {
-      const nodes = Object.values(this.clusterService.nodes());
+      const nodes = this.getParticipatingNodes();
       const addresses = Object.values(this.config.addresses);
       if (this.rotationOffset >= Math.max(nodes.length, addresses.length)) {
         this.rotationOffset = 0;
@@ -146,6 +146,11 @@ export class BluetoothClassicService
     }
   }
 
+  getParticipatingNodes(): Node[] {
+    const nodes = Object.values(this.clusterService.nodes());
+    return nodes.filter(node => node.channels?.includes(NEW_RSSI_CHANNEL));
+  }
+
   protected async createSensor(
     sensorId: string,
     address: string
@@ -175,7 +180,7 @@ export class BluetoothClassicService
   }
 
   protected calculateCurrentTimeout(): number {
-    const nodes = Object.values(this.clusterService.nodes());
+    const nodes = this.getParticipatingNodes();
     const addresses = Object.values(this.config.addresses); // workaround for node-config deserializing to an Array-like object
     return Math.max(nodes.length, addresses.length) * 10;
   }
