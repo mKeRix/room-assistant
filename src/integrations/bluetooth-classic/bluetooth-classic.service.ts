@@ -40,6 +40,9 @@ export class BluetoothClassicService
     this.logger = new Logger(BluetoothClassicService.name);
   }
 
+  /**
+   * Lifecycle hook, called once the host module has been initialized.
+   */
   async onModuleInit(): Promise<void> {
     const execPromise = util.promisify(exec);
 
@@ -52,6 +55,9 @@ export class BluetoothClassicService
     }
   }
 
+  /**
+   * Lifecycle hook, called once the application has started.
+   */
   onApplicationBootstrap(): void {
     this.clusterService.on(
       REQUEST_RSSI_CHANNEL,
@@ -61,6 +67,11 @@ export class BluetoothClassicService
     this.clusterService.subscribe(NEW_RSSI_CHANNEL);
   }
 
+  /**
+   * Takes a Bluetooth MAC address, determines the current RSSI and then publishes it across the cluster.
+   *
+   * @param address - Bluetooth MAC address
+   */
   async handleRssiRequest(address: string): Promise<void> {
     const rssi = await this.inquireRssi(address);
 
@@ -76,6 +87,12 @@ export class BluetoothClassicService
     }
   }
 
+  /**
+   * Processes an event with a new RSSI event by passing it along to the corresponding to sensor.
+   * If no sensor matching the given address was found it will create a new one.
+   *
+   * @param event - Event that contains a new RSSI value
+   */
   async handleNewRssi(event: NewRssiEvent): Promise<void> {
     const sensorId = slugify(
       _.lowerCase(`bluetooth-classic ${event.address} room presence`)
@@ -91,6 +108,10 @@ export class BluetoothClassicService
     sensor.handleNewRssi(event.instanceName, event.rssi, timeout);
   }
 
+  /**
+   * Sends out RSSI requests to the connected nodes in the cluster by matching each one with a MAC address.
+   * Rotates the mapping on each call.
+   */
   @Interval(10 * 1000)
   distributeInquiries(): void {
     if (this.clusterService.isLeader()) {
@@ -122,6 +143,12 @@ export class BluetoothClassicService
     }
   }
 
+  /**
+   * Queries for the RSSI of a Bluetooth device using the hcitool shell command.
+   *
+   * @param address - Bluetooth MAC address
+   * @returns RSSI value
+   */
   async inquireRssi(address: string): Promise<number> {
     const execPromise = util.promisify(exec);
 
@@ -134,6 +161,12 @@ export class BluetoothClassicService
     return matches?.length > 0 ? parseInt(matches[0], 10) : undefined;
   }
 
+  /**
+   * Queries for the name of a Bluetooth device using the hcitool shell command.
+   *
+   * @param address - Bluetooth MAC address
+   * @returns Bluetooth device name or undefined if not found
+   */
   async inquireDeviceName(address: string): Promise<string> {
     const execPromise = util.promisify(exec);
 
@@ -146,11 +179,23 @@ export class BluetoothClassicService
     }
   }
 
+  /**
+   * Filters the nodes in the cluster to those who have this integration loaded.
+   *
+   * @returns List of nodes with the Bluetooth Classic integration enabled
+   */
   getParticipatingNodes(): Node[] {
     const nodes = Object.values(this.clusterService.nodes());
     return nodes.filter(node => node.channels?.includes(NEW_RSSI_CHANNEL));
   }
 
+  /**
+   * Creates and registers a new Bluetooth Classic sensor.
+   *
+   * @param sensorId - Entity ID for the new sensor
+   * @param address - Bluetooth MAC address of the matching device
+   * @returns Registered sensor
+   */
   protected async createSensor(
     sensorId: string,
     address: string
@@ -179,12 +224,25 @@ export class BluetoothClassicService
     return sensor;
   }
 
+  /**
+   * Calculates the current timeout value based on the time it takes for a full rotation.
+   *
+   * @returns Timeout in seconds
+   */
   protected calculateCurrentTimeout(): number {
     const nodes = this.getParticipatingNodes();
     const addresses = Object.values(this.config.addresses); // workaround for node-config deserializing to an Array-like object
     return Math.max(nodes.length, addresses.length) * 10;
   }
 
+  /**
+   * Maps the values of two arrays based on a numeric offset.
+   *
+   * @param a1 - The first array
+   * @param a2 - The second array
+   * @param offset - Index offset for the larger of both arrays
+   * @returns A tuple with subsets of both input arrays with matching size
+   */
   protected mapArrays(a1: any[], a2: any[], offset: number): [any[], any[]] {
     const [small, large] = a1.length > a2.length ? [a2, a1] : [a1, a2];
     const largeSubset = large.slice(offset, offset + small.length);
