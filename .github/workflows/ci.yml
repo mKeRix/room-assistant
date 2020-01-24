@@ -1,10 +1,9 @@
-name: room-assistant CI
+name: Node.js CI
 
 on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -21,9 +20,9 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-
       - name: Install dependencies
         run: npm ci
@@ -33,5 +32,8 @@ jobs:
         run: npm test
         env:
           CI: true
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Lint the code
         run: npm run lint --if-present
