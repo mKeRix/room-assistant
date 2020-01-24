@@ -76,8 +76,7 @@
     "moduleFileExtensions": [
       "js",
       "json",
-      "ts",
-      "node"
+      "ts"
     ],
     "rootDir": "src",
     "testRegex": ".spec.ts$",
@@ -85,6 +84,9 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "coverageDirectory": "../coverage",
+    "collectCoverageFrom": [
+      "**/*.ts"
+    ],
     "testEnvironment": "node"
   },
   "optionalDependencies": {

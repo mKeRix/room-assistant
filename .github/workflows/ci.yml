@@ -35,5 +35,6 @@ jobs:
       - uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          name: Node.js ${{ matrix.node-version }}
       - name: Lint the code
         run: npm run lint --if-present
