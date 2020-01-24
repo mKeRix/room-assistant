@@ -5,7 +5,7 @@ import { EntitiesService } from '../../entities/entities.service';
 import { BluetoothLowEnergyConfig } from './bluetooth-low-energy.config';
 import slugify from 'slugify';
 import _ from 'lodash';
-import { BluetoothLowEnergyDistributedSensor } from './bluetooth-low-energy-distributed.sensor';
+import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { Entity } from '../../entities/entity.entity';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
@@ -39,7 +39,7 @@ export class BluetoothLowEnergyDistributedService {
         }
       ];
       sensor = this.entitiesService.add(
-        new BluetoothLowEnergyDistributedSensor(
+        new RoomPresenceDistanceSensor(
           sensorId,
           sensorName,
           this.config.timeout
@@ -47,15 +47,13 @@ export class BluetoothLowEnergyDistributedService {
         customizations
       );
       const interval = setInterval(
-        (sensor as BluetoothLowEnergyDistributedSensor).checkForTimeout.bind(
-          sensor
-        ),
+        (sensor as RoomPresenceDistanceSensor).checkForTimeout.bind(sensor),
         this.config.timeout * 1000
       );
       this.schedulerRegistry.addInterval(`${sensorId}_timeout_check`, interval);
     }
 
-    (sensor as BluetoothLowEnergyDistributedSensor).handleNewDistance(
+    (sensor as RoomPresenceDistanceSensor).handleNewDistance(
       event.instanceName,
       event.distance
     );

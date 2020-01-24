@@ -12,11 +12,11 @@ import {
   REQUEST_RSSI_CHANNEL
 } from './bluetooth-classic.const';
 import { NewRssiEvent } from './new-rssi.event';
-import { BluetoothClassicSensor } from './bluetooth-classic.sensor';
+import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 
 jest.mock('child_process');
 jest.mock('util');
-jest.mock('./bluetooth-classic.sensor');
+jest.mock('../room-presence/room-presence-distance.sensor');
 
 describe('BluetoothClassicService', () => {
   let service: BluetoothClassicService;
@@ -180,13 +180,18 @@ describe('BluetoothClassicService', () => {
     await service.handleNewRssi(event);
 
     expect(entitiesService.add).toHaveBeenCalledWith(
-      expect.any(BluetoothClassicSensor),
+      expect.any(RoomPresenceDistanceSensor),
       expect.any(Array)
     );
     expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 10000);
-    expect(
-      (BluetoothClassicSensor as jest.Mock).mock.instances[0].handleNewRssi
-    ).toHaveBeenCalledWith('test-instance', -10, 20);
+
+    const sensorInstance = (RoomPresenceDistanceSensor as jest.Mock).mock
+      .instances[0];
+    expect(sensorInstance.handleNewDistance).toHaveBeenCalledWith(
+      'test-instance',
+      10
+    );
+    expect(sensorInstance.timeout).toBe(20);
   });
 
   it('should not distribute inquiries if not the leader', () => {

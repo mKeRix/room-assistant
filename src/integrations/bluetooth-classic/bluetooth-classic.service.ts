@@ -14,7 +14,6 @@ import { Node } from 'democracy';
 import { NewRssiEvent } from './new-rssi.event';
 import slugify from 'slugify';
 import _ from 'lodash';
-import { BluetoothClassicSensor } from './bluetooth-classic.sensor';
 import { Interval, SchedulerRegistry } from '@nestjs/schedule';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { SensorConfig } from '../home-assistant/sensor-config';
@@ -22,6 +21,7 @@ import {
   NEW_RSSI_CHANNEL,
   REQUEST_RSSI_CHANNEL
 } from './bluetooth-classic.const';
+import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 
 @Injectable()
 export class BluetoothClassicService
@@ -97,15 +97,15 @@ export class BluetoothClassicService
     const sensorId = slugify(
       _.lowerCase(`bluetooth-classic ${event.address} room presence`)
     );
-    let sensor: BluetoothClassicSensor;
+    let sensor: RoomPresenceDistanceSensor;
     if (this.entitiesService.has(sensorId)) {
-      sensor = this.entitiesService.get(sensorId) as BluetoothClassicSensor;
+      sensor = this.entitiesService.get(sensorId) as RoomPresenceDistanceSensor;
     } else {
       sensor = await this.createSensor(event.address, sensorId);
     }
 
-    const timeout = this.calculateCurrentTimeout();
-    sensor.handleNewRssi(event.instanceName, event.rssi, timeout);
+    sensor.timeout = this.calculateCurrentTimeout();
+    sensor.handleNewDistance(event.instanceName, event.rssi * -1);
   }
 
   /**
@@ -190,7 +190,7 @@ export class BluetoothClassicService
   }
 
   /**
-   * Creates and registers a new Bluetooth Classic sensor.
+   * Creates and registers a new room presence sensor.
    *
    * @param sensorId - Entity ID for the new sensor
    * @param address - Bluetooth MAC address of the matching device
@@ -199,7 +199,7 @@ export class BluetoothClassicService
   protected async createSensor(
     sensorId: string,
     address: string
-  ): Promise<BluetoothClassicSensor> {
+  ): Promise<RoomPresenceDistanceSensor> {
     const deviceName = (await this.inquireDeviceName(address)) || address;
 
     const customizations: Array<EntityCustomization<any>> = [
@@ -211,9 +211,13 @@ export class BluetoothClassicService
       }
     ];
     const sensor = this.entitiesService.add(
-      new BluetoothClassicSensor(sensorId, `${deviceName} Room Presence`),
+      new RoomPresenceDistanceSensor(
+        sensorId,
+        `${deviceName} Room Presence`,
+        0
+      ),
       customizations
-    ) as BluetoothClassicSensor;
+    ) as RoomPresenceDistanceSensor;
 
     const interval = setInterval(
       sensor.checkForTimeout.bind(sensor),
