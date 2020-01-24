@@ -36,5 +36,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           name: Node.js ${{ matrix.node-version }}
+          flags: unittests
       - name: Lint the code
         run: npm run lint --if-present
