@@ -1,3 +1,11 @@
+const mockBrowser = {
+  on: jest.fn(),
+  start: jest.fn()
+};
+const mockAdvertisement = {
+  start: jest.fn()
+};
+
 import { networkInterfaces } from 'os';
 import Democracy from 'democracy';
 import * as mdns from 'mdns';
@@ -7,7 +15,26 @@ import { ConfigModule } from '../config/config.module';
 
 jest.mock('os');
 jest.mock('democracy');
-jest.mock('mdns');
+jest.mock(
+  'mdns',
+  () => {
+    return {
+      udp: jest.fn().mockImplementation((name: string) => {
+        return { name };
+      }),
+      createBrowser: jest.fn().mockReturnValue(mockBrowser),
+      createAdvertisement: jest.fn().mockReturnValue(mockAdvertisement),
+      rst: {
+        DNSServiceResolve: jest.fn(),
+        DNSServiceGetAddrInfo: jest.fn(),
+        getaddrinfo: jest.fn(),
+        makeAddressesUnique: jest.fn()
+      },
+      dns_sd: []
+    };
+  },
+  { virtual: true }
+);
 
 describe('ClusterService', () => {
   let service: ClusterService;
@@ -53,20 +80,6 @@ describe('ClusterService', () => {
   });
 
   it('should start advertising room-assistant via Bonjour', () => {
-    (mdns.udp as jest.Mock).mockImplementation((name: string) => {
-      return { name };
-    });
-
-    const browser = {
-      on: jest.fn(),
-      start: jest.fn()
-    };
-    (mdns.createBrowser as jest.Mock).mockReturnValue(browser);
-    const advertisement = {
-      start: jest.fn()
-    };
-    (mdns.createAdvertisement as jest.Mock).mockReturnValue(advertisement);
-
     service.onApplicationBootstrap();
     expect(mdns.createAdvertisement).toHaveBeenCalledWith(
       { name: 'room-assistant' },
@@ -79,7 +92,7 @@ describe('ClusterService', () => {
       { name: 'room-assistant' },
       expect.anything()
     );
-    expect(browser.start).toHaveBeenCalled();
-    expect(advertisement.start).toHaveBeenCalled();
+    expect(mockBrowser.start).toHaveBeenCalled();
+    expect(mockAdvertisement.start).toHaveBeenCalled();
   });
 });
