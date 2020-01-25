@@ -191,7 +191,7 @@ describe('BluetoothClassicService', () => {
       'test-instance',
       10
     );
-    expect(sensorInstance.timeout).toBe(20);
+    expect(sensorInstance.timeout).toBe(30);
   });
 
   it('should not distribute inquiries if not the leader', () => {
@@ -208,18 +208,18 @@ describe('BluetoothClassicService', () => {
       abcd: { channels: [NEW_RSSI_CHANNEL] }
     });
     clusterService.isLeader.mockReturnValue(true);
-    const inquireSpy = jest
-      .spyOn(service, 'inquireRssi')
+    const rssiRequestSpy = jest
+      .spyOn(service, 'handleRssiRequest')
       .mockImplementation(() => undefined);
 
     service.distributeInquiries();
-    expect(inquireSpy).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
+    expect(rssiRequestSpy).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
 
     service.distributeInquiries();
-    expect(inquireSpy).toHaveBeenLastCalledWith('f7:6c:e3:10:55:b5');
+    expect(rssiRequestSpy).toHaveBeenLastCalledWith('f7:6c:e3:10:55:b5');
 
     service.distributeInquiries();
-    expect(inquireSpy).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
+    expect(rssiRequestSpy).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
   });
 
   it('should rotate inquiries correctly when there are exactly as many addresses as nodes', () => {
@@ -228,12 +228,12 @@ describe('BluetoothClassicService', () => {
       def: { id: 'def', channels: [NEW_RSSI_CHANNEL], last: new Date() }
     });
     clusterService.isLeader.mockReturnValue(true);
-    const inquireSpy = jest
-      .spyOn(service, 'inquireRssi')
+    const handleRssiRequest = jest
+      .spyOn(service, 'handleRssiRequest')
       .mockImplementation(() => undefined);
 
     service.distributeInquiries();
-    expect(inquireSpy).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
+    expect(handleRssiRequest).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
     expect(clusterService.send).toHaveBeenLastCalledWith(
       REQUEST_RSSI_CHANNEL,
       'f7:6c:e3:10:55:b5',
@@ -241,7 +241,7 @@ describe('BluetoothClassicService', () => {
     );
 
     service.distributeInquiries();
-    expect(inquireSpy).toHaveBeenLastCalledWith('f7:6c:e3:10:55:b5');
+    expect(handleRssiRequest).toHaveBeenLastCalledWith('f7:6c:e3:10:55:b5');
     expect(clusterService.send).toHaveBeenLastCalledWith(
       REQUEST_RSSI_CHANNEL,
       '8d:ad:e3:e2:7a:01',
@@ -249,7 +249,7 @@ describe('BluetoothClassicService', () => {
     );
 
     service.distributeInquiries();
-    expect(inquireSpy).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
+    expect(handleRssiRequest).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
     expect(clusterService.send).toHaveBeenLastCalledWith(
       REQUEST_RSSI_CHANNEL,
       'f7:6c:e3:10:55:b5',
@@ -264,23 +264,23 @@ describe('BluetoothClassicService', () => {
       xyz: { id: 'xyz', channels: [NEW_RSSI_CHANNEL], last: new Date() }
     });
     clusterService.isLeader.mockReturnValue(true);
-    const inquireSpy = jest
-      .spyOn(service, 'inquireRssi')
+    const handleRssiRequest = jest
+      .spyOn(service, 'handleRssiRequest')
       .mockImplementation(() => undefined);
 
     service.distributeInquiries();
-    expect(inquireSpy).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
+    expect(handleRssiRequest).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
     expect(clusterService.send).toHaveBeenCalledWith(
       REQUEST_RSSI_CHANNEL,
       'f7:6c:e3:10:55:b5',
       'def'
     );
     expect(clusterService.send).toHaveBeenCalledTimes(1);
-    inquireSpy.mockClear();
+    handleRssiRequest.mockClear();
     clusterService.send.mockClear();
 
     service.distributeInquiries();
-    expect(inquireSpy).not.toHaveBeenCalled();
+    expect(handleRssiRequest).not.toHaveBeenCalled();
     expect(clusterService.send).toHaveBeenCalledWith(
       REQUEST_RSSI_CHANNEL,
       '8d:ad:e3:e2:7a:01',
@@ -292,22 +292,22 @@ describe('BluetoothClassicService', () => {
       'xyz'
     );
     expect(clusterService.send).toHaveBeenCalledTimes(2);
-    inquireSpy.mockClear();
+    handleRssiRequest.mockClear();
     clusterService.send.mockClear();
 
     service.distributeInquiries();
-    expect(inquireSpy).toHaveBeenCalledWith('f7:6c:e3:10:55:b5');
+    expect(handleRssiRequest).toHaveBeenCalledWith('f7:6c:e3:10:55:b5');
     expect(clusterService.send).toHaveBeenCalledWith(
       REQUEST_RSSI_CHANNEL,
       '8d:ad:e3:e2:7a:01',
       'xyz'
     );
     expect(clusterService.send).toHaveBeenCalledTimes(1);
-    inquireSpy.mockClear();
+    handleRssiRequest.mockClear();
     clusterService.send.mockClear();
 
     service.distributeInquiries();
-    expect(inquireSpy).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
+    expect(handleRssiRequest).toHaveBeenLastCalledWith('8d:ad:e3:e2:7a:01');
     expect(clusterService.send).toHaveBeenCalledWith(
       REQUEST_RSSI_CHANNEL,
       'f7:6c:e3:10:55:b5',

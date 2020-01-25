@@ -94,6 +94,10 @@ export class BluetoothClassicService
    * @param event - Event that contains a new RSSI value
    */
   async handleNewRssi(event: NewRssiEvent): Promise<void> {
+    this.logger.debug(
+      `Received RSSI of ${event.rssi} for ${event.address} from ${event.instanceName}`
+    );
+
     const sensorId = slugify(
       _.lowerCase(`bluetooth-classic ${event.address} room presence`)
     );
@@ -101,7 +105,7 @@ export class BluetoothClassicService
     if (this.entitiesService.has(sensorId)) {
       sensor = this.entitiesService.get(sensorId) as RoomPresenceDistanceSensor;
     } else {
-      sensor = await this.createSensor(event.address, sensorId);
+      sensor = await this.createSensor(sensorId, event.address);
     }
 
     sensor.timeout = this.calculateCurrentTimeout();
@@ -129,7 +133,7 @@ export class BluetoothClassicService
       nodeSubset.forEach((node, index) => {
         // only remote nodes have a timestamp of last contact attached
         if (node.last === undefined) {
-          this.inquireRssi(addressSubset[index]);
+          this.handleRssiRequest(addressSubset[index]);
         } else {
           this.clusterService.send(
             REQUEST_RSSI_CHANNEL,
@@ -152,6 +156,7 @@ export class BluetoothClassicService
   async inquireRssi(address: string): Promise<number> {
     const execPromise = util.promisify(exec);
 
+    this.logger.debug(`Querying for RSSI of ${address} using hcitool`);
     const output = await execPromise(
       `hcitool cc "${address}" && hcitool rssi "${address}"`
     );
@@ -236,7 +241,7 @@ export class BluetoothClassicService
   protected calculateCurrentTimeout(): number {
     const nodes = this.getParticipatingNodes();
     const addresses = Object.values(this.config.addresses); // workaround for node-config deserializing to an Array-like object
-    return Math.max(nodes.length, addresses.length) * 10;
+    return (Math.max(nodes.length, addresses.length) + 1) * 10;
   }
 
   /**
