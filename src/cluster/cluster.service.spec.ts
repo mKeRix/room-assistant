@@ -5,36 +5,30 @@ const mockBrowser = {
 const mockAdvertisement = {
   start: jest.fn()
 };
+const mockMdns = {
+  udp: jest.fn().mockImplementation((name: string) => {
+    return { name };
+  }),
+  createBrowser: jest.fn().mockReturnValue(mockBrowser),
+  createAdvertisement: jest.fn().mockReturnValue(mockAdvertisement),
+  rst: {
+    DNSServiceResolve: jest.fn(),
+    DNSServiceGetAddrInfo: jest.fn(),
+    getaddrinfo: jest.fn(),
+    makeAddressesUnique: jest.fn()
+  },
+  dns_sd: []
+};
 
 import { networkInterfaces } from 'os';
 import Democracy from 'democracy';
-import * as mdns from 'mdns';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClusterService } from './cluster.service';
 import { ConfigModule } from '../config/config.module';
 
 jest.mock('os');
 jest.mock('democracy');
-jest.mock(
-  'mdns',
-  () => {
-    return {
-      udp: jest.fn().mockImplementation((name: string) => {
-        return { name };
-      }),
-      createBrowser: jest.fn().mockReturnValue(mockBrowser),
-      createAdvertisement: jest.fn().mockReturnValue(mockAdvertisement),
-      rst: {
-        DNSServiceResolve: jest.fn(),
-        DNSServiceGetAddrInfo: jest.fn(),
-        getaddrinfo: jest.fn(),
-        makeAddressesUnique: jest.fn()
-      },
-      dns_sd: []
-    };
-  },
-  { virtual: true }
-);
+jest.mock('mdns', () => mockMdns, { virtual: true });
 
 describe('ClusterService', () => {
   let service: ClusterService;
@@ -81,14 +75,14 @@ describe('ClusterService', () => {
 
   it('should start advertising room-assistant via Bonjour', async () => {
     await service.onApplicationBootstrap();
-    expect(mdns.createAdvertisement).toHaveBeenCalledWith(
+    expect(mockMdns.createAdvertisement).toHaveBeenCalledWith(
       { name: 'room-assistant' },
       6425,
       {
         networkInterface: undefined
       }
     );
-    expect(mdns.createBrowser).toHaveBeenCalledWith(
+    expect(mockMdns.createBrowser).toHaveBeenCalledWith(
       { name: 'room-assistant' },
       expect.anything()
     );
