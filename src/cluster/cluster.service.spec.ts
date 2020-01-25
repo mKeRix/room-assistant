@@ -79,8 +79,8 @@ describe('ClusterService', () => {
     });
   });
 
-  it('should start advertising room-assistant via Bonjour', () => {
-    service.onApplicationBootstrap();
+  it('should start advertising room-assistant via Bonjour', async () => {
+    await service.onApplicationBootstrap();
     expect(mdns.createAdvertisement).toHaveBeenCalledWith(
       { name: 'room-assistant' },
       6425,
