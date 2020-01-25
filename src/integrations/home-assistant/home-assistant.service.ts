@@ -55,6 +55,9 @@ export class HomeAssistantService
       this.config.mqttUrl,
       this.config.mqttOptions
     );
+    this.mqttClient.on('connect', () =>
+      this.logger.log(`Connected to ${this.config.mqttUrl}`)
+    );
 
     const systemInfo = await system();
     this.device = new Device(systemInfo.uuid);
@@ -65,10 +68,12 @@ export class HomeAssistantService
 
   async onApplicationShutdown(signal?: string): Promise<void> {
     this.entityConfigs.forEach(config => {
-      this.mqttClient.publish(
-        config.availabilityTopic,
-        config.payloadNotAvailable
-      );
+      if (config.device.identifiers !== 'room-assistant-distributed') {
+        this.mqttClient.publish(
+          config.availabilityTopic,
+          config.payloadNotAvailable
+        );
+      }
     });
     return this.mqttClient.end();
   }
@@ -88,12 +93,7 @@ export class HomeAssistantService
       return;
     }
 
-    const customization = customizations.find(
-      value => value.for.prototype instanceof EntityConfig
-    );
-    if (customization !== undefined) {
-      Object.assign(config, customization.overrides);
-    }
+    config = this.applyCustomizations(config, customizations);
 
     if (entity.distributed) {
       config.device = new Device('room-assistant-distributed');
@@ -164,7 +164,21 @@ export class HomeAssistantService
     }_${entityId}`;
   }
 
-  private formatMessage(message: object): object {
+  protected applyCustomizations(
+    config: EntityConfig,
+    customizations: Array<EntityCustomization<any>>
+  ): EntityConfig {
+    const customization = customizations.find(
+      value => value.for.prototype instanceof EntityConfig
+    );
+    if (customization !== undefined) {
+      Object.assign(config, customization.overrides);
+    }
+
+    return config;
+  }
+
+  protected formatMessage(message: object): object {
     const filteredMessage = _.omit(message, PROPERTY_BLACKLIST);
     return this.deepMap(filteredMessage, obj => {
       return _.mapKeys(obj, (v, k) => {
