@@ -3,7 +3,6 @@ import { BluetoothLowEnergyService } from './bluetooth-low-energy.service';
 import { EntitiesModule } from '../../entities/entities.module';
 import { ConfigModule } from '../../config/config.module';
 import { ClusterModule } from '../../cluster/cluster.module';
-import { BluetoothLowEnergyDistributedService } from './bluetooth-low-energy-distributed.service';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({})
@@ -17,10 +16,7 @@ export default class BluetoothLowEnergyModule {
         ClusterModule,
         ScheduleModule.forRoot()
       ],
-      providers: [
-        BluetoothLowEnergyService,
-        BluetoothLowEnergyDistributedService
-      ]
+      providers: [BluetoothLowEnergyService]
     };
   }
 }

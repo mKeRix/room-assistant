@@ -1,4 +1,4 @@
-import { Tag } from './tag.entity';
+import { Tag } from './tag';
 import { Peripheral } from '@abandonware/noble';
 
 export class IBeacon extends Tag {
