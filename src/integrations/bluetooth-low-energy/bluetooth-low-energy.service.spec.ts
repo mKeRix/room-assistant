@@ -1,3 +1,5 @@
+import KalmanFilter from 'kalmanjs';
+
 const mockNoble = {
   on: jest.fn()
 };
@@ -8,6 +10,13 @@ jest.mock(
   },
   { virtual: true }
 );
+jest.mock('kalmanjs', () => {
+  return jest.fn().mockImplementation(() => {
+    return {
+      filter: z => z
+    };
+  });
+});
 
 import { Peripheral } from '@abandonware/noble';
 import { ConfigService } from '../../config/config.service';
@@ -341,6 +350,54 @@ describe('BluetoothLowEnergyService', () => {
     expect(service.isOnWhitelist('123')).toBeTruthy();
     expect(service.isOnWhitelist('test')).toBeFalsy();
     expect(service.isOnWhitelist('test123')).toBeFalsy();
+  });
+
+  it('should filter the measured RSSI of the peripherals', () => {
+    const sensor = new Sensor('testid', 'Test');
+    entitiesService.has.mockReturnValue(true);
+    entitiesService.get.mockReturnValue(sensor);
+    jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    const filterSpy = jest.spyOn(service, 'filterRssi').mockReturnValue(-50);
+
+    service.handleDiscovery({
+      id: '12:ab:cd:12:cd',
+      rssi: -45,
+      advertisement: {
+        localName: 'Test BLE Device'
+      }
+    } as Peripheral);
+
+    expect(filterSpy).toHaveBeenCalledWith('12:ab:cd:12:cd', -45);
+    expect(sensor.state).toBe(0.2);
+  });
+
+  it('should reuse existing Kalman filters for the same id', () => {
+    const sensor = new Sensor('testid', 'Test');
+    entitiesService.has.mockReturnValue(true);
+    entitiesService.get.mockReturnValue(sensor);
+    jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+
+    service.handleDiscovery({
+      id: 'id1',
+      rssi: -45,
+      advertisement: {}
+    } as Peripheral);
+    service.handleDiscovery({
+      id: 'id2',
+      rssi: -67,
+      advertisement: {}
+    } as Peripheral);
+    service.handleDiscovery({
+      id: 'id1',
+      rssi: -56,
+      advertisement: {}
+    } as Peripheral);
+
+    expect(KalmanFilter).toHaveBeenCalledTimes(2);
   });
 
   it('should pass distance information to existing room presence sensors', () => {

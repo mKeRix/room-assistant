@@ -19,6 +19,7 @@ import { EntityCustomization } from '../../entities/entity-customization.interfa
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import KalmanFilter from 'kalmanjs';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 
@@ -26,6 +27,10 @@ export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 export class BluetoothLowEnergyService
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothLowEnergyConfig;
+  private filterMap: Map<string, KalmanFilter> = new Map<
+    string,
+    KalmanFilter
+  >();
 
   constructor(
     private readonly entitiesService: EntitiesService,
@@ -68,6 +73,7 @@ export class BluetoothLowEnergyService
 
     if (this.isOnWhitelist(tag.id)) {
       tag = this.applyOverrides(tag);
+      tag.rssi = this.filterRssi(tag.id, tag.rssi);
 
       const sensorId = slugify(`ble ${_.lowerCase(tag.id)}`);
       let sensor: Entity;
@@ -139,6 +145,24 @@ export class BluetoothLowEnergyService
     return this.config.whitelistRegex
       ? whitelist.some(regex => id.match(regex))
       : whitelist.includes(id);
+  }
+
+  /**
+   * Applies the Kalman filter based on the historic values with the same tag id.
+   *
+   * @param tagId - Tag id that matches the measured device
+   * @param rssi - Measured signal strength
+   * @returns Smoothed signal strength value
+   */
+  filterRssi(tagId: string, rssi: number): number {
+    if (this.filterMap.has(tagId)) {
+      return this.filterMap.get(tagId).filter(rssi);
+    } else {
+      // filter params taken from: https://www.researchgate.net/publication/316501991_An_Improved_BLE_Indoor_Localization_with_Kalman-Based_Fusion_An_Experimental_Study
+      const kalman = new KalmanFilter({ R: 1.4, Q: 0.065 });
+      this.filterMap.set(tagId, kalman);
+      return kalman.filter(rssi);
+    }
   }
 
   /**
