@@ -1,4 +1,4 @@
-import { version } from '../../../package.json';
+import { VERSION } from '../../app.module';
 
 export class Device {
   constructor(identifiers: string | string[]) {
@@ -10,5 +10,5 @@ export class Device {
   manufacturer: string;
   model: string;
   name: string;
-  swVersion: string = version;
+  swVersion: string = VERSION;
 }
