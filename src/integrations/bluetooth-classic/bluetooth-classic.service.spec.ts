@@ -13,10 +13,18 @@ import {
 } from './bluetooth-classic.const';
 import { NewRssiEvent } from './new-rssi.event';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
+import KalmanFilter from 'kalmanjs';
 
 jest.mock('child_process');
 jest.mock('util');
 jest.mock('../room-presence/room-presence-distance.sensor');
+jest.mock('kalmanjs', () => {
+  return jest.fn().mockImplementation(() => {
+    return {
+      filter: z => z
+    };
+  });
+});
 
 describe('BluetoothClassicService', () => {
   let service: BluetoothClassicService;
@@ -191,7 +199,7 @@ describe('BluetoothClassicService', () => {
       'test-instance',
       10
     );
-    expect(sensorInstance.timeout).toBe(30);
+    expect(sensorInstance.timeout).toBe(35);
   });
 
   it('should not distribute inquiries if not the leader', () => {
@@ -328,5 +336,34 @@ describe('BluetoothClassicService', () => {
     expect(nodes.find(node => node.id === 'abcd')).not.toBeUndefined();
     expect(nodes.find(node => node.id === 'def')).not.toBeUndefined();
     expect(nodes.find(node => node.id === 'xyz')).toBeUndefined();
+  });
+
+  it('should filter the RSSI of inquired devices before publishing', async () => {
+    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-3);
+    const handleRssiMock = jest
+      .spyOn(service, 'handleNewRssi')
+      .mockImplementation(() => undefined);
+    const filterRssiMock = jest
+      .spyOn(service, 'filterRssi')
+      .mockReturnValue(-5.2);
+
+    const address = 'ab:cd:01:23:00:70';
+    const expectedEvent = new NewRssiEvent('test-instance', address, -5.2);
+
+    await service.handleRssiRequest(address);
+    expect(filterRssiMock).toHaveBeenCalled();
+    expect(clusterService.publish).toHaveBeenCalledWith(
+      NEW_RSSI_CHANNEL,
+      expectedEvent
+    );
+    expect(handleRssiMock).toHaveBeenCalledWith(expectedEvent);
+  });
+
+  it('should reuse Kalman filters for the same address', () => {
+    service.filterRssi('D6:AB:CD:10:DA:31', -1);
+    service.filterRssi('D6:AB:CD:10:DA:41', -4);
+    service.filterRssi('D6:AB:CD:10:DA:31', -2);
+
+    expect(KalmanFilter).toHaveBeenCalledTimes(2);
   });
 });

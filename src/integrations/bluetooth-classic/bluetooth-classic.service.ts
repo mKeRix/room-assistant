@@ -22,11 +22,16 @@ import {
   REQUEST_RSSI_CHANNEL
 } from './bluetooth-classic.const';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
+import KalmanFilter from 'kalmanjs';
 
 @Injectable()
 export class BluetoothClassicService
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothClassicConfig;
+  private filterMap: Map<string, KalmanFilter> = new Map<
+    string,
+    KalmanFilter
+  >();
   private rotationOffset: number = 0;
   private logger: Logger;
 
@@ -73,9 +78,10 @@ export class BluetoothClassicService
    * @param address - Bluetooth MAC address
    */
   async handleRssiRequest(address: string): Promise<void> {
-    const rssi = await this.inquireRssi(address);
+    let rssi = await this.inquireRssi(address);
 
     if (rssi !== undefined) {
+      rssi = _.round(this.filterRssi(address, rssi), 1);
       const event = new NewRssiEvent(
         this.configService.get('global').instanceName,
         address,
@@ -167,6 +173,23 @@ export class BluetoothClassicService
   }
 
   /**
+   * Applies the Kalman filter based on the historic values with the same address.
+   *
+   * @param address - Bluetooth MAC address
+   * @param rssi - Signal strength measurement for the given address
+   * @returns Smoothed signal strength value
+   */
+  filterRssi(address: string, rssi: number): number {
+    if (this.filterMap.has(address)) {
+      return this.filterMap.get(address).filter(rssi);
+    } else {
+      const kalman = new KalmanFilter({ R: 1.4, Q: 0.4 });
+      this.filterMap.set(address, kalman);
+      return kalman.filter(rssi);
+    }
+  }
+
+  /**
    * Queries for the name of a Bluetooth device using the hcitool shell command.
    *
    * @param address - Bluetooth MAC address
@@ -241,7 +264,7 @@ export class BluetoothClassicService
   protected calculateCurrentTimeout(): number {
     const nodes = this.getParticipatingNodes();
     const addresses = Object.values(this.config.addresses); // workaround for node-config deserializing to an Array-like object
-    return (Math.max(nodes.length, addresses.length) + 1) * 10;
+    return (Math.max(nodes.length, addresses.length) + 1.5) * 10;
   }
 
   /**
