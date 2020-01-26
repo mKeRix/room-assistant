@@ -180,6 +180,7 @@ export class BluetoothLowEnergyService
       {
         for: SensorConfig,
         overrides: {
+          icon: 'mdi:bluetooth',
           unitOfMeasurement: 'm'
         }
       }
@@ -207,7 +208,7 @@ export class BluetoothLowEnergyService
       {
         for: SensorConfig,
         overrides: {
-          unitOfMeasurement: 'm'
+          icon: 'mdi:bluetooth'
         }
       }
     ];
