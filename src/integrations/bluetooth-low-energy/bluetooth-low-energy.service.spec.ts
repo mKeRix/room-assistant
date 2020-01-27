@@ -1,5 +1,3 @@
-import KalmanFilter from 'kalmanjs';
-
 const mockNoble = {
   on: jest.fn()
 };
@@ -36,6 +34,7 @@ import { Sensor } from '../../entities/sensor.entity';
 import c from 'config';
 import { NewDistanceEvent } from './new-distance.event';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
+import KalmanFilter from 'kalmanjs';
 
 describe('BluetoothLowEnergyService', () => {
   let service: BluetoothLowEnergyService;
@@ -56,6 +55,11 @@ describe('BluetoothLowEnergyService', () => {
     get: jest.fn().mockImplementation((key: string) => {
       return key === 'bluetoothLowEnergy' ? mockConfig : c.get(key);
     })
+  };
+  const loggerService = {
+    log: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn()
   };
 
   const iBeaconData = Buffer.from([
@@ -106,6 +110,7 @@ describe('BluetoothLowEnergyService', () => {
       .overrideProvider(ConfigService)
       .useValue(configService)
       .compile();
+    module.useLogger(loggerService);
 
     service = module.get<BluetoothLowEnergyService>(BluetoothLowEnergyService);
   });
@@ -117,6 +122,16 @@ describe('BluetoothLowEnergyService', () => {
       expect.any(Function)
     );
     expect(mockNoble.on).toHaveBeenCalledWith('discover', expect.any(Function));
+  });
+
+  it('should warn if no whitelist has been configured', () => {
+    mockConfig.whitelist = ['abcd'];
+    service.onModuleInit();
+    expect(loggerService.warn).not.toHaveBeenCalled();
+
+    mockConfig.whitelist = [];
+    service.onModuleInit();
+    expect(loggerService.warn).toHaveBeenCalled();
   });
 
   it('should setup cluster listeners on bootstrap', () => {
@@ -149,6 +164,7 @@ describe('BluetoothLowEnergyService', () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
 
     mockConfig.onlyIBeacon = true;
     mockConfig.processIBeacon = true;
@@ -180,6 +196,7 @@ describe('BluetoothLowEnergyService', () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
 
     mockConfig.processIBeacon = false;
     service.handleDiscovery({
@@ -209,6 +226,7 @@ describe('BluetoothLowEnergyService', () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
 
     service.handleDiscovery({
       id: '123-123',
@@ -231,10 +249,41 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
+  it('should ignore devices that are not on the whitelist', () => {
+    const handleDistanceSpy = jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    mockConfig.whitelist = ['123-1-1'];
+
+    service.handleDiscovery({
+      id: '123-1-2',
+      rssi: -82,
+      advertisement: {}
+    } as Peripheral);
+    expect(handleDistanceSpy).not.toHaveBeenCalled();
+    expect(clusterService.publish).not.toHaveBeenCalled();
+  });
+
+  it('should not publish anything if the whitelist is empty', () => {
+    const handleDistanceSpy = jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    mockConfig.whitelist = [];
+
+    service.handleDiscovery({
+      id: '89:47:65',
+      rssi: -82,
+      advertisement: {}
+    } as Peripheral);
+    expect(handleDistanceSpy).not.toHaveBeenCalled();
+    expect(clusterService.publish).not.toHaveBeenCalled();
+  });
+
   it('should apply tag distance override if it exists', () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
     mockConfig.tagOverrides = {
       abcd: {
         measuredPower: -80
@@ -282,6 +331,7 @@ describe('BluetoothLowEnergyService', () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
     mockConfig.tagOverrides = {
       abcd: {
         name: 'better name'
@@ -339,6 +389,7 @@ describe('BluetoothLowEnergyService', () => {
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     const filterSpy = jest.spyOn(service, 'filterRssi').mockReturnValue(-50);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
 
     service.handleDiscovery({
       id: '12:ab:cd:12:cd',
@@ -363,6 +414,7 @@ describe('BluetoothLowEnergyService', () => {
     jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
 
     service.handleDiscovery({
       id: 'id1',

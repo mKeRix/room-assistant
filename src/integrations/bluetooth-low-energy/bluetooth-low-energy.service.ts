@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   OnApplicationBootstrap,
   OnModuleInit
 } from '@nestjs/common';
@@ -24,6 +25,7 @@ export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothLowEnergyConfig;
+  private readonly logger: Logger;
 
   constructor(
     private readonly entitiesService: EntitiesService,
@@ -33,6 +35,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   ) {
     super();
     this.config = this.configService.get('bluetoothLowEnergy');
+    this.logger = new Logger(BluetoothLowEnergyService.name);
   }
 
   /**
@@ -41,6 +44,10 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   onModuleInit(): void {
     noble.on('stateChange', BluetoothLowEnergyService.handleStateChange);
     noble.on('discover', this.handleDiscovery.bind(this));
+
+    if (!this.isWhitelistEnabled()) {
+      this.logger.warn('The whitelist is empty, no sensors will be created!');
+    }
   }
 
   /**
@@ -78,6 +85,10 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
       );
       this.handleNewDistance(event);
       this.clusterService.publish(NEW_DISTANCE_CHANNEL, event);
+    } else {
+      this.logger.debug(
+        `Ignoring tag with id ${tag.id} and signal strength ${tag.rssi}`
+      );
     }
   }
 
@@ -115,6 +126,15 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   }
 
   /**
+   * Determines whether a whitelist has been configured or not.
+   *
+   * @returns Whitelist status
+   */
+  isWhitelistEnabled(): boolean {
+    return this.config.whitelist?.length > 0;
+  }
+
+  /**
    * Checks if an id is on the whitelist of this component.
    * Always returns true if the whitelist is empty.
    *
@@ -124,7 +144,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   isOnWhitelist(id: string): boolean {
     const whitelist = this.config.whitelist;
     if (whitelist === undefined || whitelist.length === 0) {
-      return true;
+      return false;
     }
 
     return this.config.whitelistRegex
