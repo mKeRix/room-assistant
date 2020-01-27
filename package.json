@@ -40,6 +40,8 @@
     "@nestjs/platform-express": "^6.10.14",
     "@nestjs/schedule": "^0.1.1",
     "async-mqtt": "^2.4.2",
+    "command-line-args": "^5.1.1",
+    "command-line-usage": "^6.1.0",
     "config": "^3.2.4",
     "democracy": "^3.1.3",
     "js-yaml": "^3.13.1",
