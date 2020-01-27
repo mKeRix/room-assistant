@@ -1,4 +1,3 @@
-/* tslint:disable:no-bitwise */
 import {
   Injectable,
   OnApplicationBootstrap,
@@ -53,7 +52,7 @@ export class GridEyeService extends ThermopileOccupancySensor
     );
   }
 
-  async onApplicationShutdown(signal?: string): Promise<void> {
+  async onApplicationShutdown(): Promise<void> {
     return this.i2cBus.close();
   }
 

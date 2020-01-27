@@ -13,7 +13,7 @@ jest.mock(
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {
     return {
-      filter: z => z
+      filter: (z: number): number => z
     };
   });
 });

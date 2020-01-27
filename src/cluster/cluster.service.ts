@@ -14,7 +14,6 @@ import { ClusterConfig } from './cluster.config';
 
 let mdns;
 try {
-  // tslint:disable-next-line:no-var-requires
   mdns = require('mdns');
 } catch (e) {
   mdns = undefined;
@@ -68,7 +67,7 @@ export class ClusterService extends Democracy
     this.on('elected', this.handleNodeElected);
   }
 
-  onApplicationShutdown(signal?: string): any {
+  onApplicationShutdown(): any {
     this.advertisement?.stop();
     this.browser?.stop();
   }

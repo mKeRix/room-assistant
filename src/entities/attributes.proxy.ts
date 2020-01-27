@@ -13,8 +13,7 @@ export class AttributesProxyHandler
   set(
     target: { [p: string]: string | number | boolean },
     p: string | number | symbol,
-    value: any,
-    receiver: any
+    value: any
   ): boolean {
     const oldValue = target[p as string];
     target[p as string] = value;

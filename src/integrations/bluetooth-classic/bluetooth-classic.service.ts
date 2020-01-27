@@ -28,7 +28,7 @@ import { KalmanFilterable } from '../../util/filters';
 export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 0.8)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothClassicConfig;
-  private rotationOffset: number = 0;
+  private rotationOffset = 0;
   private logger: Logger;
 
   constructor(

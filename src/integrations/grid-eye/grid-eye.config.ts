@@ -1,5 +1,5 @@
 export class GridEyeConfig {
-  busNumber: number = 1;
-  address: number = 0x69;
-  deltaThreshold: number = 2;
+  busNumber = 1;
+  address = 0x69;
+  deltaThreshold = 2;
 }

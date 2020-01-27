@@ -1,5 +1,5 @@
 export abstract class Entity {
-  constructor(id: string, name: string, distributed: boolean = false) {
+  constructor(id: string, name: string, distributed = false) {
     this.id = id;
     this.name = name;
     this.distributed = distributed;

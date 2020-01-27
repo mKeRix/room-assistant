@@ -2,11 +2,11 @@ import KalmanFilter from 'kalmanjs';
 
 type Constructable = new (...args: any[]) => object;
 
-// tslint:disable-next-line:typedef
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function KalmanFilterable<BC extends Constructable>(
   Base: BC,
-  R: number = 1,
-  Q: number = 1
+  R = 1,
+  Q = 1
 ) {
   return class extends Base {
     kalmanFilterMap: Map<string, KalmanFilter> = new Map<
@@ -22,7 +22,7 @@ export function KalmanFilterable<BC extends Constructable>(
      * @param id - ID to group values together in separated filters
      * @returns Filtered value
      */
-    kalmanFilter(value: number, id: string = 'default'): number {
+    kalmanFilter(value: number, id = 'default'): number {
       if (this.kalmanFilterMap.has(id)) {
         return this.kalmanFilterMap.get(id).filter(value);
       } else {

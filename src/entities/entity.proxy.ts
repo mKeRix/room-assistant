@@ -8,7 +8,7 @@ export class EntityProxyHandler implements ProxyHandler<Entity> {
     private readonly isLeader: () => boolean
   ) {}
 
-  get(target: Entity, p: string | number | symbol, receiver: any): any {
+  get(target: Entity, p: string | number | symbol): any {
     if (p === 'attributes') {
       return new Proxy(
         target[p],
@@ -24,12 +24,7 @@ export class EntityProxyHandler implements ProxyHandler<Entity> {
     }
   }
 
-  set(
-    target: Entity,
-    p: string | number | symbol,
-    value: any,
-    receiver: any
-  ): boolean {
+  set(target: Entity, p: string | number | symbol, value: any): boolean {
     const oldValue = target[p];
     target[p] = value;
 

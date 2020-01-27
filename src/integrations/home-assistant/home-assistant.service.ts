@@ -66,7 +66,7 @@ export class HomeAssistantService
     this.device.manufacturer = systemInfo.manufacturer;
   }
 
-  async onApplicationShutdown(signal?: string): Promise<void> {
+  async onApplicationShutdown(): Promise<void> {
     this.entityConfigs.forEach(config => {
       if (config.device.identifiers !== 'room-assistant-distributed') {
         this.mqttClient.publish(
@@ -118,7 +118,7 @@ export class HomeAssistantService
   handleNewState(
     id: string,
     state: number | string | boolean,
-    distributed: boolean = false
+    distributed = false
   ): void {
     const config = this.entityConfigs.get(this.getCombinedId(id, distributed));
     if (config === undefined) {
@@ -131,7 +131,7 @@ export class HomeAssistantService
   handleNewAttributes(
     entityId: string,
     attributes: { [key: string]: any },
-    distributed: boolean = false
+    distributed = false
   ): void {
     const config = this.entityConfigs.get(
       this.getCombinedId(entityId, distributed)
@@ -153,10 +153,7 @@ export class HomeAssistantService
     }
   }
 
-  protected getCombinedId(
-    entityId: string,
-    distributed: boolean = false
-  ): string {
+  protected getCombinedId(entityId: string, distributed = false): string {
     return `${
       distributed
         ? 'distributed'

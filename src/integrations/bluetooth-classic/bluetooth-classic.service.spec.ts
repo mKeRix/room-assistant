@@ -21,7 +21,7 @@ jest.mock('../room-presence/room-presence-distance.sensor');
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {
     return {
-      filter: z => z
+      filter: (z: number): number => z
     };
   });
 });

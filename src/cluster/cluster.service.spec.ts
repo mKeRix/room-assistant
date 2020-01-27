@@ -17,6 +17,7 @@ const mockMdns = {
     getaddrinfo: jest.fn(),
     makeAddressesUnique: jest.fn()
   },
+  // eslint-disable-next-line @typescript-eslint/camelcase
   dns_sd: []
 };
 

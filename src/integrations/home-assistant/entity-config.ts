@@ -13,8 +13,8 @@ export abstract class EntityConfig {
   stateTopic: string;
   jsonAttributesTopic: string;
   availabilityTopic: string;
-  payloadAvailable: string = 'online';
-  payloadNotAvailable: string = 'offline';
+  payloadAvailable = 'online';
+  payloadNotAvailable = 'offline';
 
   constructor(component: string, id: string, name: string, device?: Device) {
     this.component = component;

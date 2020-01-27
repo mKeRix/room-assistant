@@ -9,7 +9,6 @@ import _ from 'lodash';
 import { NestEmitterModule } from 'nest-emitter';
 import { EventEmitter } from 'events';
 
-// tslint:disable-next-line:no-var-requires
 export const VERSION = require('../package.json').version;
 export const CONFIGURED_INTEGRATIONS = c
   .get<string[]>('global.integrations')
