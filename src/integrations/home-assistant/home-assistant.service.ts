@@ -71,7 +71,11 @@ export class HomeAssistantService
       if (config.device.identifiers !== 'room-assistant-distributed') {
         this.mqttClient.publish(
           config.availabilityTopic,
-          config.payloadNotAvailable
+          config.payloadNotAvailable,
+          {
+            qos: 0,
+            retain: true
+          }
         );
       }
     });
@@ -112,7 +116,10 @@ export class HomeAssistantService
         retain: true
       }
     );
-    this.mqttClient.publish(config.availabilityTopic, config.payloadAvailable);
+    this.mqttClient.publish(config.availabilityTopic, config.payloadAvailable, {
+      qos: 0,
+      retain: true
+    });
   }
 
   handleNewState(
