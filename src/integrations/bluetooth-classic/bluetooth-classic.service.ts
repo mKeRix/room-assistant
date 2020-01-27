@@ -22,16 +22,12 @@ import {
   REQUEST_RSSI_CHANNEL
 } from './bluetooth-classic.const';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
-import KalmanFilter from 'kalmanjs';
+import { KalmanFilterable } from '../../util/filters';
 
 @Injectable()
-export class BluetoothClassicService
+export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 0.8)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothClassicConfig;
-  private filterMap: Map<string, KalmanFilter> = new Map<
-    string,
-    KalmanFilter
-  >();
   private rotationOffset: number = 0;
   private logger: Logger;
 
@@ -41,6 +37,7 @@ export class BluetoothClassicService
     private readonly clusterService: ClusterService,
     private readonly schedulerRegistry: SchedulerRegistry
   ) {
+    super();
     this.config = this.configService.get('bluetoothClassic');
     this.logger = new Logger(BluetoothClassicService.name);
   }
@@ -180,13 +177,7 @@ export class BluetoothClassicService
    * @returns Smoothed signal strength value
    */
   filterRssi(address: string, rssi: number): number {
-    if (this.filterMap.has(address)) {
-      return this.filterMap.get(address).filter(rssi);
-    } else {
-      const kalman = new KalmanFilter({ R: 1.4, Q: 0.4 });
-      this.filterMap.set(address, kalman);
-      return kalman.filter(rssi);
-    }
+    return this.kalmanFilter(rssi, address);
   }
 
   /**

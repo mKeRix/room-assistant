@@ -19,18 +19,16 @@ import { EntityCustomization } from '../../entities/entity-customization.interfa
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import KalmanFilter from 'kalmanjs';
+import { KalmanFilterable } from '../../util/filters';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 
+// filter params taken from: https://www.researchgate.net/publication/316501991_An_Improved_BLE_Indoor_Localization_with_Kalman-Based_Fusion_An_Experimental_Study
 @Injectable()
 export class BluetoothLowEnergyService
+  extends KalmanFilterable(Object, 1.4, 0.065)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothLowEnergyConfig;
-  private filterMap: Map<string, KalmanFilter> = new Map<
-    string,
-    KalmanFilter
-  >();
 
   constructor(
     private readonly entitiesService: EntitiesService,
@@ -38,6 +36,7 @@ export class BluetoothLowEnergyService
     private readonly clusterService: ClusterService,
     private readonly schedulerRegistry: SchedulerRegistry
   ) {
+    super();
     this.config = this.configService.get('bluetoothLowEnergy');
   }
 
@@ -155,14 +154,7 @@ export class BluetoothLowEnergyService
    * @returns Smoothed signal strength value
    */
   filterRssi(tagId: string, rssi: number): number {
-    if (this.filterMap.has(tagId)) {
-      return this.filterMap.get(tagId).filter(rssi);
-    } else {
-      // filter params taken from: https://www.researchgate.net/publication/316501991_An_Improved_BLE_Indoor_Localization_with_Kalman-Based_Fusion_An_Experimental_Study
-      const kalman = new KalmanFilter({ R: 1.4, Q: 0.065 });
-      this.filterMap.set(tagId, kalman);
-      return kalman.filter(rssi);
-    }
+    return this.kalmanFilter(rssi, tagId);
   }
 
   /**
