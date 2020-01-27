@@ -23,8 +23,8 @@ export abstract class EntityConfig {
 
     this.uniqueId = slugify(_.lowerCase(`room-assistant ${component} ${id}`));
     this.configTopic = `homeassistant/${this.component}/${this.uniqueId}/config`;
-    this.stateTopic = `homeassistant/${this.component}/${this.uniqueId}/state`;
-    this.jsonAttributesTopic = `homeassistant/${this.component}/${this.uniqueId}/attributes`;
-    this.availabilityTopic = `homeassistant/${this.component}/${this.uniqueId}/status`;
+    this.stateTopic = `roomassistant/${this.component}/${this.uniqueId}/state`;
+    this.jsonAttributesTopic = `roomassistant/${this.component}/${this.uniqueId}/attributes`;
+    this.availabilityTopic = `roomassistant/${this.component}/${this.uniqueId}/status`;
   }
 }
