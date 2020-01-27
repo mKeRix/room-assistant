@@ -7,11 +7,9 @@ import noble, { Peripheral } from '@abandonware/noble';
 import * as _ from 'lodash';
 import slugify from 'slugify';
 import { EntitiesService } from '../../entities/entities.service';
-import { Sensor } from '../../entities/sensor.entity';
 import { IBeacon } from './i-beacon';
 import { Tag } from './tag';
 import { ConfigService } from '../../config/config.service';
-import { Entity } from '../../entities/entity.entity';
 import { BluetoothLowEnergyConfig } from './bluetooth-low-energy.config';
 import { ClusterService } from '../../cluster/cluster.service';
 import { NewDistanceEvent } from './new-distance.event';
@@ -73,15 +71,6 @@ export class BluetoothLowEnergyService
     if (this.isOnWhitelist(tag.id)) {
       tag = this.applyOverrides(tag);
       tag.rssi = this.filterRssi(tag.id, tag.rssi);
-
-      const sensorId = slugify(`ble ${_.lowerCase(tag.id)}`);
-      let sensor: Entity;
-      if (this.entitiesService.has(sensorId)) {
-        sensor = this.entitiesService.get(sensorId);
-      } else {
-        sensor = this.createDistanceSensor(sensorId, tag.name);
-      }
-      sensor.state = tag.distance;
 
       const globalSettings = this.configService.get('global');
       const event = new NewDistanceEvent(
@@ -155,33 +144,6 @@ export class BluetoothLowEnergyService
    */
   filterRssi(tagId: string, rssi: number): number {
     return this.kalmanFilter(rssi, tagId);
-  }
-
-  /**
-   * Creates and registers a new distance sensor (this machine <> peripheral).
-   *
-   * @param sensorId - Id that the sensor should receive
-   * @param deviceName - Name of the BLE peripheral
-   * @returns Registered sensor
-   */
-  protected createDistanceSensor(sensorId: string, deviceName: string): Sensor {
-    const globalSettings = this.configService.get('global');
-
-    const sensorName = `Distance ${globalSettings.instanceName} - ${deviceName}`;
-    const customizations: Array<EntityCustomization<any>> = [
-      {
-        for: SensorConfig,
-        overrides: {
-          icon: 'mdi:bluetooth',
-          unitOfMeasurement: 'm'
-        }
-      }
-    ];
-
-    return this.entitiesService.add(
-      new Sensor(sensorId, sensorName),
-      customizations
-    ) as Sensor;
   }
 
   /**

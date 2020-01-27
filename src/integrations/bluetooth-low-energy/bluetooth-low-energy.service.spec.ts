@@ -146,9 +146,6 @@ describe('BluetoothLowEnergyService', () => {
   });
 
   it('should publish iBeacon distance changes', () => {
-    const sensor = new Sensor('testid', 'Test');
-    entitiesService.has.mockReturnValue(true);
-    entitiesService.get.mockReturnValue(sensor);
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
@@ -172,7 +169,6 @@ describe('BluetoothLowEnergyService', () => {
       'Test Beacon',
       0.7
     );
-    expect(sensor.state).toBe(0.7);
     expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
     expect(clusterService.publish).toHaveBeenCalledWith(
       NEW_DISTANCE_CHANNEL,
@@ -181,9 +177,6 @@ describe('BluetoothLowEnergyService', () => {
   });
 
   it('should not process iBeacon data if disabled in the config', () => {
-    const sensor = new Sensor('testid', 'Test');
-    entitiesService.has.mockReturnValue(true);
-    entitiesService.get.mockReturnValue(sensor);
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
@@ -205,7 +198,6 @@ describe('BluetoothLowEnergyService', () => {
       'Test Beacon',
       1
     );
-    expect(sensor.state).toBe(1);
     expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
     expect(clusterService.publish).toHaveBeenCalledWith(
       NEW_DISTANCE_CHANNEL,
@@ -214,9 +206,6 @@ describe('BluetoothLowEnergyService', () => {
   });
 
   it('should publish distance changes for normal BLE devices', () => {
-    const sensor = new Sensor('testid', 'Test');
-    entitiesService.has.mockReturnValue(true);
-    entitiesService.get.mockReturnValue(sensor);
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
@@ -235,7 +224,6 @@ describe('BluetoothLowEnergyService', () => {
       'Test BLE Device',
       10.5
     );
-    expect(sensor.state).toBe(10.5);
     expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
     expect(clusterService.publish).toHaveBeenCalledWith(
       NEW_DISTANCE_CHANNEL,
@@ -244,9 +232,6 @@ describe('BluetoothLowEnergyService', () => {
   });
 
   it('should apply tag distance override if it exists', () => {
-    const sensor = new Sensor('testid', 'Test');
-    entitiesService.has.mockReturnValue(true);
-    entitiesService.get.mockReturnValue(sensor);
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
@@ -270,7 +255,6 @@ describe('BluetoothLowEnergyService', () => {
       'Test BLE Device',
       1.1
     );
-    expect(sensor.state).toBe(1.1);
     expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
     expect(clusterService.publish).toHaveBeenCalledWith(
       NEW_DISTANCE_CHANNEL,
@@ -287,7 +271,6 @@ describe('BluetoothLowEnergyService', () => {
 
     expectedEvent.tagId = 'defg';
     expectedEvent.distance = 10.5;
-    expect(sensor.state).toBe(10.5);
     expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
     expect(clusterService.publish).toHaveBeenCalledWith(
       NEW_DISTANCE_CHANNEL,
@@ -296,10 +279,7 @@ describe('BluetoothLowEnergyService', () => {
   });
 
   it('should apply a tag name override if it exists', () => {
-    const sensor = new Sensor('testid', 'Test');
-    entitiesService.has.mockReturnValue(false);
-    entitiesService.add.mockReturnValue(sensor);
-    jest
+    const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     mockConfig.tagOverrides = {
@@ -316,38 +296,11 @@ describe('BluetoothLowEnergyService', () => {
       }
     } as Peripheral);
 
-    expect(entitiesService.add).toHaveBeenCalledWith(
+    expect(handleDistanceSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: expect.stringContaining('better name')
-      }),
-      expect.any(Array)
+        tagName: 'better name'
+      })
     );
-  });
-
-  it('should create a new distance sensor if there is not a matching one yet', () => {
-    const sensor = new Sensor('new', 'New');
-    entitiesService.has.mockReturnValue(false);
-    entitiesService.add.mockReturnValue(sensor);
-    jest
-      .spyOn(service, 'handleNewDistance')
-      .mockImplementation(() => undefined);
-
-    service.handleDiscovery({
-      id: 'abcd',
-      rssi: -60,
-      advertisement: {
-        localName: 'Test BLE Device'
-      }
-    } as Peripheral);
-
-    expect(entitiesService.add).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 'ble-abcd',
-        name: 'Distance test-instance - Test BLE Device'
-      }),
-      expect.any(Array)
-    );
-    expect(sensor.state).toBe(1.1);
   });
 
   it('should not publish state changes for devices that are not on the whitelist', () => {
@@ -382,10 +335,7 @@ describe('BluetoothLowEnergyService', () => {
   });
 
   it('should filter the measured RSSI of the peripherals', () => {
-    const sensor = new Sensor('testid', 'Test');
-    entitiesService.has.mockReturnValue(true);
-    entitiesService.get.mockReturnValue(sensor);
-    jest
+    const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     const filterSpy = jest.spyOn(service, 'filterRssi').mockReturnValue(-50);
@@ -399,7 +349,11 @@ describe('BluetoothLowEnergyService', () => {
     } as Peripheral);
 
     expect(filterSpy).toHaveBeenCalledWith('12:ab:cd:12:cd', -45);
-    expect(sensor.state).toBe(0.2);
+    expect(handleDistanceSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        distance: 0.2
+      })
+    );
   });
 
   it('should reuse existing Kalman filters for the same id', () => {
