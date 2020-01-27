@@ -25,7 +25,7 @@ import { KalmanFilterable } from '../../util/filters';
 import { makeId } from '../../util/id';
 
 @Injectable()
-export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 0.8)
+export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothClassicConfig;
   private rotationOffset = 0;
