@@ -21,10 +21,8 @@ import { KalmanFilterable } from '../../util/filters';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 
-// filter params taken from: https://www.researchgate.net/publication/316501991_An_Improved_BLE_Indoor_Localization_with_Kalman-Based_Fusion_An_Experimental_Study
-@Injectable()
-export class BluetoothLowEnergyService
-  extends KalmanFilterable(Object, 1.4, 0.065)
+@Injectable() // parameters determined experimentally
+export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothLowEnergyConfig;
 
