@@ -191,7 +191,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 0.8)
 
     try {
       const output = await execPromise(`hcitool name "${address}"`);
-      return output.stdout ? output.stdout : undefined;
+      return output.stdout ? output.stdout.trim() : undefined;
     } catch (e) {
       this.logger.error(e.message);
       return undefined;
