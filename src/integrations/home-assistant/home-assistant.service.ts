@@ -60,7 +60,7 @@ export class HomeAssistantService
     );
 
     const systemInfo = await system();
-    this.device = new Device(systemInfo.uuid);
+    this.device = new Device(systemInfo.serial);
     this.device.name = this.configService.get('global').instanceName;
     this.device.model = systemInfo.model;
     this.device.manufacturer = systemInfo.manufacturer;
