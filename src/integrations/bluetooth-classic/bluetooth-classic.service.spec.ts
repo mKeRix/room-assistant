@@ -199,7 +199,7 @@ describe('BluetoothClassicService', () => {
       'test-instance',
       10
     );
-    expect(sensorInstance.timeout).toBe(35);
+    expect(sensorInstance.timeout).toBe(40);
   });
 
   it('should not distribute inquiries if not the leader', () => {

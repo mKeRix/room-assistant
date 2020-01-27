@@ -253,7 +253,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
   protected calculateCurrentTimeout(): number {
     const nodes = this.getParticipatingNodes();
     const addresses = Object.values(this.config.addresses); // workaround for node-config deserializing to an Array-like object
-    return (Math.max(nodes.length, addresses.length) + 1.5) * 10;
+    return Math.max(nodes.length, addresses.length) * 2 * 10;
   }
 
   /**
