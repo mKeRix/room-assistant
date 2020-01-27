@@ -243,7 +243,7 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should apply tag overrides if they exist', () => {
+  it('should apply tag distance override if it exists', () => {
     const sensor = new Sensor('testid', 'Test');
     entitiesService.has.mockReturnValue(true);
     entitiesService.get.mockReturnValue(sensor);
@@ -292,6 +292,35 @@ describe('BluetoothLowEnergyService', () => {
     expect(clusterService.publish).toHaveBeenCalledWith(
       NEW_DISTANCE_CHANNEL,
       expectedEvent
+    );
+  });
+
+  it('should apply a tag name override if it exists', () => {
+    const sensor = new Sensor('testid', 'Test');
+    entitiesService.has.mockReturnValue(false);
+    entitiesService.add.mockReturnValue(sensor);
+    jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    mockConfig.tagOverrides = {
+      abcd: {
+        name: 'better name'
+      }
+    };
+
+    service.handleDiscovery({
+      id: 'abcd',
+      rssi: -12,
+      advertisement: {
+        localName: 'Test BLE Device'
+      }
+    } as Peripheral);
+
+    expect(entitiesService.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: expect.stringContaining('better name')
+      }),
+      expect.any(Array)
     );
   });
 

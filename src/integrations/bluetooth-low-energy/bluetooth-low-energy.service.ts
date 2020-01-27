@@ -248,6 +248,9 @@ export class BluetoothLowEnergyService
   protected applyOverrides(tag: Tag): Tag {
     if (this.config.tagOverrides.hasOwnProperty(tag.id)) {
       const overrides = this.config.tagOverrides[tag.id];
+      if (overrides.name !== undefined) {
+        tag.name = overrides.name;
+      }
       if (overrides.measuredPower !== undefined) {
         tag.measuredPower = overrides.measuredPower;
       }

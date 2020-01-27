@@ -11,5 +11,6 @@ export class BluetoothLowEnergyConfig {
 }
 
 class TagOverride {
-  measuredPower: number;
+  name?: string;
+  measuredPower?: number;
 }

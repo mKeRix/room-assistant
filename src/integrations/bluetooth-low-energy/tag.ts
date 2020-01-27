@@ -2,6 +2,8 @@ import { Peripheral } from '@abandonware/noble';
 import _ from 'lodash';
 
 export class Tag {
+  private _name;
+
   constructor(peripheral: Peripheral) {
     this.peripheral = peripheral;
     this.rssi = peripheral.rssi;
@@ -18,7 +20,11 @@ export class Tag {
   }
 
   get name(): string {
-    return this.peripheral.advertisement.localName || this.id;
+    return this._name || this.peripheral.advertisement.localName || this.id;
+  }
+
+  set name(name: string) {
+    this._name = name;
   }
 
   get distance(): number {
