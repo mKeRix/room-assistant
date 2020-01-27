@@ -12,7 +12,6 @@ import * as util from 'util';
 import { exec } from 'child_process';
 import { Node } from 'democracy';
 import { NewRssiEvent } from './new-rssi.event';
-import slugify from 'slugify';
 import _ from 'lodash';
 import { Interval, SchedulerRegistry } from '@nestjs/schedule';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
@@ -23,6 +22,7 @@ import {
 } from './bluetooth-classic.const';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import { KalmanFilterable } from '../../util/filters';
+import { makeId } from '../../util/id';
 
 @Injectable()
 export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 0.8)
@@ -101,9 +101,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 0.8)
       `Received RSSI of ${event.rssi} for ${event.address} from ${event.instanceName}`
     );
 
-    const sensorId = slugify(
-      _.lowerCase(`bluetooth-classic ${event.address} room presence`)
-    );
+    const sensorId = makeId(`bluetooth-classic ${event.address}`);
     let sensor: RoomPresenceDistanceSensor;
     if (this.entitiesService.has(sensorId)) {
       sensor = this.entitiesService.get(sensorId) as RoomPresenceDistanceSensor;

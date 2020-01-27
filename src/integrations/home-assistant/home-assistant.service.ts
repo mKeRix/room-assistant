@@ -18,6 +18,7 @@ import { system } from 'systeminformation';
 import { InjectEventEmitter } from 'nest-emitter';
 import { EntitiesEventEmitter } from '../../entities/entities.events';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
+import { makeId } from '../../util/id';
 
 const PROPERTY_BLACKLIST = ['component', 'configTopic'];
 
@@ -161,11 +162,11 @@ export class HomeAssistantService
   }
 
   protected getCombinedId(entityId: string, distributed = false): string {
-    return `${
+    return makeId(
       distributed
-        ? 'distributed'
-        : this.configService.get('global').instanceName
-    }_${entityId}`;
+        ? entityId
+        : [this.configService.get('global').instanceName, entityId].join('-')
+    );
   }
 
   protected applyCustomizations(

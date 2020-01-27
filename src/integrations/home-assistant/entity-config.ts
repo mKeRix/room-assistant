@@ -1,6 +1,4 @@
 import { Device } from './device';
-import slugify from 'slugify';
-import * as _ from 'lodash';
 
 export abstract class EntityConfig {
   uniqueId: string;
@@ -16,15 +14,20 @@ export abstract class EntityConfig {
   payloadAvailable = 'online';
   payloadNotAvailable = 'offline';
 
-  constructor(component: string, id: string, name: string, device?: Device) {
+  protected constructor(
+    component: string,
+    id: string,
+    name: string,
+    device?: Device
+  ) {
     this.component = component;
     this.name = name;
     this.device = device;
 
-    this.uniqueId = slugify(_.lowerCase(`room-assistant ${component} ${id}`));
-    this.configTopic = `homeassistant/${this.component}/${this.uniqueId}/config`;
-    this.stateTopic = `roomassistant/${this.component}/${this.uniqueId}/state`;
-    this.jsonAttributesTopic = `roomassistant/${this.component}/${this.uniqueId}/attributes`;
-    this.availabilityTopic = `roomassistant/${this.component}/${this.uniqueId}/status`;
+    this.uniqueId = `room-assistant-${id}`;
+    this.configTopic = `homeassistant/${this.component}/room-assistant/${id}/config`;
+    this.stateTopic = `room-assistant/${this.component}/${id}/state`;
+    this.jsonAttributesTopic = `room-assistant/${this.component}/${id}/attributes`;
+    this.availabilityTopic = `room-assistant/${this.component}/${id}/status`;
   }
 }

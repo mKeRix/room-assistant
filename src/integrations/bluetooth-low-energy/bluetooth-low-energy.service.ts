@@ -4,8 +4,6 @@ import {
   OnModuleInit
 } from '@nestjs/common';
 import noble, { Peripheral } from '@abandonware/noble';
-import * as _ from 'lodash';
-import slugify from 'slugify';
 import { EntitiesService } from '../../entities/entities.service';
 import { IBeacon } from './i-beacon';
 import { Tag } from './tag';
@@ -18,6 +16,7 @@ import { SensorConfig } from '../home-assistant/sensor-config';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { KalmanFilterable } from '../../util/filters';
+import { makeId } from '../../util/id';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 
@@ -88,7 +87,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
    * @param event - Event with new distance data
    */
   handleNewDistance(event: NewDistanceEvent): void {
-    const sensorId = slugify(_.lowerCase(`ble ${event.tagId} room presence`));
+    const sensorId = makeId(`ble ${event.tagId}`);
     let sensor: RoomPresenceDistanceSensor;
     if (this.entitiesService.has(sensorId)) {
       sensor = this.entitiesService.get(sensorId) as RoomPresenceDistanceSensor;

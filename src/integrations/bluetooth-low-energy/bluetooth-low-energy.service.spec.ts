@@ -410,7 +410,7 @@ describe('BluetoothLowEnergyService', () => {
 
     expect(entitiesService.add).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: 'ble-new-room-presence',
+        id: 'ble-new',
         name: 'New Tag Room Presence',
         timeout: 20
       }),
