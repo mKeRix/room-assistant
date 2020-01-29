@@ -31,9 +31,9 @@ export class HomeAssistantService
     string,
     EntityConfig
   >();
-  private debounceFunctions: Map<string, () => void> = new Map<
+  private debounceFunctions = new Map<
     string,
-    () => void
+    (attributes: { [key: string]: any }) => void
   >();
   private mqttClient: AsyncMqttClient;
   private readonly logger: Logger = new Logger(HomeAssistantService.name);
@@ -45,14 +45,20 @@ export class HomeAssistantService
     this.config = this.configService.get('homeAssistant');
   }
 
+  /**
+   * Lifecycle hook, called once the host module has been initialized.
+   */
   onModuleInit(): void {
     this.emitter.on('newEntity', this.handleNewEntity.bind(this));
     this.emitter.on('stateUpdate', this.handleNewState.bind(this));
     this.emitter.on('attributesUpdate', this.handleNewAttributes.bind(this));
   }
 
+  /**
+   * Lifecycle hook, called once the application has started.
+   */
   async onApplicationBootstrap(): Promise<void> {
-    this.mqttClient = mqtt.connect(
+    this.mqttClient = await mqtt.connectAsync(
       this.config.mqttUrl,
       this.config.mqttOptions
     );
@@ -60,13 +66,12 @@ export class HomeAssistantService
       this.logger.log(`Connected to ${this.config.mqttUrl}`)
     );
 
-    const systemInfo = await system();
-    this.device = new Device(systemInfo.serial);
-    this.device.name = this.configService.get('global').instanceName;
-    this.device.model = systemInfo.model;
-    this.device.manufacturer = systemInfo.manufacturer;
+    this.device = await this.getDeviceInfo();
   }
 
+  /**
+   * Lifecycle hook, called once the application is shutting down.
+   */
   async onApplicationShutdown(): Promise<void> {
     this.entityConfigs.forEach(config => {
       if (config.device.identifiers !== 'room-assistant-distributed') {
@@ -83,15 +88,19 @@ export class HomeAssistantService
     return this.mqttClient.end();
   }
 
+  /**
+   * Sends information about a new entity to Home Assistant.
+   *
+   * @param entity - Entity to register
+   * @param customizations - Customizations for the discovery objects
+   */
   handleNewEntity(
     entity: Entity,
     customizations: Array<EntityCustomization<any>> = []
   ): void {
     const combinedId = this.getCombinedId(entity.id, entity.distributed);
-    let config: EntityConfig;
-    if (entity instanceof Sensor) {
-      config = new SensorConfig(combinedId, entity.name);
-    } else {
+    let config = this.generateEntityConfig(combinedId, entity);
+    if (config === undefined) {
       this.logger.warn(
         `${combinedId} cannot be matched to a Home Assistant type and will not be transferred`
       );
@@ -99,7 +108,6 @@ export class HomeAssistantService
     }
 
     config = this.applyCustomizations(config, customizations);
-
     if (entity.distributed) {
       config.device = new Device('room-assistant-distributed');
       config.device.name = 'room-assistant hub';
@@ -108,7 +116,6 @@ export class HomeAssistantService
     }
 
     this.entityConfigs.set(combinedId, config);
-
     this.mqttClient.publish(
       config.configTopic,
       JSON.stringify(this.formatMessage(config)),
@@ -123,6 +130,13 @@ export class HomeAssistantService
     });
   }
 
+  /**
+   * Sends information about entity state changes to Home Assistant.
+   *
+   * @param id - ID of the entity that had its state updated
+   * @param state - New state of the entity
+   * @param distributed - Whether the entity is a distributed one or not
+   */
   handleNewState(
     id: string,
     state: number | string | boolean,
@@ -136,6 +150,14 @@ export class HomeAssistantService
     this.mqttClient.publish(config.stateTopic, String(state));
   }
 
+  /**
+   * Sends information about attribute state changes to Home Assistant.
+   * Updates are debounced and will only be sent on the next tick.
+   *
+   * @param entityId - ID of the entity that had its attributes updated
+   * @param attributes - All current attributes of the entity
+   * @param distributed - Whether the entity is a distributed one or not
+   */
   handleNewAttributes(
     entityId: string,
     attributes: { [key: string]: any },
@@ -149,18 +171,40 @@ export class HomeAssistantService
     }
 
     if (this.debounceFunctions.has(entityId)) {
-      this.debounceFunctions.get(entityId)();
+      this.debounceFunctions.get(entityId)(attributes);
     } else {
-      const debouncedFunc = _.debounce(() => {
+      const debouncedFunc = _.debounce(attributes => {
         this.mqttClient.publish(
           config.jsonAttributesTopic,
           JSON.stringify(this.formatMessage(attributes))
         );
       });
       this.debounceFunctions.set(entityId, debouncedFunc);
+      debouncedFunc(attributes);
     }
   }
 
+  /**
+   * Retrieves information about the local device.
+   *
+   * @returns Device information
+   */
+  protected async getDeviceInfo(): Promise<Device> {
+    const systemInfo = await system();
+    const device = new Device(systemInfo.serial);
+    device.name = this.configService.get('global').instanceName;
+    device.model = systemInfo.model;
+    device.manufacturer = systemInfo.manufacturer;
+    return device;
+  }
+
+  /**
+   * Generates a Home Assistant ID.
+   *
+   * @param entityId - ID of the entity
+   * @param distributed - Whether the entity is distributed or not
+   * @returns ID to be used for the entity in Home Assistant
+   */
   protected getCombinedId(entityId: string, distributed = false): string {
     return makeId(
       distributed
@@ -169,6 +213,31 @@ export class HomeAssistantService
     );
   }
 
+  /**
+   * Generates a Home Assistant config for a local entity.
+   *
+   * @param combinedId - Home Assistant ID
+   * @param entity - Entity that the configuration should be generated for
+   * @returns Entity configuration for Home Assistant
+   */
+  protected generateEntityConfig(
+    combinedId: string,
+    entity: Entity
+  ): EntityConfig {
+    if (entity instanceof Sensor) {
+      return new SensorConfig(combinedId, entity.name);
+    } else {
+      return;
+    }
+  }
+
+  /**
+   * Picks and applies relevant customizations to a Home Assistant entity configuration.
+   *
+   * @param config - Existing entity configuration
+   * @param customizations - Customizations for the configuration
+   * @returns Customized configuration
+   */
   protected applyCustomizations(
     config: EntityConfig,
     customizations: Array<EntityCustomization<any>>
@@ -183,6 +252,12 @@ export class HomeAssistantService
     return config;
   }
 
+  /**
+   * Formats a message to be in the Home Assistant format.
+   *
+   * @param message - Message to be sent
+   * @returns Formatted message
+   */
   protected formatMessage(message: object): object {
     const filteredMessage = _.omit(message, PROPERTY_BLACKLIST);
     return this.deepMap(filteredMessage, obj => {
@@ -192,6 +267,12 @@ export class HomeAssistantService
     });
   }
 
+  /**
+   * Maps values of an object in a recursive manner.
+   *
+   * @param obj - Object to map
+   * @param mapper - Function to apply to all items
+   */
   private deepMap(obj: object, mapper: (v: object) => object): object {
     return mapper(
       _.mapValues(obj, v => {
