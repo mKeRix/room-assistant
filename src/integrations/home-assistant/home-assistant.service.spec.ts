@@ -240,7 +240,11 @@ describe('HomeAssistantService', () => {
 
     expect(mockMqttClient.publish).toHaveBeenCalledWith(
       'room-assistant/sensor/test-instance-test/state',
-      '2'
+      '2',
+      {
+        qos: 0,
+        retain: true
+      }
     );
   });
 

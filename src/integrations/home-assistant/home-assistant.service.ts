@@ -149,7 +149,10 @@ export class HomeAssistantService
       return;
     }
 
-    this.mqttClient.publish(config.stateTopic, String(state));
+    this.mqttClient.publish(config.stateTopic, String(state), {
+      qos: 0,
+      retain: true
+    });
   }
 
   /**
