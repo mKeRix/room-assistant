@@ -23,6 +23,8 @@ import {
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import { KalmanFilterable } from '../../util/filters';
 import { makeId } from '../../util/id';
+import { Device } from './device';
+import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
 
 @Injectable()
 export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
@@ -179,20 +181,33 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
   }
 
   /**
-   * Queries for the name of a Bluetooth device using the hcitool shell command.
+   * Inquires device information of a Bluetooth peripheral.
    *
    * @param address - Bluetooth MAC address
-   * @returns Bluetooth device name or undefined if not found
+   * @returns Device information
    */
-  async inquireDeviceName(address: string): Promise<string> {
+  async inquireDeviceInfo(address: string): Promise<Device> {
     const execPromise = util.promisify(exec);
 
     try {
-      const output = await execPromise(`hcitool name "${address}"`);
-      return output.stdout ? output.stdout.trim() : undefined;
+      const output = await execPromise(`hcitool info "${address}"`);
+
+      const nameMatches = /Device Name: (.+)/g.exec(output.stdout);
+      const manufacturerMatches = /OUI Company: (.+) \(.+\)/g.exec(
+        output.stdout
+      );
+
+      return {
+        address,
+        name: nameMatches[1],
+        manufacturer: manufacturerMatches[1]
+      };
     } catch (e) {
-      this.logger.error(e.message);
-      return undefined;
+      this.logger.error(e.message, e.stack);
+      return {
+        address,
+        name: address
+      };
     }
   }
 
@@ -217,20 +232,27 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
     sensorId: string,
     address: string
   ): Promise<RoomPresenceDistanceSensor> {
-    const deviceName = (await this.inquireDeviceName(address)) || address;
+    const deviceInfo = await this.inquireDeviceInfo(address);
 
     const customizations: Array<EntityCustomization<any>> = [
       {
         for: SensorConfig,
         overrides: {
-          icon: 'mdi:bluetooth'
+          icon: 'mdi:bluetooth',
+          device: {
+            identifiers: deviceInfo.address,
+            name: deviceInfo.name,
+            manufacturer: deviceInfo.manufacturer,
+            connections: [['mac', deviceInfo.address]],
+            viaDevice: DISTRIBUTED_DEVICE_ID
+          }
         }
       }
     ];
     const sensor = this.entitiesService.add(
       new RoomPresenceDistanceSensor(
         sensorId,
-        `${deviceName} Room Presence`,
+        `${deviceInfo.name} Room Presence`,
         0
       ),
       customizations

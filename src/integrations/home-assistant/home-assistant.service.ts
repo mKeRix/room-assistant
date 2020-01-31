@@ -19,6 +19,7 @@ import { InjectEventEmitter } from 'nest-emitter';
 import { EntitiesEventEmitter } from '../../entities/entities.events';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { makeId } from '../../util/id';
+import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
 
 const PROPERTY_BLACKLIST = ['component', 'configTopic'];
 
@@ -74,7 +75,7 @@ export class HomeAssistantService
    */
   async onApplicationShutdown(): Promise<void> {
     this.entityConfigs.forEach(config => {
-      if (config.device.identifiers !== 'room-assistant-distributed') {
+      if (config.device.identifiers !== DISTRIBUTED_DEVICE_ID) {
         this.mqttClient.publish(
           config.availabilityTopic,
           config.payloadNotAvailable,
@@ -107,13 +108,14 @@ export class HomeAssistantService
       return;
     }
 
-    config = this.applyCustomizations(config, customizations);
     if (entity.distributed) {
-      config.device = new Device('room-assistant-distributed');
+      config.device = new Device(DISTRIBUTED_DEVICE_ID);
       config.device.name = 'room-assistant hub';
     } else {
       config.device = this.device;
     }
+
+    config = this.applyCustomizations(config, customizations);
 
     this.entityConfigs.set(combinedId, config);
     this.mqttClient.publish(

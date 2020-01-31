@@ -126,24 +126,39 @@ describe('BluetoothClassicService', () => {
     expect(service.inquireRssi('08:05:90:ed:3b:60')).resolves.toBeUndefined();
   });
 
-  it('should return the Bluetooth device name if found', async () => {
+  it('should return device information based on parsed output', async () => {
     jest.spyOn(util, 'promisify').mockImplementation(() => {
-      return jest.fn().mockResolvedValue({ stdout: 'Test iPhone' });
+      return jest.fn().mockResolvedValue({
+        stdout: `
+Requesting information ...
+\tBD Address:  F0:99:B6:12:34:AB
+\tOUI Company: Apple, Inc. (F0-99-B6)
+\tDevice Name: Test iPhone
+\tLMP Version: 5.0 (0x9) LMP Subversion: 0x4307
+\tManufacturer: Broadcom Corporation (15)
+\tFeatures page 0:
+\tFeatures page 1:
+\tFeatures page 2:
+      `
+      });
     });
 
-    expect(await service.inquireDeviceName('bb:3e:db:b7:8a:60')).toBe(
-      'Test iPhone'
-    );
+    expect(await service.inquireDeviceInfo('F0:99:B6:12:34:AB')).toStrictEqual({
+      address: 'F0:99:B6:12:34:AB',
+      name: 'Test iPhone',
+      manufacturer: 'Apple, Inc.'
+    });
   });
 
-  it('should return undefined for name if not found', async () => {
+  it('should return barebones information if request fails', async () => {
     jest.spyOn(util, 'promisify').mockImplementation(() => {
-      return jest.fn().mockResolvedValue({ stdout: '' });
+      return jest.fn().mockRejectedValue({ stderr: 'I/O Error' });
     });
 
-    expect(
-      await service.inquireDeviceName('bb:3e:db:b7:8a:60')
-    ).toBeUndefined();
+    expect(await service.inquireDeviceInfo('F0:99:B6:12:34:CD')).toStrictEqual({
+      address: 'F0:99:B6:12:34:CD',
+      name: 'F0:99:B6:12:34:CD'
+    });
   });
 
   it('should publish the RSSI if found', async () => {
@@ -181,7 +196,10 @@ describe('BluetoothClassicService', () => {
     clusterService.nodes.mockReturnValue({
       abcd: { channels: [NEW_RSSI_CHANNEL] }
     });
-    jest.spyOn(service, 'inquireDeviceName').mockResolvedValue('Test iPhone');
+    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue({
+      address: '10:36:cf:ca:9a:18',
+      name: 'Test iPhone'
+    });
     jest.useFakeTimers();
 
     const event = new NewRssiEvent('test-instance', '10:36:cf:ca:9a:18', -10);

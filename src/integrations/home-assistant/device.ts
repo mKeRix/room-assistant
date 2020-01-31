@@ -6,9 +6,10 @@ export class Device {
   }
 
   identifiers: string | string[];
-  connections: string[][];
-  manufacturer: string;
-  model: string;
+  connections?: string[][];
+  manufacturer?: string;
+  model?: string;
   name: string;
-  swVersion: string = VERSION;
+  swVersion?: string = VERSION;
+  viaDevice?: string;
 }
