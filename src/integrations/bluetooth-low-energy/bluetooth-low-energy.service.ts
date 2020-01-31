@@ -18,6 +18,7 @@ import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-dista
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { KalmanFilterable } from '../../util/filters';
 import { makeId } from '../../util/id';
+import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 
@@ -103,7 +104,11 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
     if (this.entitiesService.has(sensorId)) {
       sensor = this.entitiesService.get(sensorId) as RoomPresenceDistanceSensor;
     } else {
-      sensor = this.createRoomPresenceSensor(sensorId, event.tagName);
+      sensor = this.createRoomPresenceSensor(
+        sensorId,
+        event.tagId,
+        event.tagName
+      );
     }
 
     sensor.handleNewDistance(event.instanceName, event.distance);
@@ -167,11 +172,13 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
    * Creates and registers a new room presence sensor.
    *
    * @param sensorId - Id that the sensor should receive
+   * @param deviceId - Id of the BLE peripheral
    * @param deviceName - Name of the BLE peripheral
    * @returns Registered room presence sensor
    */
   protected createRoomPresenceSensor(
     sensorId: string,
+    deviceId: string,
     deviceName: string
   ): RoomPresenceDistanceSensor {
     const sensorName = `${deviceName} Room Presence`;
@@ -179,7 +186,12 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
       {
         for: SensorConfig,
         overrides: {
-          icon: 'mdi:bluetooth'
+          icon: 'mdi:bluetooth',
+          device: {
+            identifiers: deviceId,
+            name: deviceName,
+            viaDevice: DISTRIBUTED_DEVICE_ID
+          }
         }
       }
     ];
