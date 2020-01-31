@@ -1,4 +1,4 @@
-import { Entity } from './entity.entity';
+import { Entity } from './entity';
 import { AttributesProxyHandler } from './attributes.proxy';
 import { EntitiesEventEmitter } from './entities.events';
 

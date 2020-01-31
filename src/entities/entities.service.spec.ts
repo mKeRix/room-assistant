@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EntitiesService } from './entities.service';
-import { Sensor } from './sensor.entity';
+import { Sensor } from './sensor';
 import * as util from 'util';
 import { ClusterService } from '../cluster/cluster.service';
 import { NestEmitterModule } from 'nest-emitter';

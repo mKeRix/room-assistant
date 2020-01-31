@@ -4,9 +4,9 @@ import {
   OnApplicationShutdown
 } from '@nestjs/common';
 import i2cBus, { PromisifiedBus } from 'i2c-bus';
-import { Entity } from '../../entities/entity.entity';
+import { Entity } from '../../entities/entity';
 import { EntitiesService } from '../../entities/entities.service';
-import { Sensor } from '../../entities/sensor.entity';
+import { Sensor } from '../../entities/sensor';
 import * as math from 'mathjs';
 import { Interval } from '@nestjs/schedule';
 import { ThermopileOccupancySensor } from '../../util/thermopile/thermopile-occupancy.sensor';

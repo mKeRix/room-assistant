@@ -30,7 +30,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ClusterService } from '../../cluster/cluster.service';
 import { EntitiesService } from '../../entities/entities.service';
 import { BluetoothLowEnergyConfig } from './bluetooth-low-energy.config';
-import { Sensor } from '../../entities/sensor.entity';
+import { Sensor } from '../../entities/sensor';
 import c from 'config';
 import { NewDistanceEvent } from './new-distance.event';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';

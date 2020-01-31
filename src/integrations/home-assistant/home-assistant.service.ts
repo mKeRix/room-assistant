@@ -5,8 +5,8 @@ import {
   OnApplicationShutdown,
   OnModuleInit
 } from '@nestjs/common';
-import { Entity } from '../../entities/entity.entity';
-import { Sensor } from '../../entities/sensor.entity';
+import { Entity } from '../../entities/entity';
+import { Sensor } from '../../entities/sensor';
 import { EntityConfig } from './entity-config';
 import { SensorConfig } from './sensor-config';
 import * as _ from 'lodash';

@@ -15,8 +15,8 @@ import * as mqtt from 'async-mqtt';
 import { system, Systeminformation } from 'systeminformation';
 import SystemData = Systeminformation.SystemData;
 import { SensorConfig } from './sensor-config';
-import { Entity } from '../../entities/entity.entity';
-import { Sensor } from '../../entities/sensor.entity';
+import { Entity } from '../../entities/entity';
+import { Sensor } from '../../entities/sensor';
 
 jest.mock('async-mqtt', () => {
   return {

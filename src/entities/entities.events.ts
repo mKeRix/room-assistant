@@ -1,4 +1,4 @@
-import { Entity } from './entity.entity';
+import { Entity } from './entity';
 import { StrictEventEmitter } from 'nest-emitter';
 import EventEmitter = NodeJS.EventEmitter;
 import { EntityCustomization } from './entity-customization.interface';

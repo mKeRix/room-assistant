@@ -1,4 +1,4 @@
-import { Sensor } from '../../entities/sensor.entity';
+import { Sensor } from '../../entities/sensor';
 
 export const STATE_NOT_HOME = 'not_home';
 

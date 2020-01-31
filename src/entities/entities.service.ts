@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Entity } from './entity.entity';
+import { Entity } from './entity';
 import { EntityProxyHandler } from './entity.proxy';
 import { InjectEventEmitter } from 'nest-emitter';
 import { EntitiesEventEmitter } from './entities.events';
