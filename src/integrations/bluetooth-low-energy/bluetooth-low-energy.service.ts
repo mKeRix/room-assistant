@@ -27,6 +27,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothLowEnergyConfig;
   private readonly logger: Logger;
+  private readonly seenIds = new Set<string>();
 
   constructor(
     private readonly entitiesService: EntitiesService,
@@ -47,7 +48,9 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
     noble.on('discover', this.handleDiscovery.bind(this));
 
     if (!this.isWhitelistEnabled()) {
-      this.logger.warn('The whitelist is empty, no sensors will be created!');
+      this.logger.warn(
+        'The whitelist is empty, no sensors will be created! Please add some of the discovered IDs below to your configuration.'
+      );
     }
   }
 
@@ -73,6 +76,13 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
       return;
     }
 
+    if (!this.seenIds.has(tag.id)) {
+      this.logger.log(
+        `Discovered new BLE peripheral with ID ${tag.id} and RSSI ${tag.rssi}`
+      );
+      this.seenIds.add(tag.id);
+    }
+
     if (this.isOnWhitelist(tag.id)) {
       tag = this.applyOverrides(tag);
       tag.rssi = this.filterRssi(tag.id, tag.rssi);
@@ -86,10 +96,6 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
       );
       this.handleNewDistance(event);
       this.clusterService.publish(NEW_DISTANCE_CHANNEL, event);
-    } else {
-      this.logger.debug(
-        `Ignoring tag with id ${tag.id} and signal strength ${tag.rssi}`
-      );
     }
   }
 

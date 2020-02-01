@@ -471,4 +471,43 @@ describe('BluetoothLowEnergyService', () => {
     expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 20 * 1000);
     expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 1.3);
   });
+
+  it('should log the id of new peripherals that are found', () => {
+    mockConfig.processIBeacon = true;
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(false);
+
+    service.handleDiscovery({
+      id: 'test-ibeacon-123',
+      rssi: -50,
+      advertisement: {
+        localName: 'Test Beacon',
+        manufacturerData: iBeaconData
+      }
+    } as Peripheral);
+    service.handleDiscovery({
+      id: 'test-peripheral-456',
+      rssi: -78,
+      advertisement: {}
+    } as Peripheral);
+    service.handleDiscovery({
+      id: 'test-ibeacon-123',
+      rssi: -54,
+      advertisement: {
+        localName: 'Test Beacon',
+        manufacturerData: iBeaconData
+      }
+    } as Peripheral);
+
+    expect(loggerService.log).toHaveBeenCalledTimes(2);
+    expect(loggerService.log).toHaveBeenCalledWith(
+      expect.stringContaining('2f234454cf6d4a0fadf2f4911ba9ffa6-1-2'),
+      BluetoothLowEnergyService.name,
+      expect.anything()
+    );
+    expect(loggerService.log).toHaveBeenCalledWith(
+      expect.stringContaining('test-peripheral-456'),
+      BluetoothLowEnergyService.name,
+      expect.anything()
+    );
+  });
 });
