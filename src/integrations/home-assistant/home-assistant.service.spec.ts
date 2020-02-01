@@ -31,7 +31,7 @@ jest.mock('systeminformation', () => {
 
 describe('HomeAssistantService', () => {
   let service: HomeAssistantService;
-  const emitter: EventEmitter = new EventEmitter();
+  let emitter: EventEmitter;
   const mockMqtt = mocked(mqtt, true);
   const mockSystem = mocked(system);
   const loggerService = {
@@ -41,6 +41,7 @@ describe('HomeAssistantService', () => {
   };
 
   beforeEach(async () => {
+    emitter = new EventEmitter();
     const module: TestingModule = await Test.createTestingModule({
       imports: [NestEmitterModule.forRoot(emitter), ConfigModule],
       providers: [HomeAssistantService]
@@ -52,10 +53,10 @@ describe('HomeAssistantService', () => {
     service = module.get<HomeAssistantService>(HomeAssistantService);
   });
 
-  it('should subscribe to entity events on init', () => {
+  it('should subscribe to entity events on init', async () => {
     const emitterOnSpy = jest.spyOn(emitter, 'on');
 
-    service.onModuleInit();
+    await service.onModuleInit();
     expect(emitterOnSpy).toHaveBeenCalledWith(
       'newEntity',
       expect.any(Function)
@@ -70,21 +71,22 @@ describe('HomeAssistantService', () => {
     );
   });
 
-  it('should connect to MQTT on bootstrap', async () => {
-    await service.onApplicationBootstrap();
+  it('should connect to MQTT on init', async () => {
+    await service.onModuleInit();
     expect(mockMqtt.connectAsync).toHaveBeenCalledWith(
       expect.any(String),
-      expect.any(Object)
+      expect.any(Object),
+      false
     );
   });
 
-  it('should get the device info on bootstrap', async () => {
-    await service.onApplicationBootstrap();
+  it('should get the device info on init', async () => {
+    await service.onModuleInit();
     expect(mockSystem).toHaveBeenCalled();
   });
 
   it('should send offline messages for local entities on shutdown', async () => {
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
     service.handleNewEntity(new Sensor('test', 'Test'));
     service.handleNewEntity(new Sensor('test2', 'Test 2'));
     mockMqttClient.publish.mockClear();
@@ -103,24 +105,24 @@ describe('HomeAssistantService', () => {
   });
 
   it('should not send offline messages for distributed entities', async () => {
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
     service.handleNewEntity(new Sensor('distributed', 'Dist', true));
     mockMqttClient.publish.mockClear();
 
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
 
     expect(mockMqttClient.publish).not.toHaveBeenCalled();
   });
 
   it('should terminate the MQTT connection gracefully on shutdown', async () => {
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
     await service.onApplicationShutdown();
 
     expect(mockMqttClient.end).toHaveBeenCalled();
   });
 
   it('should publish discovery configuration for a new sensor', async () => {
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
     service.handleNewEntity(new Sensor('test-sensor', 'Test Sensor'));
 
     expect(mockMqttClient.publish).toHaveBeenCalledWith(
@@ -151,7 +153,7 @@ describe('HomeAssistantService', () => {
   });
 
   it('should publish discovery configuration for a new distributed sensor', async () => {
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
     service.handleNewEntity(new Sensor('dist-sensor', 'Dist Sensor', true));
 
     expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject({
@@ -174,7 +176,7 @@ describe('HomeAssistantService', () => {
       manufacturer: 'Foundation'
     } as SystemData);
 
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
     service.handleNewEntity(new Sensor('d6t-sensor', 'D6T Sensor'));
 
     expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject({
@@ -188,7 +190,7 @@ describe('HomeAssistantService', () => {
   });
 
   it('should apply sensor customizations to the discovery message', async () => {
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
     service.handleNewEntity(new Sensor('custom-sensor', 'Custom'), [
       {
         for: SensorConfig,
@@ -206,7 +208,7 @@ describe('HomeAssistantService', () => {
   });
 
   it('should exclude internal values from the discovery message', async () => {
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
     service.handleNewEntity(new Sensor('test-sensor', 'Test Sensor'));
 
     const configMsg = JSON.parse(mockMqttClient.publish.mock.calls[0][1]);
@@ -234,7 +236,7 @@ describe('HomeAssistantService', () => {
   });
 
   it('should publish state updates for entities', async () => {
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
     service.handleNewEntity(new Sensor('test', 'Test'));
     service.handleNewState('test', 2);
 
@@ -255,7 +257,7 @@ describe('HomeAssistantService', () => {
 
   it('should publish attribute updates for entities', async () => {
     jest.useFakeTimers();
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
     service.handleNewEntity(new Sensor('test', 'Test'));
     service.handleNewAttributes('test', { stateUpdated: true });
     jest.runAllTimers();
@@ -268,7 +270,7 @@ describe('HomeAssistantService', () => {
 
   it('should debounce the attribute updates', async () => {
     jest.useFakeTimers();
-    await service.onApplicationBootstrap();
+    await service.onModuleInit();
     service.handleNewEntity(new Sensor('test', 'Test'));
     mockMqttClient.publish.mockClear();
 

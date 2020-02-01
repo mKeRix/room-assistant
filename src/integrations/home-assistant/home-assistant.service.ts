@@ -1,7 +1,6 @@
 import {
   Injectable,
   Logger,
-  OnApplicationBootstrap,
   OnApplicationShutdown,
   OnModuleInit
 } from '@nestjs/common';
@@ -25,7 +24,7 @@ const PROPERTY_BLACKLIST = ['component', 'configTopic'];
 
 @Injectable()
 export class HomeAssistantService
-  implements OnModuleInit, OnApplicationBootstrap, OnApplicationShutdown {
+  implements OnModuleInit, OnApplicationShutdown {
   private config: HomeAssistantConfig;
   private device: Device;
   private entityConfigs: Map<string, EntityConfig> = new Map<
@@ -49,25 +48,25 @@ export class HomeAssistantService
   /**
    * Lifecycle hook, called once the host module has been initialized.
    */
-  onModuleInit(): void {
-    this.emitter.on('newEntity', this.handleNewEntity.bind(this));
-    this.emitter.on('stateUpdate', this.handleNewState.bind(this));
-    this.emitter.on('attributesUpdate', this.handleNewAttributes.bind(this));
-  }
-
-  /**
-   * Lifecycle hook, called once the application has started.
-   */
-  async onApplicationBootstrap(): Promise<void> {
-    this.mqttClient = await mqtt.connectAsync(
-      this.config.mqttUrl,
-      this.config.mqttOptions
-    );
-    this.mqttClient.on('connect', () =>
-      this.logger.log(`Connected to ${this.config.mqttUrl}`)
-    );
-
+  async onModuleInit(): Promise<void> {
     this.device = await this.getDeviceInfo();
+
+    try {
+      this.mqttClient = await mqtt.connectAsync(
+        this.config.mqttUrl,
+        this.config.mqttOptions,
+        false
+      );
+      this.logger.log(
+        `Successfully connected to MQTT broker at ${this.config.mqttUrl}`
+      );
+
+      this.emitter.on('newEntity', this.handleNewEntity.bind(this));
+      this.emitter.on('stateUpdate', this.handleNewState.bind(this));
+      this.emitter.on('attributesUpdate', this.handleNewAttributes.bind(this));
+    } catch (e) {
+      this.logger.error(e);
+    }
   }
 
   /**
@@ -75,7 +74,7 @@ export class HomeAssistantService
    */
   async onApplicationShutdown(): Promise<void> {
     this.entityConfigs.forEach(config => {
-      if (config.device.identifiers !== DISTRIBUTED_DEVICE_ID) {
+      if (config.device?.identifiers !== DISTRIBUTED_DEVICE_ID) {
         this.mqttClient.publish(
           config.availabilityTopic,
           config.payloadNotAvailable,
