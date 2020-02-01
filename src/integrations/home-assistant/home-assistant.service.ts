@@ -19,6 +19,8 @@ import { EntitiesEventEmitter } from '../../entities/entities.events';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { makeId } from '../../util/id';
 import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
+import { BinarySensor } from '../../entities/binary-sensor';
+import { BinarySensorConfig } from './binary-sensor-config';
 
 const PROPERTY_BLACKLIST = ['component', 'configTopic'];
 
@@ -230,6 +232,8 @@ export class HomeAssistantService
   ): EntityConfig {
     if (entity instanceof Sensor) {
       return new SensorConfig(combinedId, entity.name);
+    } else if (entity instanceof BinarySensor) {
+      return new BinarySensorConfig(combinedId, entity.name);
     } else {
       return;
     }

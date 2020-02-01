@@ -17,6 +17,7 @@ import SystemData = Systeminformation.SystemData;
 import { SensorConfig } from './sensor-config';
 import { Entity } from '../../entities/entity';
 import { Sensor } from '../../entities/sensor';
+import { BinarySensor } from '../../entities/binary-sensor';
 
 jest.mock('async-mqtt', () => {
   return {
@@ -166,6 +167,40 @@ describe('HomeAssistantService', () => {
         identifiers: 'room-assistant-distributed',
         name: 'room-assistant hub'
       }
+    });
+  });
+
+  it('should publish configuration for a new binary sensor', async () => {
+    await service.onModuleInit();
+    service.handleNewEntity(new BinarySensor('bin-sensor', 'Binary'));
+
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'homeassistant/binary_sensor/room-assistant/test-instance-bin-sensor/config',
+      expect.any(String),
+      {
+        qos: 0,
+        retain: true
+      }
+    );
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'room-assistant/binary_sensor/test-instance-bin-sensor/status',
+      'online',
+      {
+        qos: 0,
+        retain: true
+      }
+    );
+    expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject({
+      unique_id: 'room-assistant-test-instance-bin-sensor',
+      name: 'Binary',
+      state_topic:
+        'room-assistant/binary_sensor/test-instance-bin-sensor/state',
+      json_attributes_topic:
+        'room-assistant/binary_sensor/test-instance-bin-sensor/attributes',
+      availability_topic:
+        'room-assistant/binary_sensor/test-instance-bin-sensor/status',
+      payload_on: 'true',
+      payload_off: 'false'
     });
   });
 
