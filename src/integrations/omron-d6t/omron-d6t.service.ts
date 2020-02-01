@@ -14,7 +14,7 @@ import { Sensor } from '../../entities/sensor';
 import { Entity } from '../../entities/entity';
 import { I2CError } from './i2c.error';
 import { SensorConfig } from '../home-assistant/sensor-config';
-import { ThermopileOccupancySensor } from '../../util/thermopile/thermopile-occupancy.sensor';
+import { ThermopileOccupancySensor } from '../thermopile/thermopile-occupancy.sensor';
 
 const TEMPERATURE_COMMAND = 0x4c;
 
