@@ -6,6 +6,7 @@ import { OmronD6tConfig } from '../../integrations/omron-d6t/omron-d6t.config';
 import { GridEyeConfig } from '../../integrations/grid-eye/grid-eye.config';
 import { BluetoothClassicConfig } from '../../integrations/bluetooth-classic/bluetooth-classic.config';
 import { GpioConfig } from '../../integrations/gpio/gpio.config';
+import { ShellConfig } from '../../integrations/shell/shell.config';
 
 export class AppConfig {
   global: GlobalConfig = new GlobalConfig();
@@ -15,6 +16,7 @@ export class AppConfig {
   omronD6t: OmronD6tConfig = new OmronD6tConfig();
   gridEye: GridEyeConfig = new GridEyeConfig();
   gpio: GpioConfig = new GpioConfig();
+  shell: ShellConfig = new ShellConfig();
   homeAssistant: HomeAssistantConfig = new HomeAssistantConfig();
 }
 

@@ -13,3 +13,15 @@ gpio:
     - name: Radar
       pin: 24
       deviceClass: motion
+shell:
+  sensors:
+    - name: Simple Test
+      command: echo test
+      cron: '* * * * *'
+    - name: Regex Test
+      command: echo 'test 123'
+      cron: '* * * * */2'
+      regex: '[1-9]+'
+      deviceClass: 'timestamp'
+      icon: 'mdi:test'
+      unitOfMeasurement: 'tests'
