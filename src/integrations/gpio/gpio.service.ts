@@ -31,6 +31,9 @@ export class GpioService
     this.logger = new Logger(GpioService.name);
   }
 
+  /**
+   * Lifecycle hook, called once the application has started.
+   */
   onApplicationBootstrap(): void {
     this.config.binarySensors.forEach(binarySensor => {
       this.createBinarySensor(
@@ -41,12 +44,23 @@ export class GpioService
     });
   }
 
+  /**
+   * Lifecycle hook, called once the application is shutting down.
+   */
   onApplicationShutdown(): void {
     this.gpios.forEach(gpio => {
       gpio.unexport();
     });
   }
 
+  /**
+   * Creates and register a new GPIO sensor, which updates its state based on the GPIO pin input.
+   *
+   * @param name - Name of the sensor
+   * @param pin - GPIO pin to watch for interrupts
+   * @param deviceClass - Device class of the sensor
+   * @returns Registered sensor
+   */
   protected createBinarySensor(
     name: string,
     pin: number,
