@@ -15,8 +15,6 @@ import { NewRssiEvent } from './new-rssi.event';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import KalmanFilter from 'kalmanjs';
 
-jest.mock('child_process');
-jest.mock('util');
 jest.mock('../room-presence/room-presence-distance.sensor');
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {
@@ -25,6 +23,10 @@ jest.mock('kalmanjs', () => {
     };
   });
 });
+jest.mock('util', () => ({
+  ...jest.requireActual('util'),
+  promisify: jest.fn()
+}));
 
 describe('BluetoothClassicService', () => {
   let service: BluetoothClassicService;
