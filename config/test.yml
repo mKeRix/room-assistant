@@ -6,3 +6,10 @@ bluetoothClassic:
   addresses:
     - 8d:ad:e3:e2:7a:01
     - f7:6c:e3:10:55:b5
+gpio:
+  binarySensors:
+    - name: PIR Sensor
+      pin: 23
+    - name: Radar
+      pin: 24
+      deviceClass: motion
