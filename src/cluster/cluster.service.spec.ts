@@ -75,8 +75,8 @@ describe('ClusterService', () => {
     });
   });
 
-  it('should start advertising room-assistant via Bonjour', async () => {
-    await service.onApplicationBootstrap();
+  it('should start advertising room-assistant via Bonjour', () => {
+    service.onApplicationBootstrap();
     expect(mockMdns.createAdvertisement).toHaveBeenCalledWith(
       { name: 'room-assistant' },
       6425,
