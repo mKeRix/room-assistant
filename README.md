@@ -11,7 +11,7 @@ There is no documentation yet, if you don't can't find what you're looking for i
 
 ```bash
 sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev libavahi-compat-libdnssd-dev
-sudo npm i --global --unsafe-perm room-assistant@2.0.0-beta.1
+sudo npm i --global --unsafe-perm room-assistant@2.0.0-beta.3
 ```
 
 Create a config file in `<working dir>/config/local.yml` and then run the software by typing `sudo room-assistant`.
