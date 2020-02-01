@@ -87,7 +87,7 @@ export class HomeAssistantService
         );
       }
     });
-    return this.mqttClient.end();
+    return this.mqttClient?.end();
   }
 
   /**
