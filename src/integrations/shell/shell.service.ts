@@ -25,6 +25,9 @@ export class ShellService implements OnApplicationBootstrap {
     this.logger = new Logger(ShellService.name);
   }
 
+  /**
+   * Lifecycle hook, called once the application has started.
+   */
   onApplicationBootstrap(): void {
     this.config.sensors.forEach(sensorOptions => {
       const sensor = this.createSensor(
@@ -48,6 +51,14 @@ export class ShellService implements OnApplicationBootstrap {
     });
   }
 
+  /**
+   * Executes a shell command and returns the output, optionally filtered with a RegExp.
+   * If capture groups are provided the first one is returned, otherwise the entire match.
+   *
+   * @param command - Shell command to execute
+   * @param regex - Regular expression to filter the output with
+   * @returns stdout of command, optionally filtered
+   */
   async executeCommand(command: string, regex?: RegExp): Promise<string> {
     const execPromise = util.promisify(exec);
     const output = await execPromise(command);
@@ -63,6 +74,15 @@ export class ShellService implements OnApplicationBootstrap {
     }
   }
 
+  /**
+   * Creates a shell sensor.
+   *
+   * @param name - Name of the sensor
+   * @param deviceClass - Device class to use
+   * @param unitOfMeasurement - Unit of measurement to use
+   * @param icon - Icon to use
+   * @returns Registered sensor
+   */
   protected createSensor(
     name: string,
     deviceClass?: string,
