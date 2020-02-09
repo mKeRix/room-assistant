@@ -1,7 +1,17 @@
 module.exports = {
   title: 'room-assistant',
   description: 'A companion software to bring your home automation to the room-level for presence detection and more.',
-  plugins: ['vuepress-plugin-clean-urls'],
+  plugins: [
+    'vuepress-plugin-clean-urls',
+    'vuepress-plugin-seo',
+    [
+      '@vuepress/pwa',
+      {
+        serviceWorker: true,
+        updatePopup: true
+      }
+    ]
+  ],
   head: [
     ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }],
     ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' }],
@@ -12,6 +22,11 @@ module.exports = {
     ['meta', { name: 'theme-color', content: '#ffffff' }]
   ],
   themeConfig: {
+    domain: 'www.room-assistant.io',
+    author: {
+      name: 'Heiko Rothe',
+      twitter: '@mKeRix'
+    },
     repo: 'mKeRix/room-assistant',
     editLinks: true,
     lastUpdated: true,
