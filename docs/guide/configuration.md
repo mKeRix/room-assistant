@@ -21,7 +21,6 @@ room-assistant exposes a few settings that affect the overall behavior of the ap
 | `integrations` | Array  |          | The integrations that should be loaded on this instance, denoted as camelCase.                   |
 
 ::: details Example Config
-
 ```yaml
 global:
   instanceName: bedroom
@@ -29,7 +28,6 @@ global:
     - bluetoothLowEnergy
     - homeAssistant
 ```
-
 :::
 
 ## Cluster Settings
@@ -45,7 +43,6 @@ If you are running multiple room-assistant instances they come together in a clu
 | `peerAddresses`    | Array  |         | A list of endpoint addresses (IP + port) of other room-assistant instances.                       |
 
 ::: details Example Config
-
 ```yaml
 cluster:
   networkInterface: wlan0
@@ -54,5 +51,4 @@ cluster:
     - 192.168.1.10:6425
     - 192.168.1.11:6425
 ```
-
 :::
