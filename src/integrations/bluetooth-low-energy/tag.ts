@@ -8,7 +8,7 @@ export class Tag {
     this.peripheral = peripheral;
     this.rssi = peripheral.rssi;
     // -59 is a somewhat reasonable default
-    this.measuredPower = peripheral.advertisement.txPowerLevel || -59.0;
+    this.measuredPower = -59.0;
   }
 
   peripheral: Peripheral;
