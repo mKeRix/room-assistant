@@ -2,6 +2,12 @@
 
 **Integration Key:** `bluetoothLowEnergy`
 
+::: warning
+
+This integration cannot be used together with [Bluetooth Classic](./bluetooth-classic).
+
+:::
+
 The Bluetooth Low Energy (BLE) integration scans for advertisement packets that other devices, like iBeacon or Bluetooth tags, emit. You can use any of the many different BLE tags or smart armbands out there, as long as they send out a constant ID. An example would be the [RadBeacon Chip](https://store.radiusnetworks.com/collections/all/products/radbeacon-chip) or the [iB001W](https://www.beaconzone.co.uk/iB001W?search=iB001W). You can use Google or your favorite tech hardware store to find many other products like them that would also work.
 
 The integration calculates an estimated distance in meters for all advertisements it receives and uses that to update the current location of the device. Since there are many factors at play these estimations are not exact measurements, especially once there are obstructions between the BLE device and room-assistant instance. The best accuracy can be achieved with properly configured iBeacons. The distance value is smoothed using a [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter) to limit the impact of measurement noise.
@@ -52,7 +58,6 @@ The tag overrides object can be considered as a map with the BLE tag ID as key a
 | `measuredPower` | Number |         | Overrides the [measured power](https://community.estimote.com/hc/en-us/articles/201636913-What-are-Broadcasting-Power-RSSI-and-other-characteristics-of-a-beacon-s-signal-) of a BLE tag, which is used for distance calculation. Should be the expected RSSI when the beacon is exactly 1 meter away from the room-assistant instance. |
 
 ::: details Example Config
-
 ```yaml
 global:
   integrations:
@@ -67,5 +72,4 @@ bluetoothLowEnergy:
       name: Cool BLE Tag
       measuredPower: -61
 ```
-
 :::

@@ -27,13 +27,20 @@ module.exports = {
           children: [
             '/guide/',
             '/guide/installation',
-            '/guide/configuration']
+            '/guide/configuration'
+          ]
         },
         {
           title: 'Integrations',
           collapsable: false,
           children: [
-            '/integrations/bluetooth-low-energy'
+            '/integrations/home-assistant',
+            '/integrations/bluetooth-low-energy',
+            '/integrations/bluetooth-classic',
+            '/integrations/omron-d6t',
+            '/integrations/grid-eye',
+            '/integrations/gpio',
+            '/integrations/shell'
           ]
         }
       ]
