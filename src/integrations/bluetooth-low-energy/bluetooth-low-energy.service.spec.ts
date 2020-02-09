@@ -407,6 +407,42 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
+  it('should report peripherals that are closer than the max distance', () => {
+    const handleDistanceSpy = jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    mockConfig.maxDistance = 5;
+
+    service.handleDiscovery({
+      id: '12:ab:cd:12:cd',
+      rssi: -45,
+      advertisement: {
+        localName: 'Test BLE Device'
+      }
+    } as Peripheral);
+    expect(handleDistanceSpy).toHaveBeenCalled();
+    expect(clusterService.publish).toHaveBeenCalled();
+  });
+
+  it('should ignore peripherals that are further away than max distance', () => {
+    const handleDistanceSpy = jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    mockConfig.maxDistance = 5;
+
+    service.handleDiscovery({
+      id: '12:ab:cd:12:cd',
+      rssi: -89,
+      advertisement: {
+        localName: 'Test BLE Device'
+      }
+    } as Peripheral);
+    expect(handleDistanceSpy).not.toHaveBeenCalled();
+    expect(clusterService.publish).not.toHaveBeenCalled();
+  });
+
   it('should reuse existing Kalman filters for the same id', () => {
     const sensor = new Sensor('testid', 'Test');
     entitiesService.has.mockReturnValue(true);
