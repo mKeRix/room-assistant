@@ -35,6 +35,9 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# VuePress
+docs/.vuepress/dist
+
 # Config
 config/*.yml
 !config/test.yml
