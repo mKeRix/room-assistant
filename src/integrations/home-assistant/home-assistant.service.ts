@@ -76,7 +76,10 @@ export class HomeAssistantService
    */
   async onApplicationShutdown(): Promise<void> {
     this.entityConfigs.forEach(config => {
-      if (config.device?.identifiers !== DISTRIBUTED_DEVICE_ID) {
+      if (
+        config.device?.identifiers !== DISTRIBUTED_DEVICE_ID &&
+        config.device?.viaDevice !== DISTRIBUTED_DEVICE_ID
+      ) {
         this.mqttClient.publish(
           config.availabilityTopic,
           config.payloadNotAvailable,

@@ -18,6 +18,7 @@ import { SensorConfig } from './sensor-config';
 import { Entity } from '../../entities/entity';
 import { Sensor } from '../../entities/sensor';
 import { BinarySensor } from '../../entities/binary-sensor';
+import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
 
 jest.mock('async-mqtt', () => {
   return {
@@ -107,10 +108,30 @@ describe('HomeAssistantService', () => {
 
   it('should not send offline messages for distributed entities', async () => {
     await service.onModuleInit();
-    service.handleNewEntity(new Sensor('distributed', 'Dist', true));
+    service.handleNewEntity(new Sensor('test-sensor', 'Dist', true));
     mockMqttClient.publish.mockClear();
 
+    await service.onApplicationShutdown();
+
+    expect(mockMqttClient.publish).not.toHaveBeenCalled();
+  });
+
+  it('should not send offline messages for entities belong to a child device of the distributed hub', async () => {
     await service.onModuleInit();
+    service.handleNewEntity(new Sensor('test-sensor', 'Dist', true), [
+      {
+        for: SensorConfig,
+        overrides: {
+          device: {
+            identifiers: 'test-device-id',
+            viaDevice: DISTRIBUTED_DEVICE_ID
+          }
+        }
+      }
+    ]);
+    mockMqttClient.publish.mockClear();
+
+    await service.onApplicationShutdown();
 
     expect(mockMqttClient.publish).not.toHaveBeenCalled();
   });
