@@ -25,6 +25,8 @@ import { KalmanFilterable } from '../../util/filters';
 import { makeId } from '../../util/id';
 import { Device } from './device';
 import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
+import { Switch } from '../../entities/switch';
+import { SwitchConfig } from '../home-assistant/switch-config';
 
 const INTERVAL = 6 * 1000;
 
@@ -33,6 +35,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothClassicConfig;
   private rotationOffset = 0;
+  private inquiriesSwitch: Switch;
   private logger: Logger;
 
   constructor(
@@ -65,6 +68,8 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    * Lifecycle hook, called once the application has started.
    */
   onApplicationBootstrap(): void {
+    this.inquiriesSwitch = this.createInquiriesSwitch();
+
     this.clusterService.on(
       REQUEST_RSSI_CHANNEL,
       this.handleRssiRequest.bind(this)
@@ -79,18 +84,20 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    * @param address - Bluetooth MAC address
    */
   async handleRssiRequest(address: string): Promise<void> {
-    let rssi = await this.inquireRssi(address);
+    if (this.shouldInquire()) {
+      let rssi = await this.inquireRssi(address);
 
-    if (rssi !== undefined) {
-      rssi = _.round(this.filterRssi(address, rssi), 1);
-      const event = new NewRssiEvent(
-        this.configService.get('global').instanceName,
-        address,
-        rssi
-      );
+      if (rssi !== undefined) {
+        rssi = _.round(this.filterRssi(address, rssi), 1);
+        const event = new NewRssiEvent(
+          this.configService.get('global').instanceName,
+          address,
+          rssi
+        );
 
-      this.clusterService.publish(NEW_RSSI_CHANNEL, event);
-      this.handleNewRssi(event);
+        this.clusterService.publish(NEW_RSSI_CHANNEL, event);
+        this.handleNewRssi(event);
+      }
     }
   }
 
@@ -226,6 +233,42 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
   getParticipatingNodes(): Node[] {
     const nodes = Object.values(this.clusterService.nodes());
     return nodes.filter(node => node.channels?.includes(NEW_RSSI_CHANNEL));
+  }
+
+  /**
+   * Checks whether this instance should send out Bluetooth Inquiries at the moment or not.
+   *
+   * @returns Bluetooth inquiries allowed?
+   */
+  shouldInquire(): boolean {
+    return this.inquiriesSwitch?.state;
+  }
+
+  /**
+   * Creates and registers a new switch as a setting for whether Bluetooth queries should be made from this device or not.
+   *
+   * @returns Registered query switch
+   */
+  protected createInquiriesSwitch(): Switch {
+    const instanceName = this.configService.get('global').instanceName;
+    const customizations: Array<EntityCustomization<any>> = [
+      {
+        for: SwitchConfig,
+        overrides: {
+          icon: 'mdi:bluetooth-audio'
+        }
+      }
+    ];
+    const inquiriesSwitch = this.entitiesService.add(
+      new Switch(
+        'bluetooth-classic-inquiries-switch',
+        `${instanceName} Bluetooth Inquiries`
+      ),
+      customizations
+    ) as Switch;
+    inquiriesSwitch.turnOn();
+
+    return inquiriesSwitch;
   }
 
   /**

@@ -32,6 +32,12 @@ This integration assumes that you have loaded it and configured it in the same m
 
 Each configured device will create a sensor that has the name of the closest room-assistant instance as its state - or `not_home` if the device could not be found by any of them. The distance in the attributes of those sensors is the inverted signal strength value and does not actually represent any physical distance. It may also show negative numbers.
 
+## Inquiries switch
+
+Each instance running this integration will also create a switch for enabling or disabling Bluetooth inquiries. A disabled switch blocks all Bluetooth requests of the instance, which essentially means that your Bluetooth device won't be discovered by this instance anymore. It does not take the instance out of the rotation however, so the time to detection stays the same.
+
+You could use this to reduce the resources used by room-assistant when you are certain nobody is home. Another example would be disabling the inquiries when you are asleep to save the batteries of your Bluetooth devices at night. 
+
 ## Settings
 
 | Name        | Type  | Default | Description                                                  |

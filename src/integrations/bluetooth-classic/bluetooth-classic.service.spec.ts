@@ -14,6 +14,7 @@ import {
 import { NewRssiEvent } from './new-rssi.event';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import KalmanFilter from 'kalmanjs';
+import { Switch } from '../../entities/switch';
 
 jest.mock('../room-presence/room-presence-distance.sensor');
 jest.mock('kalmanjs', () => {
@@ -94,6 +95,10 @@ describe('BluetoothClassicService', () => {
   });
 
   it('should setup the cluster bindings on bootstrap', () => {
+    entitiesService.add.mockReturnValue(
+      new Switch('query-switch', 'Query Switch')
+    );
+
     service.onApplicationBootstrap();
 
     expect(clusterService.on).toHaveBeenCalledWith(
@@ -105,6 +110,23 @@ describe('BluetoothClassicService', () => {
       expect.anything()
     );
     expect(clusterService.subscribe).toHaveBeenCalledWith(NEW_RSSI_CHANNEL);
+  });
+
+  it('should create and register an inquiries switch on bootstrap', () => {
+    const mockSwitch = new Switch('inquiries-switch', 'Inquiries Switch');
+    entitiesService.add.mockReturnValue(mockSwitch);
+    const turnOnSpy = jest.spyOn(mockSwitch, 'turnOn');
+
+    service.onApplicationBootstrap();
+
+    expect(entitiesService.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'bluetooth-classic-inquiries-switch',
+        name: 'test-instance Bluetooth Inquiries'
+      }),
+      expect.any(Array)
+    );
+    expect(turnOnSpy).toHaveBeenCalled();
   });
 
   it('should return measured RSSI value from command output', () => {
@@ -172,6 +194,7 @@ Requesting information ...
   });
 
   it('should publish the RSSI if found', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
     jest.spyOn(service, 'inquireRssi').mockResolvedValue(0);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
@@ -189,12 +212,23 @@ Requesting information ...
   });
 
   it('should not publish an RSSI value if none was found', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
     jest.spyOn(service, 'inquireRssi').mockResolvedValue(undefined);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
 
     await service.handleRssiRequest('77:50:fb:4d:ab:70');
+
+    expect(clusterService.publish).not.toHaveBeenCalled();
+    expect(handleRssiMock).not.toHaveBeenCalled();
+  });
+
+  it('should ignore RSSI requests of inquiries are disabled', () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(false);
+    const handleRssiMock = jest
+      .spyOn(service, 'handleNewRssi')
+      .mockImplementation(() => undefined);
 
     expect(clusterService.publish).not.toHaveBeenCalled();
     expect(handleRssiMock).not.toHaveBeenCalled();
@@ -367,6 +401,7 @@ Requesting information ...
   });
 
   it('should filter the RSSI of inquired devices before publishing', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
     jest.spyOn(service, 'inquireRssi').mockResolvedValue(-3);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
@@ -393,5 +428,25 @@ Requesting information ...
     service.filterRssi('D6:AB:CD:10:DA:31', -2);
 
     expect(KalmanFilter).toHaveBeenCalledTimes(2);
+  });
+
+  it('should not allow inquiries if the inquiries switch is turned off', () => {
+    const mockSwitch = new Switch('inquiries-switch', 'Inquiries Switch');
+    entitiesService.add.mockReturnValue(mockSwitch);
+
+    service.onApplicationBootstrap();
+    mockSwitch.state = false;
+
+    expect(service.shouldInquire()).toBeFalsy();
+  });
+
+  it('should allow inquiries if the inquiries switch is turned on', () => {
+    const mockSwitch = new Switch('inquiries-switch', 'Inquiries Switch');
+    entitiesService.add.mockReturnValue(mockSwitch);
+
+    service.onApplicationBootstrap();
+    mockSwitch.state = true;
+
+    expect(service.shouldInquire()).toBeTruthy();
   });
 });
