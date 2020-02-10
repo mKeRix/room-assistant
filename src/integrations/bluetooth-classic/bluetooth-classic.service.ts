@@ -119,7 +119,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    * Sends out RSSI requests to the connected nodes in the cluster by matching each one with a MAC address.
    * Rotates the mapping on each call.
    */
-  @Interval(10 * 1000)
+  @Interval(6 * 1000)
   distributeInquiries(): void {
     if (this.clusterService.isLeader()) {
       const nodes = this.getParticipatingNodes();
@@ -158,15 +158,20 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    */
   async inquireRssi(address: string): Promise<number> {
     const execPromise = util.promisify(exec);
+    const regex = new RegExp(/-?[0-9]+/);
 
     this.logger.debug(`Querying for RSSI of ${address} using hcitool`);
-    const output = await execPromise(
-      `hcitool cc "${address}" && hcitool rssi "${address}"`
-    );
-    const regex = new RegExp(/-?[0-9]+/);
-    const matches = output.stdout.match(regex);
+    try {
+      const output = await execPromise(
+        `hcitool cc "${address}" && hcitool rssi "${address}"`
+      );
+      const matches = output.stdout.match(regex);
 
-    return matches?.length > 0 ? parseInt(matches[0], 10) : undefined;
+      return matches?.length > 0 ? parseInt(matches[0], 10) : undefined;
+    } catch (e) {
+      this.logger.debug(e.message);
+      return undefined;
+    }
   }
 
   /**

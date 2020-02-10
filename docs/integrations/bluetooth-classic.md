@@ -28,7 +28,7 @@ sudo setcap cap_net_raw+eip $(eval readlink -f `which hcitool`)
 
 ## How it works
 
-This integration assumes that you have loaded it and configured it in the same manner on all instances that you want to use for tracking. Every 10 seconds each instance in the cluster will be tasked with querying the signal strength of one of the configured devices. The resulting RSSI values are shared with all other instances, one of which keeps track of all device states.
+This integration assumes that you have loaded it and configured it in the same manner on all instances that you want to use for tracking. Every 6 seconds each instance in the cluster will be tasked with querying the signal strength of one of the configured devices. The resulting RSSI values are shared with all other instances, one of which keeps track of all device states.
 
 Each configured device will create a sensor that has the name of the closest room-assistant instance as its state - or `not_home` if the device could not be found by any of them. The distance in the attributes of those sensors is the inverted signal strength value and does not actually represent any physical distance. It may also show negative numbers.
 

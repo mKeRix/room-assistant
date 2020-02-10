@@ -128,6 +128,14 @@ describe('BluetoothClassicService', () => {
     expect(service.inquireRssi('08:05:90:ed:3b:60')).resolves.toBeUndefined();
   });
 
+  it('should return undefined if the command failed', () => {
+    jest.spyOn(util, 'promisify').mockImplementation(() => {
+      return jest.fn().mockRejectedValue({ message: 'Command failed' });
+    });
+
+    expect(service.inquireRssi('08:05:90:ed:3b:60')).resolves.toBeUndefined();
+  });
+
   it('should return device information based on parsed output', async () => {
     jest.spyOn(util, 'promisify').mockImplementation(() => {
       return jest.fn().mockResolvedValue({
