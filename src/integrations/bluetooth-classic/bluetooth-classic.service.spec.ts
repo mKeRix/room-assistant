@@ -219,7 +219,7 @@ Requesting information ...
       expect.any(RoomPresenceDistanceSensor),
       expect.any(Array)
     );
-    expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 10000);
+    expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 6000);
 
     const sensorInstance = (RoomPresenceDistanceSensor as jest.Mock).mock
       .instances[0];
@@ -227,7 +227,7 @@ Requesting information ...
       'test-instance',
       10
     );
-    expect(sensorInstance.timeout).toBe(40);
+    expect(sensorInstance.timeout).toBe(24);
   });
 
   it('should not distribute inquiries if not the leader', () => {

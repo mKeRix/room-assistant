@@ -26,6 +26,8 @@ import { makeId } from '../../util/id';
 import { Device } from './device';
 import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
 
+const INTERVAL = 6 * 1000;
+
 @Injectable()
 export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
   implements OnModuleInit, OnApplicationBootstrap {
@@ -119,7 +121,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    * Sends out RSSI requests to the connected nodes in the cluster by matching each one with a MAC address.
    * Rotates the mapping on each call.
    */
-  @Interval(6 * 1000)
+  @Interval(INTERVAL)
   distributeInquiries(): void {
     if (this.clusterService.isLeader()) {
       const nodes = this.getParticipatingNodes();
@@ -263,10 +265,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
       customizations
     ) as RoomPresenceDistanceSensor;
 
-    const interval = setInterval(
-      sensor.checkForTimeout.bind(sensor),
-      10 * 1000
-    );
+    const interval = setInterval(sensor.checkForTimeout.bind(sensor), INTERVAL);
     this.schedulerRegistry.addInterval(`${sensorId}_timeout_check`, interval);
 
     return sensor;
@@ -280,7 +279,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
   protected calculateCurrentTimeout(): number {
     const nodes = this.getParticipatingNodes();
     const addresses = Object.values(this.config.addresses); // workaround for node-config deserializing to an Array-like object
-    return Math.max(nodes.length, addresses.length) * 2 * 10;
+    return (Math.max(nodes.length, addresses.length) * 2 * INTERVAL) / 1000;
   }
 
   /**
