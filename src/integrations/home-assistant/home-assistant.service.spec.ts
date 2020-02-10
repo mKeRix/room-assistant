@@ -2,6 +2,7 @@
 const mockMqttClient = {
   on: jest.fn(),
   publish: jest.fn(),
+  subscribe: jest.fn(),
   end: jest.fn()
 };
 
@@ -18,6 +19,7 @@ import { SensorConfig } from './sensor-config';
 import { Entity } from '../../entities/entity';
 import { Sensor } from '../../entities/sensor';
 import { BinarySensor } from '../../entities/binary-sensor';
+import { Switch } from '../../entities/switch';
 import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
 
 jest.mock('async-mqtt', () => {
@@ -79,6 +81,10 @@ describe('HomeAssistantService', () => {
       expect.any(String),
       expect.any(Object),
       false
+    );
+    expect(mockMqttClient.on).toHaveBeenCalledWith(
+      'message',
+      expect.any(Function)
     );
   });
 
@@ -225,6 +231,54 @@ describe('HomeAssistantService', () => {
     });
   });
 
+  it('should publish discovery information for a new switch', async () => {
+    await service.onModuleInit();
+    service.handleNewEntity(new Switch('test-switch', 'Test Switch'));
+
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'homeassistant/switch/room-assistant/test-instance-test-switch/config',
+      expect.any(String),
+      {
+        qos: 0,
+        retain: true
+      }
+    );
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'room-assistant/switch/test-instance-test-switch/status',
+      'online',
+      {
+        qos: 0,
+        retain: true
+      }
+    );
+    expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject({
+      unique_id: 'room-assistant-test-instance-test-switch',
+      name: 'Test Switch',
+      state_topic: 'room-assistant/switch/test-instance-test-switch/state',
+      command_topic: 'room-assistant/switch/test-instance-test-switch/command',
+      json_attributes_topic:
+        'room-assistant/switch/test-instance-test-switch/attributes',
+      availability_topic:
+        'room-assistant/switch/test-instance-test-switch/status',
+      payload_on: 'on',
+      payload_off: 'off',
+      state_on: 'true',
+      state_off: 'false'
+    });
+  });
+
+  it('should subscribe to the command topic when registering a new switch', async () => {
+    await service.onModuleInit();
+    service.handleNewEntity(new Switch('test-switch', 'Test Switch'));
+
+    expect(
+      mockMqttClient.subscribe
+    ).toHaveBeenCalledWith(
+      'room-assistant/switch/test-instance-test-switch/command',
+      { qos: 0 }
+    );
+  });
+
   it('should include device information in the discovery message', async () => {
     mockSystem.mockResolvedValue({
       serial: 'abcd',
@@ -347,5 +401,49 @@ describe('HomeAssistantService', () => {
     jest.runAllTimers();
 
     expect(mockMqttClient.publish).not.toHaveBeenCalled();
+  });
+
+  it('should match incoming messages to the correct entity', async () => {
+    await service.onModuleInit();
+    const mockSwitch = new Switch('test-switch', 'Test Switch');
+    const turnOnSpy = jest.spyOn(mockSwitch, 'turnOn');
+    service.handleNewEntity(mockSwitch);
+    service.handleNewEntity(new Sensor('test-sensor', 'Test Sensor'));
+    service.handleNewEntity(new Switch('switch2', 'Second Switch'));
+
+    service.handleIncomingMessage(
+      'room-assistant/switch/test-instance-test-switch/command',
+      Buffer.from('on')
+    );
+    expect(turnOnSpy).toHaveBeenCalled();
+  });
+
+  it('should ignore incoming messages for unknown entities', async () => {
+    await service.onModuleInit();
+    service.handleNewEntity(new Switch('test-switch', 'Test Switch'));
+
+    expect(() => {
+      service.handleIncomingMessage(
+        'room-assistant/switch/123-test/command',
+        Buffer.from('on')
+      );
+    }).not.toThrowError();
+  });
+
+  it('should ignore incoming messages with invalid commands', async () => {
+    await service.onModuleInit();
+    const mockSwitch = new Switch('test-switch', 'Test Switch');
+    service.handleNewEntity(mockSwitch);
+    const turnOnSpy = jest.spyOn(mockSwitch, 'turnOn');
+    const turnOffSpy = jest.spyOn(mockSwitch, 'turnOff');
+
+    expect(() => {
+      service.handleIncomingMessage(
+        'room-assistant/switch/test-instance-test-switch/command',
+        Buffer.from('invalid')
+      );
+    }).not.toThrowError();
+    expect(turnOnSpy).not.toHaveBeenCalled();
+    expect(turnOffSpy).not.toHaveBeenCalled();
   });
 });

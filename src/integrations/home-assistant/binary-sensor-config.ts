@@ -1,9 +1,9 @@
 import { EntityConfig } from './entity-config';
 
 export class BinarySensorConfig extends EntityConfig {
-  payload_on = 'true';
-  payload_off = 'false';
-  device_class?: BinarySensorDeviceClass;
+  payloadOn = 'true';
+  payloadOff = 'false';
+  deviceClass?: BinarySensorDeviceClass;
 
   constructor(id: string, name: string) {
     super('binary_sensor', id, name);

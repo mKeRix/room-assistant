@@ -21,8 +21,10 @@ import { makeId } from '../../util/id';
 import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
 import { BinarySensor } from '../../entities/binary-sensor';
 import { BinarySensorConfig } from './binary-sensor-config';
+import { Switch } from '../../entities/switch';
+import { SwitchConfig } from './switch-config';
 
-const PROPERTY_BLACKLIST = ['component', 'configTopic'];
+const PROPERTY_BLACKLIST = ['component', 'configTopic', 'commandStore'];
 
 @Injectable()
 export class HomeAssistantService
@@ -59,6 +61,7 @@ export class HomeAssistantService
         this.config.mqttOptions,
         false
       );
+      this.mqttClient.on('message', this.handleIncomingMessage.bind(this));
       this.logger.log(
         `Successfully connected to MQTT broker at ${this.config.mqttUrl}`
       );
@@ -194,6 +197,26 @@ export class HomeAssistantService
   }
 
   /**
+   * Executes a stored command based on the topic and content of a MQTT message.
+   *
+   * @param topic - Topic that the message was received on
+   * @param message - Buffer containing the received message as a string
+   */
+  handleIncomingMessage(topic: string, message: Buffer): void {
+    const configs = Array.from(this.entityConfigs.values());
+    const config = configs.find(
+      config => config instanceof SwitchConfig && config.commandTopic == topic
+    );
+
+    if (config instanceof SwitchConfig) {
+      const command = message.toString();
+      if (config.commandStore[command]) {
+        config.commandStore[command]();
+      }
+    }
+  }
+
+  /**
    * Retrieves information about the local device.
    *
    * @returns Device information
@@ -237,6 +260,15 @@ export class HomeAssistantService
       return new SensorConfig(combinedId, entity.name);
     } else if (entity instanceof BinarySensor) {
       return new BinarySensorConfig(combinedId, entity.name);
+    } else if (entity instanceof Switch) {
+      const config = new SwitchConfig(
+        combinedId,
+        entity.name,
+        entity.turnOn.bind(entity),
+        entity.turnOff.bind(entity)
+      );
+      this.mqttClient.subscribe(config.commandTopic, { qos: 0 });
+      return config;
     } else {
       return;
     }
