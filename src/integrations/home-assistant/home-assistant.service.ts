@@ -222,9 +222,14 @@ export class HomeAssistantService
    * @returns Device information
    */
   protected async getDeviceInfo(): Promise<Device> {
+    const instanceName = this.configService.get('global').instanceName;
     const systemInfo = await system();
-    const device = new Device(systemInfo.serial);
-    device.name = this.configService.get('global').instanceName;
+    const serial =
+      systemInfo.serial && systemInfo.serial !== '-'
+        ? systemInfo.serial
+        : makeId(instanceName);
+    const device = new Device(serial);
+    device.name = instanceName;
     device.model = systemInfo.model;
     device.manufacturer = systemInfo.manufacturer;
     return device;

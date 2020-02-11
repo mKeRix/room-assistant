@@ -1,6 +1,13 @@
 version: '3'
 services:
-  mqtt:
-    image: eclipse-mosquitto:1.6
-    ports:
-      - 1883:1883
+  room-assistant:
+    build: .
+    network_mode: host
+    environment:
+      NODE_CONFIG: >
+        {
+          "global": {
+            "instanceName": "dev-instance",
+            "integrations": []
+          }
+        }

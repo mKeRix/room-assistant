@@ -299,6 +299,26 @@ describe('HomeAssistantService', () => {
     });
   });
 
+  it('should make the instance name the device identifier if no serial was found', async () => {
+    mockSystem.mockResolvedValue({
+      serial: '-',
+      model: 'Docker Container',
+      manufacturer: ''
+    } as SystemData);
+
+    await service.onModuleInit();
+    service.handleNewEntity(new Sensor('grideye-sensor', 'GridEYE Sensor'));
+
+    expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject({
+      device: {
+        identifiers: 'test-instance',
+        name: 'test-instance',
+        model: 'Docker Container',
+        manufacturer: ''
+      }
+    });
+  });
+
   it('should apply sensor customizations to the discovery message', async () => {
     await service.onModuleInit();
     service.handleNewEntity(new Sensor('custom-sensor', 'Custom'), [

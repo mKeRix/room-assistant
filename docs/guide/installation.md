@@ -26,6 +26,10 @@ sudo npm i --global --unsafe-perm room-assistant
 npm will link the binary for running the software, usually into `/usr/bin/room-assistant`.
 If the directory is already in your `PATH` you can start it directly by typing `room-assistant`. Otherwise you can start it by typing the full path name of where it was installed.
 
+## Running with Docker
+
+This project provides official Docker images on [Docker Hub](https://hub.docker.com/r/mkerix/room-assistant/). You can either use the latest or a specific version by using the correct tag. It is strongly recommended to run this image with the `host` network, otherwise you may run into problems with many parts of the software.
+
 ## Running with Hass.io
 
 You can install room-assistant as Hass.io add-on by [adding the following URL as repository](https://www.home-assistant.io/hassio/installing_third_party_addons/):

@@ -1,0 +1,25 @@
+name: Docker
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v1
+        with:
+          version: latest
+      - name: Run Buildx
+        run: docker buildx build --build-arg ROOM_ASSISTANT_VERSION=${{steps.get_version.outputs.VERSION}} --platform linux/386,linux/amd64,linux/arm/v7,linux/arm64 -t mkerix/room-assistant:${{steps.get_version.outputs.VERSION}} --push .
