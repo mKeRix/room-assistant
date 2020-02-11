@@ -21,8 +21,8 @@ export abstract class ThermopileOccupancySensor {
     const threshold = mean + deltaThreshold;
 
     const relevantPixels: Pixel[] = [];
-    for (const [x, row] of data.entries()) {
-      for (const [y, value] of row.entries()) {
+    for (const [y, row] of data.entries()) {
+      for (const [x, value] of row.entries()) {
         if (value >= threshold) {
           relevantPixels.push(new Pixel(x, y, value));
         }

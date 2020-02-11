@@ -17,8 +17,9 @@ export class Cluster {
     return (
       this.pixels.find(value => {
         return (
-          (value.x >= pixel.x - 1 && value.x <= pixel.x + 1) ||
-          (value.y >= pixel.y - 1 && value.y <= pixel.y + 1)
+          value.x >= pixel.x - 1 &&
+          value.x <= pixel.x + 1 &&
+          value.y >= pixel.y - 1 && value.y <= pixel.y + 1
         );
       }) !== undefined
     );
