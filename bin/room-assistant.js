@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const version = require('../package.json').version;
 const commandLineUsage = require('command-line-usage');
 const commandLineArgs = require('command-line-args');
 
@@ -10,6 +11,13 @@ const optionDefinitions = [
     type: Boolean
   },
   {
+    name: 'config',
+    description: 'Path to the config folder the software should load.',
+    alias: 'c',
+    type: String,
+    defaultValue: './config'
+  },
+  {
     name: 'verbose',
     description: 'Turn on debugging output.',
     alias: 'v',
@@ -18,7 +26,7 @@ const optionDefinitions = [
 ];
 const usage = commandLineUsage([
   {
-    header: 'room-assistant',
+    header: `room-assistant ${version}`,
     content:
       'A companion client for Home Assistant to handle presence detection and sensors in multiple rooms.'
   },
@@ -37,5 +45,6 @@ if (options.help) {
 process.env.NODE_LOG_LEVEL = options.verbose
   ? 'verbose'
   : process.env.NODE_LOG_LEVEL || 'production';
+process.env.NODE_CONFIG_DIR = options.config;
 
 require('../dist/main');

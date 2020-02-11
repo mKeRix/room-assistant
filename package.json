@@ -95,7 +95,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged --pattern \"src/**/*.ts\" --pattern \"test/**/*.ts\"",
+      "pre-commit": "pretty-quick --staged --pattern \"src/**/*.ts\" --pattern \"test/**/*.ts\" --pattern \"bin/*.js\"",
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
     }
   },
