@@ -9,7 +9,7 @@ import { EntitiesService } from '../../entities/entities.service';
 import { Sensor } from '../../entities/sensor';
 import * as math from 'mathjs';
 import { Interval } from '@nestjs/schedule';
-import { ThermopileOccupancySensor } from '../thermopile/thermopile-occupancy.sensor';
+import { ThermopileOccupancyService } from '../thermopile/thermopile-occupancy.service';
 import { GridEyeConfig } from './grid-eye.config';
 import { ConfigService } from '../../config/config.service';
 import { SensorConfig } from '../home-assistant/sensor-config';
@@ -19,7 +19,7 @@ const TEMPERATURE_REGISTER_START = 0x80;
 const FRAMERATE_REGISTER = 0x02;
 
 @Injectable()
-export class GridEyeService extends ThermopileOccupancySensor
+export class GridEyeService extends ThermopileOccupancyService
   implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly config: GridEyeConfig;
   private i2cBus: PromisifiedBus;

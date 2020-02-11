@@ -14,12 +14,12 @@ import { Sensor } from '../../entities/sensor';
 import { Entity } from '../../entities/entity';
 import { I2CError } from './i2c.error';
 import { SensorConfig } from '../home-assistant/sensor-config';
-import { ThermopileOccupancySensor } from '../thermopile/thermopile-occupancy.sensor';
+import { ThermopileOccupancyService } from '../thermopile/thermopile-occupancy.service';
 
 const TEMPERATURE_COMMAND = 0x4c;
 
 @Injectable()
-export class OmronD6tService extends ThermopileOccupancySensor
+export class OmronD6tService extends ThermopileOccupancyService
   implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly config: OmronD6tConfig;
   private i2cBus: PromisifiedBus;
