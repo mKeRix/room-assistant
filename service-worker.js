@@ -27,7 +27,7 @@ self.addEventListener('message', (event) => {
 self.__precacheManifest = [
   {
     "url": "404.html",
-    "revision": "8f74a23e9f2d5bb7e8f3487ff561f35a"
+    "revision": "4e1f3fcafdecb6599dad14bcd4e682e9"
   },
   {
     "url": "android-chrome-192x192.png",
@@ -114,8 +114,8 @@ self.__precacheManifest = [
     "revision": "d97c2fa08be9777e0f864a173fd9a7e6"
   },
   {
-    "url": "assets/js/app.648216db.js",
-    "revision": "79eed0c72f1c6fc71f5b67147c07f88b"
+    "url": "assets/js/app.78ad7176.js",
+    "revision": "618b21a1c6f88dad3aa8f05f58eaf949"
   },
   {
     "url": "favicon-16x16.png",
@@ -127,11 +127,11 @@ self.__precacheManifest = [
   },
   {
     "url": "guide/index.html",
-    "revision": "01256b2197b42dc47cbcf1817005d11e"
+    "revision": "3d695eaf7a194e2593fbe7fd56390ea4"
   },
   {
     "url": "index.html",
-    "revision": "127a13176f692b83fb5131ffc33f612d"
+    "revision": "8db6ab3964aad409fc2796c949d23c7d"
   },
   {
     "url": "mstile-150x150.png",
