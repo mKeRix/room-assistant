@@ -27,7 +27,7 @@ self.addEventListener('message', (event) => {
 self.__precacheManifest = [
   {
     "url": "404.html",
-    "revision": "4e1f3fcafdecb6599dad14bcd4e682e9"
+    "revision": "8e9e57326f5cd01fe8d55af005371410"
   },
   {
     "url": "android-chrome-192x192.png",
@@ -50,8 +50,8 @@ self.__precacheManifest = [
     "revision": "83621669651b9a3d4bf64d1a670ad856"
   },
   {
-    "url": "assets/js/10.916e0a05.js",
-    "revision": "da76ef8c222bbb47df36f9d1719d63fc"
+    "url": "assets/js/10.35207443.js",
+    "revision": "6afcdf0761f4bc1daa521b955ddc23b0"
   },
   {
     "url": "assets/js/11.87fa8163.js",
@@ -106,16 +106,16 @@ self.__precacheManifest = [
     "revision": "f0472e54f78bca0913db7f129055d172"
   },
   {
-    "url": "assets/js/8.4c48653c.js",
-    "revision": "c20ca79b9fc89f75b636c2a510582ede"
+    "url": "assets/js/8.1b2c4a6a.js",
+    "revision": "e1abfe32f0c071289b05f5ba98a0efa2"
   },
   {
-    "url": "assets/js/9.4de58f54.js",
-    "revision": "d97c2fa08be9777e0f864a173fd9a7e6"
+    "url": "assets/js/9.a086cf3c.js",
+    "revision": "96a0529915b078dc04ea76607782c6d8"
   },
   {
-    "url": "assets/js/app.78ad7176.js",
-    "revision": "618b21a1c6f88dad3aa8f05f58eaf949"
+    "url": "assets/js/app.fc93e40b.js",
+    "revision": "3d46506246a38ab16ba7a9eac8591e10"
   },
   {
     "url": "favicon-16x16.png",
@@ -127,11 +127,11 @@ self.__precacheManifest = [
   },
   {
     "url": "guide/index.html",
-    "revision": "3d695eaf7a194e2593fbe7fd56390ea4"
+    "revision": "706a8581dbaed49b47f51d9cd5fe0d32"
   },
   {
     "url": "index.html",
-    "revision": "8db6ab3964aad409fc2796c949d23c7d"
+    "revision": "583f494108e1a1d97e58be3a14650bd2"
   },
   {
     "url": "mstile-150x150.png",
