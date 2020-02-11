@@ -35,28 +35,24 @@ export class OmronD6tService extends ThermopileOccupancyService
     this.logger = new Logger(OmronD6tService.name);
   }
 
+  /**
+   * Lifecycle hook, called once the application has started.
+   */
   async onApplicationBootstrap(): Promise<void> {
     this.i2cBus = await i2cBus.openPromisified(this.config.busNumber);
-
-    const customizations = [
-      {
-        for: SensorConfig,
-        overrides: {
-          icon: 'mdi:account',
-          unitOfMeasurement: 'person'
-        }
-      }
-    ];
-    this.sensor = this.entitiesService.add(
-      new Sensor('d6t_occupancy_count', 'D6T Occupancy Count'),
-      customizations
-    );
+    this.sensor = this.createSensor();
   }
 
+  /**
+   * Lifecycle hook, called once the application is shutting down.
+   */
   async onApplicationShutdown(): Promise<void> {
     return this.i2cBus.close();
   }
 
+  /**
+   * Updates the state of the sensor that this integration manages.
+   */
   @Interval(250)
   async updateState(): Promise<void> {
     try {
@@ -69,13 +65,18 @@ export class OmronD6tService extends ThermopileOccupancyService
         this.logger.debug(`Error during I2C communication: ${e.message}`);
       } else {
         this.logger.error(
-          'Retrieving the state from D6T sensor failed',
-          e.trace
+          `Retrieving the state from D6T sensor failed: ${e.message}`,
+          e.stack
         );
       }
     }
   }
 
+  /**
+   * Gets the temperatures of all sensor pixels.
+   *
+   * @returns 4x4 matrix of temperatures
+   */
   async getPixelTemperatures(): Promise<number[][]> {
     const commandBuffer = Buffer.alloc(1);
     const resultBuffer = Buffer.alloc(35);
@@ -106,6 +107,13 @@ export class OmronD6tService extends ThermopileOccupancyService
     return math.reshape(pixelTemperatures, [4, 4]) as number[][];
   }
 
+  /**
+   * Performs a packet error check on the message.
+   *
+   * @param buffer - Message to be checked
+   * @param pecIndex - Index of the PEC value in the message
+   * @returns Message is valid or not
+   */
   checkPEC(buffer: Buffer, pecIndex: number): boolean {
     let crc = this.calculateCRC(0x15);
     for (let i = 0; i < pecIndex; i++) {
@@ -115,6 +123,12 @@ export class OmronD6tService extends ThermopileOccupancyService
     return crc === buffer.readUInt8(pecIndex);
   }
 
+  /**
+   * Calculates a cyclic redundancy check value.
+   *
+   * @param data - Number to calculate the value for
+   * @returns Check value
+   */
   calculateCRC(data: number): number {
     const crc = new Uint8Array([data]);
     for (let i = 0; i < 8; i++) {
@@ -126,5 +140,26 @@ export class OmronD6tService extends ThermopileOccupancyService
     }
 
     return crc[0];
+  }
+
+  /**
+   * Creates and registers a new occupancy count sensor.
+   *
+   * @returns Registered sensor
+   */
+  protected createSensor(): Sensor {
+    const customizations = [
+      {
+        for: SensorConfig,
+        overrides: {
+          icon: 'mdi:account',
+          unitOfMeasurement: 'person'
+        }
+      }
+    ];
+    return this.entitiesService.add(
+      new Sensor('d6t_occupancy_count', 'D6T Occupancy Count'),
+      customizations
+    ) as Sensor;
   }
 }
