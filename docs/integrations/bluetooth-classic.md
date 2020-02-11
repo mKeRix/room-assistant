@@ -40,9 +40,10 @@ You could use this to reduce the resources used by room-assistant when you are c
 
 ## Settings
 
-| Name        | Type  | Default | Description                                                  |
-| ----------- | ----- | ------- | ------------------------------------------------------------ |
-| `addresses` | Array |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
+| Name        | Type   | Default | Description                                                  |
+| ----------- | ------ | ------- | ------------------------------------------------------------ |
+| `addresses` | Array  |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
+| `minRssi`   | Number |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
 
 ::: details Example Config
 ```yaml
@@ -50,6 +51,7 @@ global:
   integrations:
     - bluetoothClassic
 bluetoothClassic:
+  minRssi: -20
   addresses:
     - '08:05:90:ed:3b:60'
     - '77:50:fb:4d:ab:70'

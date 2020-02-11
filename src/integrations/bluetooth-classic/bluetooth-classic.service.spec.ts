@@ -15,6 +15,9 @@ import { NewRssiEvent } from './new-rssi.event';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import KalmanFilter from 'kalmanjs';
 import { Switch } from '../../entities/switch';
+import { BluetoothClassicConfig } from './bluetooth-classic.config';
+import c from 'config';
+import { ConfigService } from '../../config/config.service';
 
 jest.mock('../room-presence/room-presence-distance.sensor');
 jest.mock('kalmanjs', () => {
@@ -49,6 +52,14 @@ describe('BluetoothClassicService', () => {
     error: jest.fn(),
     warn: jest.fn()
   };
+  const config: Partial<BluetoothClassicConfig> = {
+    addresses: ['8d:ad:e3:e2:7a:01', 'f7:6c:e3:10:55:b5']
+  };
+  const configService = {
+    get: jest.fn().mockImplementation((key: string) => {
+      return key === 'bluetoothClassic' ? config : c.get(key);
+    })
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -66,6 +77,8 @@ describe('BluetoothClassicService', () => {
       .useValue(entitiesService)
       .overrideProvider(ClusterService)
       .useValue(clusterService)
+      .overrideProvider(ConfigService)
+      .useValue(configService)
       .compile();
     module.useLogger(loggerService);
 
@@ -222,6 +235,45 @@ Requesting information ...
 
     expect(clusterService.publish).not.toHaveBeenCalled();
     expect(handleRssiMock).not.toHaveBeenCalled();
+  });
+
+  it('should publish RSSI values that are bigger than the min RSSI', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-9);
+    const handleRssiMock = jest
+      .spyOn(service, 'handleNewRssi')
+      .mockImplementation(() => undefined);
+    config.minRssi = -10;
+
+    await service.handleRssiRequest('77:50:fb:4d:ab:70');
+    expect(handleRssiMock).toHaveBeenCalled();
+    expect(clusterService.publish).toHaveBeenCalled();
+  });
+
+  it('should publish RSSI values that are the same as the min RSSI', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-10);
+    const handleRssiMock = jest
+      .spyOn(service, 'handleNewRssi')
+      .mockImplementation(() => undefined);
+    config.minRssi = -10;
+
+    await service.handleRssiRequest('77:50:fb:4d:ab:70');
+    expect(handleRssiMock).toHaveBeenCalled();
+    expect(clusterService.publish).toHaveBeenCalled();
+  });
+
+  it('should not publish RSSI values that are smaller than the min RSSI', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-11);
+    const handleRssiMock = jest
+      .spyOn(service, 'handleNewRssi')
+      .mockImplementation(() => undefined);
+    config.minRssi = -10;
+
+    await service.handleRssiRequest('77:50:fb:4d:ab:70');
+    expect(handleRssiMock).not.toHaveBeenCalled();
+    expect(clusterService.publish).not.toHaveBeenCalled();
   });
 
   it('should ignore RSSI requests of inquiries are disabled', () => {

@@ -87,7 +87,10 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
     if (this.shouldInquire()) {
       let rssi = await this.inquireRssi(address);
 
-      if (rssi !== undefined) {
+      if (
+        rssi !== undefined &&
+        (!this.config.minRssi || rssi >= this.config.minRssi)
+      ) {
         rssi = _.round(this.filterRssi(address, rssi), 1);
         const event = new NewRssiEvent(
           this.configService.get('global').instanceName,
