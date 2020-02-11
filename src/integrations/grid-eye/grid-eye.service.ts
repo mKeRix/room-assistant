@@ -33,29 +33,26 @@ export class GridEyeService extends ThermopileOccupancySensor
     this.config = this.configService.get('gridEye');
   }
 
+  /**
+   * Lifecycle hook, called once the application has started.
+   */
   async onApplicationBootstrap(): Promise<void> {
     this.i2cBus = await i2cBus.openPromisified(this.config.busNumber);
     this.setRegister(FRAMERATE_REGISTER, 1); // set framerate to 1 FPS -> less noise
 
-    const customizations: Array<EntityCustomization<any>> = [
-      {
-        for: SensorConfig,
-        overrides: {
-          icon: 'mdi:account',
-          unitOfMeasurement: 'person'
-        }
-      }
-    ];
-    this.sensor = this.entitiesService.add(
-      new Sensor('grideye_occupancy_count', 'GridEYE Occupancy Count'),
-      customizations
-    );
+    this.sensor = this.createSensor();
   }
 
+  /**
+   * Lifecycle hook, called once the application is shutting down.
+   */
   async onApplicationShutdown(): Promise<void> {
     return this.i2cBus.close();
   }
 
+  /**
+   * Updates the state of the sensor that this integration manages.
+   */
   @Interval(1000)
   async updateState(): Promise<void> {
     const coordinates = await this.getCoordinates(this.config.deltaThreshold);
@@ -64,6 +61,11 @@ export class GridEyeService extends ThermopileOccupancySensor
     this.sensor.attributes.coordinates = coordinates;
   }
 
+  /**
+   * Gets the temperatures of all sensor pixels.
+   *
+   * @returns 8x8 matrix of temperatures
+   */
   async getPixelTemperatures(): Promise<number[][]> {
     const temperatures = [];
     for (let i = 0; i < 64; i++) {
@@ -73,6 +75,12 @@ export class GridEyeService extends ThermopileOccupancySensor
     return math.reshape(temperatures, [8, 8]) as number[][];
   }
 
+  /**
+   * Gets the temperature of a single sensor pixel.
+   *
+   * @param pixelAddr - Index of the pixel, between 0 and 63
+   * @returns Temperature sensed by the pixel
+   */
   async getPixelTemperature(pixelAddr: number): Promise<number> {
     const pixelLowRegister = TEMPERATURE_REGISTER_START + 2 * pixelAddr;
     let temperature = await this.getRegister(pixelLowRegister, 2);
@@ -85,6 +93,13 @@ export class GridEyeService extends ThermopileOccupancySensor
     return temperature * 0.25;
   }
 
+  /**
+   * Gets a value from a given register.
+   *
+   * @param register - Sensor register address
+   * @param length - Length of the value to retrieve
+   * @returns Register value
+   */
   async getRegister(register: number, length: number): Promise<number> {
     const commandBuffer = Buffer.alloc(1);
     commandBuffer.writeUInt8(register, 0);
@@ -103,6 +118,12 @@ export class GridEyeService extends ThermopileOccupancySensor
     return (msb << 8) | lsb;
   }
 
+  /**
+   * Sets a value in a given register.
+   *
+   * @param register - Sensor register address
+   * @param value - Value to write
+   */
   async setRegister(register: number, value: number): Promise<void> {
     const commandBuffer = Buffer.alloc(2);
     commandBuffer.writeUInt8(register, 0);
@@ -113,5 +134,26 @@ export class GridEyeService extends ThermopileOccupancySensor
       commandBuffer.length,
       commandBuffer
     );
+  }
+
+  /**
+   * Creates and registers a new occupancy count sensor.
+   *
+   * @returns Registered sensor
+   */
+  private createSensor(): Sensor {
+    const customizations: Array<EntityCustomization<any>> = [
+      {
+        for: SensorConfig,
+        overrides: {
+          icon: 'mdi:account',
+          unitOfMeasurement: 'person'
+        }
+      }
+    ];
+    return this.entitiesService.add(
+      new Sensor('grideye_occupancy_count', 'GridEYE Occupancy Count'),
+      customizations
+    ) as Sensor;
   }
 }
