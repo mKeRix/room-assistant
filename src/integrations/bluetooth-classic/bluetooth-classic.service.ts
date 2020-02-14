@@ -216,8 +216,8 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
 
       return {
         address,
-        name: nameMatches[1],
-        manufacturer: manufacturerMatches[1]
+        name: nameMatches ? nameMatches[1] : address,
+        manufacturer: manufacturerMatches ? manufacturerMatches[1] : undefined
       };
     } catch (e) {
       this.logger.error(e.message, e.stack);

@@ -195,6 +195,20 @@ Requesting information ...
     });
   });
 
+  it('should return the address as device name if none was found', async () => {
+    jest.spyOn(util, 'promisify').mockImplementation(() => {
+      return jest.fn().mockResolvedValue({
+        stdout: 'IO error'
+      });
+    });
+
+    expect(await service.inquireDeviceInfo('F0:99:B6:12:34:AB')).toStrictEqual({
+      address: 'F0:99:B6:12:34:AB',
+      name: 'F0:99:B6:12:34:AB',
+      manufacturer: undefined
+    });
+  });
+
   it('should return barebones information if request fails', async () => {
     jest.spyOn(util, 'promisify').mockImplementation(() => {
       return jest.fn().mockRejectedValue({ stderr: 'I/O Error' });
