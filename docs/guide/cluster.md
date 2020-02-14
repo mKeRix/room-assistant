@@ -19,6 +19,10 @@ If the auto discovery does not seem to pick up all (or any) nodes for your clust
 
 Should the other nodes not appear in your cluster even after configuring it manually you should make sure that the devices can communication with each other via UDP on the port you configured, by default `6425`.
 
+### Rivalling clusters
+
+If you're seeing multiple clusters form on your network that are both trying to take control of the distributed entities you can set the `quorum` option. This ensures that only a cluster that contains the majority of instances can update the values. Set this number so that it represents the smallest instance count to constitute a majority in your setup. For example: if you have 3 instances of the software at home you would set `quorum` to 2, for 6 overall instances it should be 4.
+
 ## Settings
 
 | Name               | Type    | Default | Description                                                  |
@@ -27,6 +31,7 @@ Should the other nodes not appear in your cluster even after configuring it manu
 | `port`             | Number  | `6425`  | The UDP port that room-assistant should use for internal communication. |
 | `timeout`          | Number  | `60`    | Number of seconds that an instance can go without sending a heartbeat and not be dropped from the cluster. |
 | `weight`           | Number  | Random  | Value used to sort when electing a leading instance. The instance with the highest weight in the cluster becomes the leader. |
+| `quorum`           | Number  |         | Minimum amount of nodes required for the cluster to represent the majority. |
 | `autoDiscovery`    | Boolean | `true`  | Allows mDNS-based auto discovery of other room-assistant instances to be turned off. |
 | `peerAddresses`    | Array   |         | A list of endpoint addresses (IP + port) of other room-assistant instances. |
 

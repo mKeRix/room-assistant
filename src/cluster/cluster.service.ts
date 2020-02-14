@@ -54,7 +54,7 @@ export class ClusterService extends Democracy
     this.logger = new Logger(ClusterService.name);
   }
 
-  onApplicationBootstrap(): any {
+  onApplicationBootstrap(): void {
     if (this.config.autoDiscovery) {
       if (mdns !== undefined) {
         this.startBonjourDiscovery();
@@ -70,9 +70,20 @@ export class ClusterService extends Democracy
     this.on('elected', this.handleNodeElected);
   }
 
-  onApplicationShutdown(): any {
+  onApplicationShutdown(): void {
     this.advertisement?.stop();
     this.browser?.stop();
+  }
+
+  isMajorityLeader(): boolean {
+    return this.isLeader() && this.quorumReached();
+  }
+
+  quorumReached(): boolean {
+    const activeNodes = Object.values(this.nodes()).filter(
+      node => node.state !== 'removed'
+    );
+    return !this.config.quorum || activeNodes.length >= this.config.quorum;
   }
 
   protected startBonjourDiscovery(): void {

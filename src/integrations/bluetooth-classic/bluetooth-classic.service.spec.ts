@@ -45,7 +45,7 @@ describe('BluetoothClassicService', () => {
     send: jest.fn(),
     publish: jest.fn(),
     subscribe: jest.fn(),
-    isLeader: jest.fn()
+    isMajorityLeader: jest.fn()
   };
   const loggerService = {
     log: jest.fn(),
@@ -338,7 +338,7 @@ Requesting information ...
   });
 
   it('should not distribute inquiries if not the leader', () => {
-    clusterService.isLeader.mockReturnValue(false);
+    clusterService.isMajorityLeader.mockReturnValue(false);
     const inquireSpy = jest.spyOn(service, 'inquireRssi');
 
     service.distributeInquiries();
@@ -350,7 +350,7 @@ Requesting information ...
     clusterService.nodes.mockReturnValue({
       abcd: { channels: [NEW_RSSI_CHANNEL] }
     });
-    clusterService.isLeader.mockReturnValue(true);
+    clusterService.isMajorityLeader.mockReturnValue(true);
     const rssiRequestSpy = jest
       .spyOn(service, 'handleRssiRequest')
       .mockImplementation(() => undefined);
@@ -370,7 +370,7 @@ Requesting information ...
       abcd: { id: 'abcd', channels: [NEW_RSSI_CHANNEL] },
       def: { id: 'def', channels: [NEW_RSSI_CHANNEL], last: new Date() }
     });
-    clusterService.isLeader.mockReturnValue(true);
+    clusterService.isMajorityLeader.mockReturnValue(true);
     const handleRssiRequest = jest
       .spyOn(service, 'handleRssiRequest')
       .mockImplementation(() => undefined);
@@ -406,7 +406,7 @@ Requesting information ...
       def: { id: 'def', channels: [NEW_RSSI_CHANNEL], last: new Date() },
       xyz: { id: 'xyz', channels: [NEW_RSSI_CHANNEL], last: new Date() }
     });
-    clusterService.isLeader.mockReturnValue(true);
+    clusterService.isMajorityLeader.mockReturnValue(true);
     const handleRssiRequest = jest
       .spyOn(service, 'handleRssiRequest')
       .mockImplementation(() => undefined);

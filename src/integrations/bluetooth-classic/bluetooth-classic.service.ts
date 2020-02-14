@@ -135,7 +135,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    */
   @Interval(INTERVAL)
   distributeInquiries(): void {
-    if (this.clusterService.isLeader()) {
+    if (this.clusterService.isMajorityLeader()) {
       const nodes = this.getParticipatingNodes();
       const addresses = Object.values(this.config.addresses);
       if (this.rotationOffset >= Math.max(nodes.length, addresses.length)) {

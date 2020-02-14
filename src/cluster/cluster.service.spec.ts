@@ -22,7 +22,7 @@ const mockMdns = {
 };
 
 import { networkInterfaces } from 'os';
-import Democracy from 'democracy';
+import Democracy, { Node } from 'democracy';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClusterService } from './cluster.service';
 import { ConfigModule } from '../config/config.module';
@@ -112,5 +112,68 @@ describe('ClusterService', () => {
     service.onApplicationBootstrap();
     expect(mockMdns.createAdvertisement).not.toHaveBeenCalled();
     expect(mockMdns.createBrowser).not.toHaveBeenCalled();
+  });
+
+  it('should ignore the quorum if it is not configured', () => {
+    jest.spyOn(service, 'nodes').mockReturnValue({
+      abc: {
+        state: 'leader'
+      } as Node
+    });
+
+    expect(service.quorumReached()).toBeTruthy();
+  });
+
+  it('should consider the quorum reached if as many nodes are connected', () => {
+    jest.spyOn(service, 'nodes').mockReturnValue({
+      abc: {
+        state: 'leader'
+      } as Node,
+      def: {
+        state: 'citizen'
+      } as Node
+    });
+    mockConfig.quorum = 2;
+
+    expect(service.quorumReached()).toBeTruthy();
+  });
+
+  it('should not consider the quorum reached if less nodes are connected', () => {
+    jest.spyOn(service, 'nodes').mockReturnValue({
+      abc: {
+        state: 'leader'
+      } as Node
+    });
+    mockConfig.quorum = 2;
+
+    expect(service.quorumReached()).toBeFalsy();
+  });
+
+  it('should not consider removed nodes for the quorum', () => {
+    jest.spyOn(service, 'nodes').mockReturnValue({
+      abc: {
+        state: 'removed'
+      } as Node,
+      def: {
+        state: 'leader'
+      } as Node
+    });
+    mockConfig.quorum = 2;
+
+    expect(service.quorumReached()).toBeFalsy();
+  });
+
+  it('should be the majority leader if the quorum is reached', () => {
+    jest.spyOn(service, 'quorumReached').mockReturnValue(true);
+    jest.spyOn(service, 'isLeader').mockReturnValue(true);
+
+    expect(service.isMajorityLeader()).toBeTruthy();
+  });
+
+  it('should not be the majority leader if the quorum is not reached', () => {
+    jest.spyOn(service, 'quorumReached').mockReturnValue(false);
+    jest.spyOn(service, 'isLeader').mockReturnValue(true);
+
+    expect(service.isMajorityLeader()).toBeFalsy();
   });
 });

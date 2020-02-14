@@ -35,7 +35,7 @@ export class EntitiesService {
       entity,
       new EntityProxyHandler(
         this.emitter,
-        this.clusterService.isLeader.bind(this.clusterService)
+        this.clusterService.isMajorityLeader.bind(this.clusterService)
       )
     );
     this.entities.set(entity.id, proxy);

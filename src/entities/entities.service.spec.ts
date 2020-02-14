@@ -13,7 +13,7 @@ describe('EntitiesService', () => {
   let service: EntitiesService;
   const emitter: EventEmitter = new EventEmitter();
   const clusterService = {
-    isLeader: jest.fn()
+    isMajorityLeader: jest.fn()
   };
 
   beforeEach(async () => {
@@ -116,7 +116,7 @@ describe('EntitiesService', () => {
   it('should pass distributed information to publishers', () => {
     const entity = new Sensor('distributed_sensor', 'Distribution', true);
     const spy = jest.spyOn(emitter, 'emit');
-    clusterService.isLeader.mockReturnValue(true);
+    clusterService.isMajorityLeader.mockReturnValue(true);
 
     const entityProxy = service.add(entity);
     entityProxy.state = 'test';
@@ -138,7 +138,7 @@ describe('EntitiesService', () => {
   it('should not emit updates for distributed sensors if not the leader', () => {
     const entity = new Sensor('distributed_sensor', 'Distribution', true);
     const spy = jest.spyOn(emitter, 'emit');
-    clusterService.isLeader.mockReturnValue(false);
+    clusterService.isMajorityLeader.mockReturnValue(false);
 
     const entityProxy = service.add(entity);
     entityProxy.state = true;
