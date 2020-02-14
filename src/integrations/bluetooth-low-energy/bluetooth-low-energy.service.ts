@@ -87,20 +87,16 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
       tag = this.applyOverrides(tag);
       tag.rssi = this.filterRssi(tag.id, tag.rssi);
 
-      if (
-        this.config.maxDistance == undefined ||
-        tag.distance <= this.config.maxDistance
-      ) {
-        const globalSettings = this.configService.get('global');
-        const event = new NewDistanceEvent(
-          globalSettings.instanceName,
-          tag.id,
-          tag.name,
-          tag.distance
-        );
-        this.handleNewDistance(event);
-        this.clusterService.publish(NEW_DISTANCE_CHANNEL, event);
-      }
+      const globalSettings = this.configService.get('global');
+      const event = new NewDistanceEvent(
+        globalSettings.instanceName,
+        tag.id,
+        tag.name,
+        tag.distance,
+        tag.distance > this.config.maxDistance
+      );
+      this.handleNewDistance(event);
+      this.clusterService.publish(NEW_DISTANCE_CHANNEL, event);
     }
   }
 
@@ -122,7 +118,11 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
       );
     }
 
-    sensor.handleNewDistance(event.instanceName, event.distance);
+    sensor.handleNewDistance(
+      event.instanceName,
+      event.distance,
+      event.outOfRange
+    );
   }
 
   /**

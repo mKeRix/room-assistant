@@ -407,7 +407,7 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should report peripherals that are closer than the max distance', () => {
+  it('should report peripherals that are closer than the max distance normally', () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
@@ -421,11 +421,20 @@ describe('BluetoothLowEnergyService', () => {
         localName: 'Test BLE Device'
       }
     } as Peripheral);
-    expect(handleDistanceSpy).toHaveBeenCalled();
-    expect(clusterService.publish).toHaveBeenCalled();
+    expect(handleDistanceSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outOfRange: false
+      })
+    );
+    expect(clusterService.publish).toHaveBeenCalledWith(
+      NEW_DISTANCE_CHANNEL,
+      expect.objectContaining({
+        outOfRange: false
+      })
+    );
   });
 
-  it('should ignore peripherals that are further away than max distance', () => {
+  it('should mark peripherals that are further away than max distance as out of range', () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
@@ -439,8 +448,17 @@ describe('BluetoothLowEnergyService', () => {
         localName: 'Test BLE Device'
       }
     } as Peripheral);
-    expect(handleDistanceSpy).not.toHaveBeenCalled();
-    expect(clusterService.publish).not.toHaveBeenCalled();
+    expect(handleDistanceSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outOfRange: true
+      })
+    );
+    expect(clusterService.publish).toHaveBeenCalledWith(
+      NEW_DISTANCE_CHANNEL,
+      expect.objectContaining({
+        outOfRange: true
+      })
+    );
   });
 
   it('should reuse existing Kalman filters for the same id', () => {
@@ -481,7 +499,7 @@ describe('BluetoothLowEnergyService', () => {
       new NewDistanceEvent('test-instance', 'test', 'Test', 2)
     );
 
-    expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 2);
+    expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 2, false);
   });
 
   it('should add new room presence sensor if no matching ones exist yet', () => {
@@ -505,7 +523,7 @@ describe('BluetoothLowEnergyService', () => {
       expect.any(Array)
     );
     expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 20 * 1000);
-    expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 1.3);
+    expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 1.3, false);
   });
 
   it('should log the id of new peripherals that are found', () => {
