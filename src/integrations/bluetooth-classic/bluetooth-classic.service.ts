@@ -237,7 +237,10 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    */
   getParticipatingNodes(): Node[] {
     const nodes = Object.values(this.clusterService.nodes());
-    return nodes.filter(node => node.channels?.includes(NEW_RSSI_CHANNEL));
+    return nodes.filter(
+      node =>
+        node.state !== 'removed' && node.channels?.includes(NEW_RSSI_CHANNEL)
+    );
   }
 
   /**
