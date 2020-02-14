@@ -2,8 +2,20 @@ import { Sensor } from '../../entities/sensor';
 
 export const STATE_NOT_HOME = 'not_home';
 
+class TimedDistance {
+  distance: number;
+  outOfRange: boolean;
+  lastUpdatedAt: Date = new Date();
+
+  constructor(distance: number, outOfRange = false) {
+    this.distance = distance;
+    this.outOfRange = outOfRange;
+  }
+}
+
 export class RoomPresenceDistanceSensor extends Sensor {
   timeout: number;
+  distances = new Map<string, TimedDistance>();
 
   constructor(id: string, name: string, timeout: number) {
     super(id, name, true);
@@ -15,25 +27,27 @@ export class RoomPresenceDistanceSensor extends Sensor {
    *
    * @param instanceName - Name of the instance from which the distance was measured
    * @param distance - Distance to the matching device
+   * @param outOfRange - If the distance is considered too far away from the instance
    */
-  handleNewDistance(instanceName: string, distance: number): void {
-    const lastDistance = this.attributes.distance as number;
-    const lastUpdate = Date.parse(this.attributes.lastUpdatedAt as string);
-    const timeoutLimit = new Date(lastUpdate + this.timeout * 1000);
+  handleNewDistance(
+    instanceName: string,
+    distance: number,
+    outOfRange = false
+  ): void {
+    this.distances.set(instanceName, new TimedDistance(distance, outOfRange));
+    const closestInRange = this.getClosestInRange();
 
-    if (this.state !== instanceName) {
-      if (
-        lastDistance === undefined ||
-        distance < lastDistance ||
-        (this.timeout > 0 && Date.now() > timeoutLimit.getTime())
-      ) {
-        this.state = instanceName;
+    if (closestInRange) {
+      if (this.state !== closestInRange[0]) {
+        this.state = closestInRange[0];
       }
-    }
 
-    if (this.state === instanceName) {
-      this.attributes.distance = distance;
-      this.attributes.lastUpdatedAt = new Date().toISOString();
+      if (this.state === closestInRange[0]) {
+        this.attributes.distance = closestInRange[1].distance;
+        this.attributes.lastUpdatedAt = closestInRange[1].lastUpdatedAt.toISOString();
+      }
+    } else {
+      this.setNotHome();
     }
   }
 
@@ -46,10 +60,37 @@ export class RoomPresenceDistanceSensor extends Sensor {
       const timeoutLimit = new Date(lastUpdate + this.timeout * 1000);
 
       if (Date.now() > timeoutLimit.getTime()) {
-        this.state = STATE_NOT_HOME;
-        this.attributes.distance = undefined;
-        this.attributes.lastUpdatedAt = new Date().toISOString();
+        this.setNotHome();
       }
     }
+  }
+
+  /**
+   * Determines the closest instance.
+   *
+   * @returns Tuple of the instance name and the timed distance to it
+   */
+  protected getClosestInRange(): [string, TimedDistance] {
+    const distances = Array.from(this.distances.entries())
+      .filter(value => {
+        return (
+          !value[1].outOfRange &&
+          (this.timeout <= 0 ||
+            Date.now() < value[1].lastUpdatedAt.getTime() + this.timeout * 1000)
+        );
+      })
+      .sort((a, b) => {
+        return a[1].distance - b[1].distance;
+      });
+    return distances.length > 0 ? distances[0] : undefined;
+  }
+
+  /**
+   * Marks the sensor as not_home.
+   */
+  protected setNotHome(): void {
+    this.state = STATE_NOT_HOME;
+    this.attributes.distance = undefined;
+    this.attributes.lastUpdatedAt = new Date().toISOString();
   }
 }

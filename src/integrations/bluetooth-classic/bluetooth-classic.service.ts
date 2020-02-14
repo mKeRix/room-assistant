@@ -87,15 +87,13 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
     if (this.shouldInquire()) {
       let rssi = await this.inquireRssi(address);
 
-      if (
-        rssi !== undefined &&
-        (!this.config.minRssi || rssi >= this.config.minRssi)
-      ) {
+      if (rssi !== undefined) {
         rssi = _.round(this.filterRssi(address, rssi), 1);
         const event = new NewRssiEvent(
           this.configService.get('global').instanceName,
           address,
-          rssi
+          rssi,
+          rssi < this.config.minRssi
         );
 
         this.clusterService.publish(NEW_RSSI_CHANNEL, event);
@@ -124,7 +122,11 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
     }
 
     sensor.timeout = this.calculateCurrentTimeout();
-    sensor.handleNewDistance(event.instanceName, event.rssi * -1);
+    sensor.handleNewDistance(
+      event.instanceName,
+      event.rssi * -1,
+      event.outOfRange
+    );
   }
 
   /**
