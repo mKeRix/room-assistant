@@ -82,5 +82,4 @@ jobs:
           version: latest
       - name: Run Buildx
         if: steps.semantic.outputs.new_release_published == 'true'
-        run: docker buildx build --build-arg ROOM_ASSISTANT_VERSION=${{steps.semantic.outputs.new_release_version}} --platform linux/386,linux/amd64,linux/arm/v7,linux/arm64 -t mkerix/room-assistant:${{steps.semantic.outputs.new_release_version}} --push .
-
+        run: docker buildx build --build-arg ROOM_ASSISTANT_VERSION=${{steps.semantic.outputs.new_release_version}} --platform linux/386,linux/amd64,linux/arm/v7,linux/arm64 -t mkerix/room-assistant:${{steps.semantic.outputs.new_release_version}} -t mkerix/room-assistant:$([[ "${{steps.semantic.outputs.new_release_version}}" == *"beta"* ]] && echo "beta" || echo "release") --push .
