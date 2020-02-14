@@ -13,7 +13,8 @@ describe('EntitiesService', () => {
   let service: EntitiesService;
   const emitter: EventEmitter = new EventEmitter();
   const clusterService = {
-    isMajorityLeader: jest.fn()
+    isMajorityLeader: jest.fn(),
+    on: jest.fn()
   };
 
   beforeEach(async () => {
@@ -27,6 +28,23 @@ describe('EntitiesService', () => {
 
     service = module.get<EntitiesService>(EntitiesService);
     jest.resetAllMocks();
+  });
+
+  it('should register a callback to leader election on bootstrap', () => {
+    service.onApplicationBootstrap();
+    expect(clusterService.on).toHaveBeenCalled();
+  });
+
+  it('should refresh entity states if elected', () => {
+    const refreshSpy = jest
+      .spyOn(service, 'refreshStates')
+      .mockImplementation(() => undefined);
+
+    service.onApplicationBootstrap();
+    const electedCallback = clusterService.on.mock.calls[0][1].bind(service);
+    electedCallback();
+
+    expect(refreshSpy).toHaveBeenCalled();
   });
 
   it('should return information about whether entity ids are registered or not', () => {
@@ -155,5 +173,45 @@ describe('EntitiesService', () => {
       expect.anything(),
       expect.anything()
     );
+  });
+
+  it('should send out events for all non-distributed entities when refreshing as non-leader', () => {
+    clusterService.isMajorityLeader.mockReturnValue(false);
+    const spy = jest.spyOn(emitter, 'emit');
+
+    const sensor1 = new Sensor('sensor1', 'Sensor 1');
+    sensor1.state = 1;
+    sensor1.attributes = {
+      test: 'abc'
+    };
+    service.add(sensor1);
+    const sensor2 = new Sensor('sensor2', 'Sensor 2', true);
+    sensor2.state = 2;
+    service.add(sensor2);
+    spy.mockClear();
+
+    service.refreshStates();
+
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it('should send out events for all entities when refreshing as majority leader', () => {
+    clusterService.isMajorityLeader.mockReturnValue(true);
+    const spy = jest.spyOn(emitter, 'emit');
+
+    const sensor1 = new Sensor('sensor1', 'Sensor 1');
+    sensor1.state = 1;
+    sensor1.attributes = {
+      test: 'abc'
+    };
+    service.add(sensor1);
+    const sensor2 = new Sensor('sensor2', 'Sensor 2', true);
+    sensor2.state = 2;
+    service.add(sensor2);
+    spy.mockClear();
+
+    service.refreshStates();
+
+    expect(spy).toHaveBeenCalledTimes(4);
   });
 });

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { Entity } from './entity';
 import { EntityProxyHandler } from './entity.proxy';
 import { InjectEventEmitter } from 'nest-emitter';
@@ -7,13 +7,22 @@ import { EntityCustomization } from './entity-customization.interface';
 import { ClusterService } from '../cluster/cluster.service';
 
 @Injectable()
-export class EntitiesService {
+export class EntitiesService implements OnApplicationBootstrap {
   private readonly entities: Map<string, Entity> = new Map<string, Entity>();
+  private readonly logger: Logger;
 
   constructor(
     private readonly clusterService: ClusterService,
     @InjectEventEmitter() private readonly emitter: EntitiesEventEmitter
-  ) {}
+  ) {
+    this.logger = new Logger(EntitiesService.name);
+  }
+
+  onApplicationBootstrap(): void {
+    this.clusterService.on('elected', () => {
+      this.refreshStates();
+    });
+  }
 
   has(id: string): boolean {
     return this.entities.has(id);
@@ -41,5 +50,25 @@ export class EntitiesService {
     this.entities.set(entity.id, proxy);
     this.emitter.emit('newEntity', proxy, customizations);
     return proxy;
+  }
+
+  refreshStates(): void {
+    this.logger.log('Refreshing entity states');
+    this.entities.forEach(entity => {
+      if (!entity.distributed || this.clusterService.isMajorityLeader()) {
+        this.emitter.emit(
+          'stateUpdate',
+          entity.id,
+          entity.state,
+          entity.distributed
+        );
+        this.emitter.emit(
+          'attributesUpdate',
+          entity.id,
+          entity.attributes,
+          entity.distributed
+        );
+      }
+    });
   }
 }
