@@ -50,26 +50,3 @@ global:
     - homeAssistant
 ```
 :::
-
-## Cluster Settings
-
-**Config Key:** `cluster`
-
-If you are running multiple room-assistant instances they come together in a cluster. By default, the instances discover each other using mDNS. This requires all of them live in the same subnet. You can also specify the adresses of other instances and tweak some other things manually.
-
-| Name               | Type   | Default | Description                                                                                       |
-| ------------------ | ------ | ------- | ------------------------------------------------------------------------------------------------- |
-| `networkInterface` | String |         | The specific network interface that room-assistant should advertise its presence on, e.g. `eth0`. |
-| `port`             | Number | `6425`  | The UDP port that room-assistant should use for internal communication.                           |
-| `peerAddresses`    | Array  |         | A list of endpoint addresses (IP + port) of other room-assistant instances.                       |
-
-::: details Example Config
-```yaml
-cluster:
-  networkInterface: wlan0
-  port: 6425
-  peerAddresses:
-    - 192.168.1.10:6425
-    - 192.168.1.11:6425
-```
-:::

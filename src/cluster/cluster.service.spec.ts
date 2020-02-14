@@ -71,7 +71,7 @@ describe('ClusterService', () => {
     expect(Democracy).toHaveBeenCalledWith({
       source: '192.168.1.108:6425',
       peers: [],
-      timeout: 30000
+      timeout: 60000
     });
   });
 

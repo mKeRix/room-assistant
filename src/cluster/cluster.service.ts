@@ -44,7 +44,8 @@ export class ClusterService extends Democracy
     super({
       source: `${ip}:${config.port}`,
       peers: Array.from(config.peerAddresses),
-      timeout: 30000
+      timeout: config.timeout * 1000,
+      weight: config.weight
     });
 
     this.networkInterfaces = networkInterfaces;
