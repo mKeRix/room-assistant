@@ -3,5 +3,6 @@ export class ClusterConfig {
   port = 6425;
   timeout = 60;
   weight?: number;
+  autoDiscovery = true;
   peerAddresses: string[] = [];
 }

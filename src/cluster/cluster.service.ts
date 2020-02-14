@@ -55,12 +55,14 @@ export class ClusterService extends Democracy
   }
 
   onApplicationBootstrap(): any {
-    if (mdns !== undefined) {
-      this.startBonjourDiscovery();
-    } else {
-      this.logger.warn(
-        'Dependency "mdns" was not found, automatic discovery has been disabled. You will have to provide the addresses of other room-assistant nodes manually in the config.'
-      );
+    if (this.config.autoDiscovery) {
+      if (mdns !== undefined) {
+        this.startBonjourDiscovery();
+      } else {
+        this.logger.warn(
+          'Dependency "mdns" was not found, automatic discovery has been disabled. You will have to provide the addresses of other room-assistant nodes manually in the config.'
+        );
+      }
     }
 
     this.on('added', this.handleNodeAdded);
@@ -96,6 +98,7 @@ export class ClusterService extends Democracy
       this.logger.error(e.message, e.trace);
     });
 
+    this.logger.log('Starting mDNS advertisements and discovery');
     this.advertisement.start();
     this.browser.start();
   }

@@ -26,6 +26,9 @@ import Democracy from 'democracy';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClusterService } from './cluster.service';
 import { ConfigModule } from '../config/config.module';
+import { ClusterConfig } from './cluster.config';
+import { ConfigService } from '../config/config.service';
+import c from 'config';
 
 jest.mock('os');
 jest.mock('democracy');
@@ -33,6 +36,12 @@ jest.mock('mdns', () => mockMdns, { virtual: true });
 
 describe('ClusterService', () => {
   let service: ClusterService;
+  const mockConfig = new ClusterConfig();
+  const configService = {
+    get: jest.fn().mockImplementation((key: string) => {
+      return key === 'cluster' ? mockConfig : c.get(key);
+    })
+  };
 
   beforeAll(async () => {
     (networkInterfaces as jest.Mock).mockReturnValue({
@@ -59,10 +68,15 @@ describe('ClusterService', () => {
   });
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule],
       providers: [ClusterService]
-    }).compile();
+    })
+      .overrideProvider(ConfigService)
+      .useValue(configService)
+      .compile();
 
     service = module.get<ClusterService>(ClusterService);
   });
@@ -90,5 +104,13 @@ describe('ClusterService', () => {
     );
     expect(mockBrowser.start).toHaveBeenCalled();
     expect(mockAdvertisement.start).toHaveBeenCalled();
+  });
+
+  it('should not advertise the instance if auto discovery has been turned off', () => {
+    mockConfig.autoDiscovery = false;
+
+    service.onApplicationBootstrap();
+    expect(mockMdns.createAdvertisement).not.toHaveBeenCalled();
+    expect(mockMdns.createBrowser).not.toHaveBeenCalled();
   });
 });
