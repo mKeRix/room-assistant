@@ -111,6 +111,22 @@ export class ClusterService extends Democracy
     });
   }
 
+  protected checkBallots(candidate: string): this {
+    super.checkBallots(candidate);
+
+    // if the peer address was configured manually it should not be removed completely
+    const node = this._nodes[candidate];
+    if (this.config.peerAddresses.includes(node.source)) {
+      this.logger.debug(
+        `Saving configured peer ${node.source} from ultimate removal`
+      );
+      clearTimeout(node.disconnected);
+      delete node.disconnected;
+    }
+
+    return this;
+  }
+
   protected startBonjourDiscovery(): void {
     this.advertisement = mdns.createAdvertisement(
       mdns.udp('room-assistant'),

@@ -1,14 +1,18 @@
 declare module 'democracy' {
   import {Socket} from 'dgram';
+  import Timeout = NodeJS.Timeout;
+
   export default class Democracy {
     protected options: InternalOptions;
     protected socket: Socket;
+    protected _nodes: {[key: string]: Node};
     protected _id: string;
     protected _weight: number;
     protected _state: 'leader' | 'citizen' | 'removed';
 
     constructor(opts?: Options);
     protected addNodeToList(node: Node): void;
+    protected checkBallots(candidate: string): this;
     hello(): this;
     nodes(): { [key: string]: Node };
     leader(): Node;
@@ -50,5 +54,6 @@ declare module 'democracy' {
     last: Date;
     voters: string[];
     channels: string[];
+    disconnected?: Timeout;
   }
 }
