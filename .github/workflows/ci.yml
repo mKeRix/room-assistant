@@ -40,11 +40,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           name: Node.js ${{ matrix.node-version }}
           flags: unittests
-      - name: SonarCloud Scan
-        uses: sonarsource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       - name: Lint the code
         run: npm run lint --if-present
   release:
