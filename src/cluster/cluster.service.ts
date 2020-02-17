@@ -12,6 +12,7 @@ import * as os from 'os';
 import { NetworkInterfaceInfo } from 'os';
 import { ConfigService } from '../config/config.service';
 import { ClusterConfig } from './cluster.config';
+import { makeId } from '../util/id';
 
 let mdns;
 try {
@@ -33,6 +34,7 @@ export class ClusterService extends Democracy
 
   constructor(configService: ConfigService) {
     const config = configService.get('cluster');
+    const globalConfig = configService.get('global');
 
     const networkInterfaces = _.flatMap<NetworkInterfaceInfo>(
       config.networkInterface
@@ -43,6 +45,7 @@ export class ClusterService extends Democracy
       address => address.internal === false && address.family === 'IPv4'
     ).address;
     super({
+      id: makeId(globalConfig.instanceName),
       source: `${ip}:${config.port}`,
       peers: Array.from(config.peerAddresses),
       timeout: config.timeout * 1000,
