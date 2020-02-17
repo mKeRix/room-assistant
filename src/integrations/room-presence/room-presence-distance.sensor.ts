@@ -35,6 +35,13 @@ export class RoomPresenceDistanceSensor extends Sensor {
     outOfRange = false
   ): void {
     this.distances.set(instanceName, new TimedDistance(distance, outOfRange));
+    this.updateState();
+  }
+
+  /**
+   * Updates the sensor state and attributes based on the recorded distances.
+   */
+  updateState(): void {
     const closestInRange = this.getClosestInRange();
 
     if (closestInRange) {
@@ -48,20 +55,6 @@ export class RoomPresenceDistanceSensor extends Sensor {
       }
     } else {
       this.setNotHome();
-    }
-  }
-
-  /**
-   * Updates the sensor state to STATE_NOT_HOME if the configured timeout has passed.
-   */
-  checkForTimeout(): void {
-    if (this.state !== STATE_NOT_HOME && this.timeout > 0) {
-      const lastUpdate = Date.parse(this.attributes.lastUpdatedAt as string);
-      const timeoutLimit = new Date(lastUpdate + this.timeout * 1000);
-
-      if (Date.now() > timeoutLimit.getTime()) {
-        this.setNotHome();
-      }
     }
   }
 

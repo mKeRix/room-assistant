@@ -54,11 +54,11 @@ describe('RoomPresenceDistanceSensor', () => {
   it('should set the state to not_home if timeout has passed with no other measurements', () => {
     sensor.timeout = 15;
     sensor.handleNewDistance('room1', 1);
-    sensor.attributes.lastUpdatedAt = new Date(
+    sensor.distances.get('room1').lastUpdatedAt = new Date(
       Date.now() - 20 * 1000
-    ).toISOString();
+    );
 
-    sensor.checkForTimeout();
+    sensor.updateState();
     expect(sensor.state).toBe(STATE_NOT_HOME);
     expect(sensor.attributes.distance).toBeUndefined();
   });
@@ -66,22 +66,22 @@ describe('RoomPresenceDistanceSensor', () => {
   it('should disable the timeout check if set to 0', () => {
     sensor.timeout = 0;
     sensor.handleNewDistance('room1', 3.3);
-    sensor.attributes.lastUpdatedAt = new Date(
+    sensor.distances.get('room1').lastUpdatedAt = new Date(
       Date.now() - 60 * 60 * 1000
-    ).toISOString();
+    );
 
-    sensor.checkForTimeout();
+    sensor.updateState();
     expect(sensor.state).toBe('room1');
   });
 
   it('should not set the state to not_home if the timeout has not passed yet', () => {
     sensor.timeout = 30;
     sensor.handleNewDistance('room1', 1.2);
-    sensor.attributes.lastUpdatedAt = new Date(
+    sensor.distances.get('room1').lastUpdatedAt = new Date(
       Date.now() - 10 * 1000
-    ).toISOString();
+    );
 
-    sensor.checkForTimeout();
+    sensor.updateState();
     expect(sensor.state).toBe('room1');
   });
 

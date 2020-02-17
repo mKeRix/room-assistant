@@ -212,7 +212,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
     ) as RoomPresenceDistanceSensor;
 
     const interval = setInterval(
-      sensor.checkForTimeout.bind(sensor),
+      sensor.updateState.bind(sensor),
       this.config.timeout * 1000
     );
     this.schedulerRegistry.addInterval(`${sensorId}_timeout_check`, interval);

@@ -137,7 +137,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
   distributeInquiries(): void {
     if (this.clusterService.isMajorityLeader()) {
       const nodes = this.getParticipatingNodes();
-      const addresses = Object.values(this.config.addresses);
+      const addresses = this.config.addresses;
       if (this.rotationOffset >= Math.max(nodes.length, addresses.length)) {
         this.rotationOffset = 0;
       }
@@ -316,7 +316,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
       customizations
     ) as RoomPresenceDistanceSensor;
 
-    const interval = setInterval(sensor.checkForTimeout.bind(sensor), INTERVAL);
+    const interval = setInterval(sensor.updateState.bind(sensor), INTERVAL);
     this.schedulerRegistry.addInterval(`${sensorId}_timeout_check`, interval);
 
     return sensor;
@@ -329,7 +329,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    */
   protected calculateCurrentTimeout(): number {
     const nodes = this.getParticipatingNodes();
-    const addresses = Object.values(this.config.addresses); // workaround for node-config deserializing to an Array-like object
+    const addresses = this.config.addresses;
     return (Math.max(nodes.length, addresses.length) * 2 * INTERVAL) / 1000;
   }
 
