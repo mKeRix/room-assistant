@@ -32,6 +32,10 @@ export class EntitiesService implements OnApplicationBootstrap {
     return this.entities.get(id);
   }
 
+  getAll(): Entity[] {
+    return Array.from(this.entities.values());
+  }
+
   add(
     entity: Entity,
     customizations?: Array<EntityCustomization<any>>

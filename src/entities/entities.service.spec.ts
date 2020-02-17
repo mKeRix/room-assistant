@@ -8,6 +8,7 @@ import { EventEmitter } from 'events';
 import { EntityCustomization } from './entity-customization.interface';
 import { SensorConfig } from '../integrations/home-assistant/sensor-config';
 import { ClusterModule } from '../cluster/cluster.module';
+import { Switch } from './switch';
 
 describe('EntitiesService', () => {
   let service: EntitiesService;
@@ -60,6 +61,14 @@ describe('EntitiesService', () => {
     const returnedEntity = service.add(entity);
 
     expect(util.types.isProxy(returnedEntity)).toBeTruthy();
+  });
+
+  it('should return all registered entities', () => {
+    const entities = [];
+    entities.push(service.add(new Sensor('sensor', 'Test')));
+    entities.push(service.add(new Switch('switch', 'Test')));
+
+    expect(service.getAll()).toStrictEqual(entities);
   });
 
   it('should throw an exception when adding a sensor with an existing id', () => {
