@@ -96,7 +96,9 @@ export class ClusterService extends Democracy
   }
 
   broadcastPeers(): void {
-    this.send('peers', this.options.peers);
+    if (this.options?.peers) {
+      this.send('peers', this.options.peers);
+    }
   }
 
   protected addMissingPeers(peers: string[][]): void {

@@ -83,9 +83,11 @@ describe('ClusterService', () => {
 
   it('should determine the local IP', () => {
     expect(Democracy).toHaveBeenCalledWith({
+      id: 'test-instance',
       source: '192.168.1.108:6425',
       peers: [],
-      timeout: 60000
+      timeout: 60000,
+      weight: undefined
     });
   });
 
