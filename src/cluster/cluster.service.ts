@@ -2,7 +2,8 @@ import {
   Injectable,
   Logger,
   OnApplicationBootstrap,
-  OnApplicationShutdown
+  OnApplicationShutdown,
+  OnModuleInit
 } from '@nestjs/common';
 import Democracy, { Node } from 'democracy';
 import { Advertisement, Browser, Service } from 'mdns';
@@ -21,7 +22,7 @@ try {
 
 @Injectable()
 export class ClusterService extends Democracy
-  implements OnApplicationBootstrap, OnApplicationShutdown {
+  implements OnModuleInit, OnApplicationBootstrap, OnApplicationShutdown {
   private readonly configService: ConfigService;
   private readonly config: ClusterConfig;
   private readonly logger: Logger;
@@ -54,6 +55,13 @@ export class ClusterService extends Democracy
     this.logger = new Logger(ClusterService.name);
   }
 
+  onModuleInit(): void {
+    this.on('added', this.handleNodeAdded);
+    this.on('removed', this.handleNodeRemoved);
+    this.on('elected', this.handleNodeElected);
+    this.on('peers', this.addMissingPeers);
+  }
+
   onApplicationBootstrap(): void {
     if (this.config.autoDiscovery) {
       if (mdns !== undefined) {
@@ -65,9 +73,7 @@ export class ClusterService extends Democracy
       }
     }
 
-    this.on('added', this.handleNodeAdded);
-    this.on('removed', this.handleNodeRemoved);
-    this.on('elected', this.handleNodeElected);
+    this.broadcastPeers();
   }
 
   onApplicationShutdown(): void {
@@ -84,6 +90,22 @@ export class ClusterService extends Democracy
       node => node.state !== 'removed'
     );
     return !this.config.quorum || activeNodes.length >= this.config.quorum;
+  }
+
+  broadcastPeers(): void {
+    this.send('peers', this.options.peers);
+  }
+
+  protected addMissingPeers(peers: string[][]): void {
+    peers.forEach(peer => {
+      const index = this.options.peers.findIndex(
+        p => p[0] === peer[0] && p[1] === peer[1]
+      );
+
+      if (index < 0) {
+        this.options.peers.push(peer);
+      }
+    });
   }
 
   protected startBonjourDiscovery(): void {
@@ -128,11 +150,12 @@ export class ClusterService extends Democracy
     }
 
     this.options.peers.push([service.addresses[0], service.port.toString()]);
-    this.hello();
+    this.send('hello');
   }
 
   private handleNodeAdded(node: Node): void {
     this.logger.log(`Added ${node.source} to the cluster with id ${node.id}`);
+    this.broadcastPeers();
   }
 
   private handleNodeRemoved(node: Node): void {

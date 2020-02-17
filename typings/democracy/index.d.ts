@@ -1,6 +1,11 @@
 declare module 'democracy' {
+  import {Socket} from 'dgram';
   export default class Democracy {
     protected options: InternalOptions;
+    protected socket: Socket;
+    protected _id: string;
+    protected _weight: number;
+    protected _state: 'leader' | 'citizen' | 'removed';
 
     constructor(opts?: Options);
     protected addNodeToList(node: Node): void;
@@ -9,7 +14,7 @@ declare module 'democracy' {
     leader(): Node;
     resign(): this;
     isLeader(): boolean;
-    send(customEvent: string, extraData: any, id?: string): this;
+    send(customEvent: string, extraData?: any, id?: string): this;
     subscribe(channel: string): this;
     publish(channel: string, msg: any): this;
     on(event: string, func: (data: any) => void);
