@@ -14,6 +14,8 @@ The integration has been tested to work great with the Apple Watch. You may see 
 
 ## Requirements
 
+### Running with NodeJS
+
 This integration only works on Linux, as it depends on `hcitool`. On most Linux distributions it should already come pre-installed. If it isn't room-assistant will warn you when starting. You can then install it with:
 
 ```shell
@@ -25,6 +27,10 @@ If you want to run room-assistant without root privileges (as it is recommended)
 ```shell
 sudo setcap cap_net_raw+eip $(eval readlink -f `which hcitool`)
 ```
+
+### Running with Docker
+
+This integration requires you to run room-assistant in the `host` network.
 
 ## How it works
 

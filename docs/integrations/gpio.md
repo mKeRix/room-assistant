@@ -4,11 +4,45 @@ The [general-purpose input/output](https://en.wikipedia.org/wiki/General-purpose
 
 ## Requirements
 
+### Running with NodeJS
+
 The user under which room-assistant is running needs to have access to the GPIO pins. Under Raspbian this can be granted by adding the user to the `gpio` group:
 
 ```shell
 sudo adduser $USER gpio
 ```
+
+### Running with Docker
+
+The `/sys` folder of the host needs to be mapped into the container like shown below.
+
+::: details Example docker-compose.yml
+
+```yaml
+version: '3'
+services:
+  room-assistant:
+    image: mkerix/room-assistant
+    network_mode: host
+    volumes:
+      - /var/run/dbus:/var/run/dbus
+      - /sys:/sys
+    environment:
+      NODE_CONFIG: >
+        {
+          "global": {
+            "instanceName": "changeme",
+            "integrations": ["gpio"]
+          },
+          "gpio": {
+            "binarySensors": [
+              { "name": "PIR Sensor", "pin": 17 }
+            ]
+          }
+        }
+```
+
+:::
 
 ## Settings
 

@@ -6,9 +6,13 @@ The [Home Assistant](https://www.home-assistant.io) integration shares data with
 
 ## Requirements
 
-You will need to setup an MQTT broker that both your instance of Home Assistant and all instances of room-assistant can connect to.
+::: tip
 
-If you are using Hass.io you can install the [official mosquitto add-on](https://github.com/home-assistant/hassio-addons/tree/master/mosquitto) to get started quickly. It is recommended to configure a separate user for room-assistant in the add-on configuration, but you can also use your Home Assistant credentials to login.
+**Running on Hass.io?** If you are also using the MQTT server add-on room-assistant will automatically pick up the correct credentials - no configuration needed!
+
+:::
+
+You will need to setup an MQTT broker that both your instance of Home Assistant and all instances of room-assistant can connect to. If you are using Hass.io you can install the [official mosquitto add-on](https://github.com/home-assistant/hassio-addons/tree/master/mosquitto) to get started quickly.
 
 room-assistant makes use of the [MQTT auto discovery](https://www.home-assistant.io/docs/mqtt/discovery/) features provided by Home Assistant to automatically create all entities for you. It is strongly recommended that you enable this feature when setting up the MQTT integration in Home Assistant.
 

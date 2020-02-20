@@ -16,6 +16,8 @@ The integration calculates an estimated distance in meters for all advertisement
 
 This integration requires a BLE capable Bluetooth adapter. Most modern boards like the Raspberry Pi Zero W have an integrated adapter that is suitable. Any Bluetooth USB stick with BLE and Linux support should also work.
 
+### Running with NodeJS
+
 Apart from that you are also required to have a few more system packages installed:
 
 ```shell
@@ -27,6 +29,10 @@ If you want to run room-assistant without root privileges (as it is recommended)
 ```shell
 sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
 ```
+
+### Running with Docker
+
+This integration requires you to run room-assistant in the `host` network.
 
 ## Determining the IDs
 

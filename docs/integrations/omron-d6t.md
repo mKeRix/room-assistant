@@ -14,7 +14,51 @@ Omron D6T hardware needs to be hooked up with JST connectors, for which you cann
 
 :::
 
-This integration only supports the D6T-44L-06 sensor at the moment. You will need to connect it to the I2C pins on your machine. On Raspberry Pi devices the I<sup>2</sup>C interface also needs to be enabled using `sudo raspi-config` and then enabling the I<sup>2</sup>C option under Advanced Options.
+This integration only supports the D6T-44L-06 sensor at the moment. You will need to connect it to the I2C pins on your machine.
+
+### Running with NodeJS
+
+On Raspberry Pi devices the I<sup>2</sup>C interface also needs to be enabled using `sudo raspi-config` and then enabling the I<sup>2</sup>C option under Advanced Options.
+
+### Running with Docker
+
+Your i2c device needs to be enabled on the host and mapped into the container as a device like shown below.
+
+::: details Example docker-compose.yml
+
+```yaml
+version: '3'
+services:
+  room-assistant:
+    image: mkerix/room-assistant
+    network_mode: host
+    volumes:
+      - /var/run/dbus:/var/run/dbus
+    devices:
+      - /dev/i2c-1
+    environment:
+      NODE_CONFIG: >
+        {
+          "global": {
+            "instanceName": "changeme",
+            "integrations": ["omronD6t"]
+          }
+        }
+```
+
+:::
+
+### Running with Hass.io
+
+You will need to enable the i2c interface by following the [official Hass.io guide](https://www.home-assistant.io/hassio/enable_i2c/). The `config.txt` file that you create should also contain an additional option, leading to the following contents:
+
+```
+dtparam=i2c1=on
+dtparam=i2c_arm=on
+dtparam=i2c_baudrate=10000
+```
+
+Reboot after you imported your config in the supervisor.
 
 ## Sensor placement
 
