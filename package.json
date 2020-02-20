@@ -1,6 +1,6 @@
 {
   "name": "room-assistant",
-  "version": "2.0.0-beta.6",
+  "version": "2.0.0-beta.7",
   "description": "A companion client for Home Assistant to handle presence detection and sensors in multiple rooms",
   "author": "Heiko Rothe <me@heikorothe.com>",
   "license": "MIT",
