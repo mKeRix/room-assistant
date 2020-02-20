@@ -18,6 +18,8 @@ services:
   room-assistant:
     image: mkerix/room-assistant
     network_mode: host
+    volumes:
+      - /var/run/dbus:/var/run/dbus
     environment:
       NODE_CONFIG: >
         {
