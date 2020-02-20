@@ -35,5 +35,3 @@ This project provides official Docker images on [Docker Hub](https://hub.docker.
 You can install room-assistant as Hass.io add-on by [adding the following URL as repository](https://www.home-assistant.io/hassio/installing_third_party_addons/):
 
 `https://github.com/mKeRix/hassio-repo`
-
-The software can be configured using the same options as for other platforms, but in JSON format.

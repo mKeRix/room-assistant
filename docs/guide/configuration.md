@@ -4,7 +4,7 @@ room-assistant can be configured using YAML and JSON files. It will look for the
 
 For example, let's say you are launching room-assistant from the directory `/home/pi/room-assistant`. In this case you should create a file `/home/pi/room-assistant/config/local.yml` and put your configuration in there.
 
-You can find the global configuration options below and the ones specific to some integrations on their respective pages.
+You can find the global configuration options below and the ones specific to some integrations on their [respective pages](/integrations/).
 
 ## Configuring with Docker
 

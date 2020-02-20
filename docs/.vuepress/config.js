@@ -32,10 +32,11 @@ module.exports = {
     lastUpdated: true,
     docsDir: 'docs',
     nav: [
-      { text: 'Documentation', link: '/guide/' }
+      { text: 'Guide', link: '/guide/' },
+      { text: 'Integrations', link: '/integrations/' }
     ],
     sidebar: {
-      '/': [
+      '/guide/': [
         {
           title: 'Guide',
           collapsable: false,
@@ -45,11 +46,14 @@ module.exports = {
             '/guide/configuration',
             '/guide/cluster'
           ]
-        },
+        }
+      ],
+      '/integrations/': [
         {
           title: 'Integrations',
           collapsable: false,
           children: [
+            '/integrations/',
             '/integrations/home-assistant',
             '/integrations/bluetooth-low-energy',
             '/integrations/bluetooth-classic',
