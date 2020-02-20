@@ -18,6 +18,12 @@ const optionDefinitions = [
     defaultValue: './config'
   },
   {
+    name: 'digResolver',
+    description:
+      'Use dig to resolve mdns hostnames instead of the native getaddrinfo.',
+    type: Boolean
+  },
+  {
     name: 'verbose',
     description: 'Turn on debugging output.',
     alias: 'v',
@@ -46,5 +52,9 @@ process.env.NODE_LOG_LEVEL = options.verbose
   ? 'verbose'
   : process.env.NODE_LOG_LEVEL || 'production';
 process.env.NODE_CONFIG_DIR = options.config;
+
+if (options.digResolver) {
+  process.env.NODE_DIG_RESOLVER = true;
+}
 
 require('../dist/main');

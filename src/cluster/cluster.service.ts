@@ -13,6 +13,7 @@ import { NetworkInterfaceInfo } from 'os';
 import { ConfigService } from '../config/config.service';
 import { ClusterConfig } from './cluster.config';
 import { makeId } from '../util/id';
+import { getAddrInfoDig } from './resolvers';
 
 let mdns;
 try {
@@ -137,11 +138,13 @@ export class ClusterService extends Democracy
         networkInterface: this.config.networkInterface
       }
     );
-    const sequence = [
-      mdns.rst.DNSServiceResolve(),
+    const defaultGetAddr =
       'DNSServiceGetAddrInfo' in mdns.dns_sd
         ? mdns.rst.DNSServiceGetAddrInfo()
-        : mdns.rst.getaddrinfo({ families: [0] }),
+        : mdns.rst.getaddrinfo({ families: [0] });
+    const sequence = [
+      mdns.rst.DNSServiceResolve(),
+      process.env.NODE_DIG_RESOLVER ? getAddrInfoDig : defaultGetAddr,
       mdns.rst.makeAddressesUnique()
     ];
     this.browser = mdns.createBrowser(mdns.udp('room-assistant'), {
