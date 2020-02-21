@@ -5,6 +5,12 @@ import * as os from 'os';
 
 const execPromise = util.promisify(exec);
 
+/**
+ * MDNS resolver to get IPs for a local hostname using the dig command.
+ *
+ * @param service - MDNS service to be augmented
+ * @param next - Function to call after augmentation is done
+ */
 export async function getAddrInfoDig(
   service: Service,
   next: (e?: Error) => void

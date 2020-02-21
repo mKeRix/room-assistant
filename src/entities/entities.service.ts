@@ -18,24 +18,51 @@ export class EntitiesService implements OnApplicationBootstrap {
     this.logger = new Logger(EntitiesService.name);
   }
 
+  /**
+   * Lifecycle hook, called once the application has started.
+   */
   onApplicationBootstrap(): void {
     this.clusterService.on('elected', () => {
       this.refreshStates();
     });
   }
 
+  /**
+   * Checks whether a given entity ID has already been registered.
+   *
+   * @param id - Entity id
+   * @returns Registered or not
+   */
   has(id: string): boolean {
     return this.entities.has(id);
   }
 
+  /**
+   * Retrieves the entity instance for a registered ID.
+   *
+   * @param id - Entity id
+   * @returns Entity or undefined if not found
+   */
   get(id: string): Entity {
     return this.entities.get(id);
   }
 
+  /**
+   * Retrieves all registered entities.
+   *
+   * @returns Registered entities
+   */
   getAll(): Entity[] {
     return Array.from(this.entities.values());
   }
 
+  /**
+   * Adds a new entity and applies ES6 proxies to watch for state/attribute changes.
+   *
+   * @param entity - Entity to register
+   * @param customizations - Customization objects to be used by other integrations
+   * @returns Entity with applied state/attributes watcher
+   */
   add(
     entity: Entity,
     customizations?: Array<EntityCustomization<any>>
@@ -56,6 +83,9 @@ export class EntitiesService implements OnApplicationBootstrap {
     return proxy;
   }
 
+  /**
+   * Emits the current states of all entities that this instance has power over.
+   */
   refreshStates(): void {
     this.logger.log('Refreshing entity states');
     this.entities.forEach(entity => {
