@@ -26,9 +26,49 @@ sudo npm i --global --unsafe-perm room-assistant
 npm will link the binary for running the software, usually into `/usr/bin/room-assistant`.
 If the directory is already in your `PATH` you can start it directly by typing `room-assistant`. Otherwise you can start it by typing the full path name of where it was installed.
 
+### Making it a service
+
+To make sure room-assistant always runs on your machine you can create a system service for it. Create the file `/etc/systemd/system/room-assistant.service` similar to the following example:
+
+```
+[Unit]
+Description=room-assistant service
+
+[Service]
+ExecStart=/usr/local/bin/room-assistant
+WorkingDirectory=/home/pi/room-assistant
+Restart=always
+RestartSec=10
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+```
+
+After you have your config ready - in the above example it should be located in `/home/pi/room-assistant/config/` - you can start and enable the service with:
+
+```shell
+sudo systemctl enable room-assistant.service
+sudo systemctl start room-assistant.service
+```
+
 ## Running with Docker
 
-This project provides official Docker images on [Docker Hub](https://hub.docker.com/r/mkerix/room-assistant/). You can either use the latest or a specific version by using the correct tag. It is strongly recommended to run this image with the `host` network, otherwise you may run into problems with many parts of the software.
+This project provides official Docker images on [Docker Hub](https://hub.docker.com/r/mkerix/room-assistant/). You can either use the latest or a specific version by using the correct tag. It is strongly recommended to run this image with the `host` network, otherwise you may run into problems with many parts of the software. For auto-discovery functionality on Linux you will need to map the `/var/run/dbus` volume.
+
+::: details Example docker-compose.yml
+
+```yaml
+version: '3'
+services:
+  room-assistant:
+    image: mkerix/room-assistant
+    network_mode: host
+    volumes:
+      - /var/run/dbus:/var/run/dbus
+```
+
+:::
 
 ## Running with Hass.io
 

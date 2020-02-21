@@ -43,8 +43,10 @@ module.exports = {
           children: [
             '/guide/',
             '/guide/installation',
+            '/guide/upgrading',
             '/guide/configuration',
-            '/guide/cluster'
+            '/guide/cluster',
+            '/guide/cli'
           ]
         }
       ],

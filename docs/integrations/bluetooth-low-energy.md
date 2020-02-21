@@ -22,6 +22,7 @@ Apart from that you are also required to have a few more system packages install
 
 ```shell
 sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev
+sudo npm i --global --unsafe-perm room-assistant
 ```
 
 If you want to run room-assistant without root privileges (as it is recommended) you also need to give NodeJS the correct permissions:
