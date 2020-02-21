@@ -219,7 +219,7 @@ export class HomeAssistantService
     );
     this.logger.debug(
       `Received message ${message.toString()} on ${topic} for ${
-        config.uniqueId
+        config?.uniqueId
       }`
     );
 
