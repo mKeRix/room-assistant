@@ -85,26 +85,20 @@ describe('BluetoothClassicService', () => {
     service = module.get<BluetoothClassicService>(BluetoothClassicService);
   });
 
-  it('should log an error if hcitool is not installed', async () => {
+  it('should throw an error if hcitool is not installed', async () => {
     jest.spyOn(util, 'promisify').mockImplementation(() => {
       return jest.fn().mockRejectedValue({ stderr: 'hcitool not found' });
     });
 
-    await service.onModuleInit();
-    expect(loggerService.error).toHaveBeenCalledWith(
-      expect.stringContaining('could not be found'),
-      expect.anything(),
-      BluetoothClassicService.name
-    );
+    await expect(service.onModuleInit()).rejects.toThrow();
   });
 
-  it('should not log an error if hcitool is found', async () => {
+  it('should not throw an error if hcitool is found', async () => {
     jest.spyOn(util, 'promisify').mockImplementation(() => {
       return jest.fn().mockResolvedValue({ stdout: 'hcitool help' });
     });
 
-    await service.onModuleInit();
-    expect(loggerService.error).not.toHaveBeenCalled();
+    await expect(service.onModuleInit()).resolves.not.toThrow();
   });
 
   it('should setup the cluster bindings on bootstrap', () => {
