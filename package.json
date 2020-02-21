@@ -1,16 +1,19 @@
 {
   "name": "room-assistant",
   "version": "2.0.0-beta.8",
-  "description": "A companion client for Home Assistant to handle presence detection and sensors in multiple rooms",
-  "author": "Heiko Rothe <me@heikorothe.com>",
+  "description": "Presence tracking and more for automation on the room-level",
+  "author": "Heiko Rothe <me@heikorothe.com> (https://heikorothe.com)",
   "license": "MIT",
   "repository": "github:mKeRix/room-assistant",
   "keywords": [
     "smart home",
     "home automation",
     "home assistant",
-    "presence"
+    "presence",
+    "bluetooth",
+    "thermopile"
   ],
+  "homepage": "https://www.room-assistant.io",
   "bugs": "https://github.com/mKeRix/room-assistant/issues",
   "bin": "./bin/room-assistant.js",
   "main": "dist/src/main.js",
