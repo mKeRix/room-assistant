@@ -48,6 +48,7 @@ export class GpioService
    * Lifecycle hook, called once the application is shutting down.
    */
   onApplicationShutdown(): void {
+    this.logger.log('Closing opened GPIO pins');
     this.gpios.forEach(gpio => {
       gpio.unexport();
     });

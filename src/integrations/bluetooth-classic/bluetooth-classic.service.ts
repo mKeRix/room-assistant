@@ -58,9 +58,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
     try {
       await execPromise('hcitool -h');
     } catch (e) {
-      this.logger.error(
-        'The Bluetooth Classic integration requires hcitool to be installed, which could not be found.'
-      );
+      throw new Error('Could not find the required hcitool command');
     }
   }
 

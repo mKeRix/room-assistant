@@ -71,6 +71,7 @@ export class EntitiesService implements OnApplicationBootstrap {
       throw new Error(`Entity with id ${entity.id} already exists!`);
     }
 
+    this.logger.debug(`Adding new entity ${entity.id}`);
     const proxy = new Proxy<Entity>(
       entity,
       new EntityProxyHandler(

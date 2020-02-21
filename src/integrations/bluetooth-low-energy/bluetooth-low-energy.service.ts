@@ -78,7 +78,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
 
     if (!this.seenIds.has(tag.id)) {
       this.logger.log(
-        `Discovered new BLE peripheral with ID ${tag.id} and RSSI ${tag.rssi}`
+        `Discovered new BLE peripheral ${tag.name} with ID ${tag.id} and RSSI ${tag.rssi}`
       );
       this.seenIds.add(tag.id);
     }

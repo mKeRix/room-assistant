@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   OnApplicationBootstrap,
   OnApplicationShutdown
 } from '@nestjs/common';
@@ -22,6 +23,7 @@ const FRAMERATE_REGISTER = 0x02;
 export class GridEyeService extends ThermopileOccupancyService
   implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly config: GridEyeConfig;
+  private readonly logger: Logger;
   private i2cBus: PromisifiedBus;
   private sensor: Entity;
 
@@ -31,12 +33,14 @@ export class GridEyeService extends ThermopileOccupancyService
   ) {
     super();
     this.config = this.configService.get('gridEye');
+    this.logger = new Logger(GridEyeService.name);
   }
 
   /**
    * Lifecycle hook, called once the application has started.
    */
   async onApplicationBootstrap(): Promise<void> {
+    this.logger.log(`Opening i2c bus ${this.config.busNumber}`);
     this.i2cBus = await i2cBus.openPromisified(this.config.busNumber);
     this.setRegister(FRAMERATE_REGISTER, 1); // set framerate to 1 FPS -> less noise
 
@@ -47,6 +51,7 @@ export class GridEyeService extends ThermopileOccupancyService
    * Lifecycle hook, called once the application is shutting down.
    */
   async onApplicationShutdown(): Promise<void> {
+    this.logger.log(`Closing i2c bus ${this.config.busNumber}`);
     return this.i2cBus.close();
   }
 

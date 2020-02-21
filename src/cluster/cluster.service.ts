@@ -19,6 +19,7 @@ let mdns;
 try {
   mdns = require('mdns');
 } catch (e) {
+  Logger.error(e.message, e.stack, 'ClusterService');
   mdns = undefined;
 }
 

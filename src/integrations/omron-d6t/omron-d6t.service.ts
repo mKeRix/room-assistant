@@ -39,6 +39,7 @@ export class OmronD6tService extends ThermopileOccupancyService
    * Lifecycle hook, called once the application has started.
    */
   async onApplicationBootstrap(): Promise<void> {
+    this.logger.log(`Opening i2c bus ${this.config.busNumber}`);
     this.i2cBus = await i2cBus.openPromisified(this.config.busNumber);
     this.sensor = this.createSensor();
   }
@@ -47,6 +48,7 @@ export class OmronD6tService extends ThermopileOccupancyService
    * Lifecycle hook, called once the application is shutting down.
    */
   async onApplicationShutdown(): Promise<void> {
+    this.logger.log(`Closing i2c bus ${this.config.busNumber}`);
     return this.i2cBus.close();
   }
 

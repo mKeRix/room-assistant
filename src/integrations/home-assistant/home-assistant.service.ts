@@ -70,7 +70,7 @@ export class HomeAssistantService
       this.emitter.on('stateUpdate', this.handleNewState.bind(this));
       this.emitter.on('attributesUpdate', this.handleNewAttributes.bind(this));
     } catch (e) {
-      this.logger.error(e);
+      this.logger.error(e, e.stack);
     }
   }
 
@@ -83,6 +83,7 @@ export class HomeAssistantService
         config.device?.identifiers !== DISTRIBUTED_DEVICE_ID &&
         config.device?.viaDevice !== DISTRIBUTED_DEVICE_ID
       ) {
+        this.logger.debug(`Marking ${config.uniqueId} as unavailable`);
         this.mqttClient.publish(
           config.availabilityTopic,
           config.payloadNotAvailable,
@@ -124,6 +125,9 @@ export class HomeAssistantService
 
     config = this.applyCustomizations(config, customizations);
 
+    this.logger.debug(
+      `Registering entity ${config.uniqueId} under ${config.configTopic}`
+    );
     this.entityConfigs.set(combinedId, config);
     this.mqttClient.publish(
       config.configTopic,
@@ -156,6 +160,7 @@ export class HomeAssistantService
       return;
     }
 
+    this.logger.debug(`Sending new state ${state} for ${config.uniqueId}`);
     this.mqttClient.publish(config.stateTopic, String(state), {
       qos: 0,
       retain: true
@@ -186,6 +191,11 @@ export class HomeAssistantService
       this.debounceFunctions.get(entityId)(attributes);
     } else {
       const debouncedFunc = _.debounce(attributes => {
+        this.logger.debug(
+          `Sending new attributes ${JSON.stringify(attributes)} for ${
+            config.uniqueId
+          }`
+        );
         this.mqttClient.publish(
           config.jsonAttributesTopic,
           JSON.stringify(this.formatMessage(attributes))
@@ -206,6 +216,11 @@ export class HomeAssistantService
     const configs = Array.from(this.entityConfigs.values());
     const config = configs.find(
       config => config instanceof SwitchConfig && config.commandTopic == topic
+    );
+    this.logger.debug(
+      `Received message ${message.toString()} on ${topic} for ${
+        config.uniqueId
+      }`
     );
 
     if (config instanceof SwitchConfig) {
