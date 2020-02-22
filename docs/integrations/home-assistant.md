@@ -31,3 +31,17 @@ room-assistant makes use of the [MQTT auto discovery](https://www.home-assistant
 | `password`           | String  |         | Password for authentication                                  |
 | `rejectUnauthorized` | Boolean | `true`  | Whether MQTTS connections should fail for invalid certificates or not. Set this to `false` if you are using a self-signed certificate and connect via TLS. |
 
+::: details Example Config
+
+```yaml
+global:
+  integrations:
+    - homeAssistant
+homeAssistant:
+  mqttUrl: mqtt://hassio.local:1883
+  mqttOptions:
+    username: youruser
+    password: yourpass
+```
+
+:::
