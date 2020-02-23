@@ -27,7 +27,7 @@ self.addEventListener('message', (event) => {
 self.__precacheManifest = [
   {
     "url": "404.html",
-    "revision": "0190548137ba7a821400553b4188bb7a"
+    "revision": "6c74c02a85cd9ca5028a803108e939d7"
   },
   {
     "url": "android-chrome-192x192.png",
@@ -130,8 +130,8 @@ self.__precacheManifest = [
     "revision": "5fa91c2dc323904735b23c4ea08ded8c"
   },
   {
-    "url": "assets/js/app.d0d54c0d.js",
-    "revision": "8a81fabba74bf00a78ef00c6f3985ded"
+    "url": "assets/js/app.74b268ad.js",
+    "revision": "ee98585b15f028e48cfffe7b4f9768bf"
   },
   {
     "url": "favicon-16x16.png",
@@ -142,16 +142,64 @@ self.__precacheManifest = [
     "revision": "d00874ce1e43be2ac335d1e80c0c8ead"
   },
   {
+    "url": "guide/cli.html",
+    "revision": "665f78ad62afd5a073081332b6cb84c1"
+  },
+  {
+    "url": "guide/cluster.html",
+    "revision": "2e5dd3dbf77b653af6596b4a54225e59"
+  },
+  {
+    "url": "guide/configuration.html",
+    "revision": "cbfe0755d70e83dc6c3b3eb06a26b99c"
+  },
+  {
     "url": "guide/index.html",
-    "revision": "972e10b503486db30e513339e47e3e05"
+    "revision": "24a81918d07b3f3d9fb7f60271676ca2"
+  },
+  {
+    "url": "guide/installation.html",
+    "revision": "fc9950904389354d64cbe781c0ca8bd3"
+  },
+  {
+    "url": "guide/upgrading.html",
+    "revision": "499b9bdc693ada4ed9415eec593268f9"
   },
   {
     "url": "index.html",
-    "revision": "c5552840c30398a4932958150a18d44b"
+    "revision": "7a15425983b341e4a2ba36243eb78dc8"
+  },
+  {
+    "url": "integrations/bluetooth-classic.html",
+    "revision": "9067e356c54551b2f4030199ef532606"
+  },
+  {
+    "url": "integrations/bluetooth-low-energy.html",
+    "revision": "c7262ac252d0b83a77667013349807c1"
+  },
+  {
+    "url": "integrations/gpio.html",
+    "revision": "1e4c176b1f34c4d172ae8377f17fbe16"
+  },
+  {
+    "url": "integrations/grid-eye.html",
+    "revision": "e06fb289007f1c3a2d32980a3a862055"
+  },
+  {
+    "url": "integrations/home-assistant.html",
+    "revision": "0555b5f94423fc57845b05c87cf43d6a"
   },
   {
     "url": "integrations/index.html",
-    "revision": "721eac1a6f0049fe337c38e3e407134b"
+    "revision": "63f78516f689d9d4dfc23f3a604014cd"
+  },
+  {
+    "url": "integrations/omron-d6t.html",
+    "revision": "e4d1d3d3e69a31edf2ef4d6ad85424b1"
+  },
+  {
+    "url": "integrations/shell.html",
+    "revision": "d5408382949f908bbcdea330e07002e6"
   },
   {
     "url": "mstile-150x150.png",
