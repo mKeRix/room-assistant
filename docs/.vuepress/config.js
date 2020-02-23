@@ -2,7 +2,6 @@ module.exports = {
   title: 'room-assistant',
   description: 'A companion software to bring your home automation to the room-level for presence detection and more.',
   plugins: [
-    'vuepress-plugin-clean-urls',
     'vuepress-plugin-seo',
     [
       '@vuepress/pwa',
