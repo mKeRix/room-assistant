@@ -9,6 +9,12 @@ module.exports = {
         serviceWorker: true,
         updatePopup: true
       }
+    ],
+    [
+      'sitemap',
+      {
+        hostname: 'https://www.room-assistant.io'
+      }
     ]
   ],
   head: [
