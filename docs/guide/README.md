@@ -18,19 +18,22 @@ If you don't require the room-level features you can of course also only setup a
 
 ### monitor
 
-[monitor](https://github.com/andrewjfreyer/monitor) is a great lightweight project for tracking if a Bluetooth device is nearby, but it only allows you to know if a device is at home or not.
-room-assistant allows you to know in which room of your house your device is in without requiring additional hardware.
-It also integrates with other types of sensors, so that you can manage all of your room-level needs from a single software.
+[monitor](https://github.com/andrewjfreyer/monitor) is a great lightweight project for tracking if a Bluetooth device is nearby, but the room presence tracking is cumbersome to setup and requires the mobile devices to be paired with all machines running the software. room-assistant automatically creates everything for you and determines the current room on its own, without you having to pair the mobile devices to anything. It also integrates with other types of sensors, so that you can manage all of your room-level needs from a single piece of software.
 
 ### Happy Bubbles
 
-[Happy Bubbles](https://www.happybubbles.tech) works with their own BLE beacon presence detector hardware, which unfortunately is not for sale anymore.
-room-assistant allows you to do the same thing and much more, but with any Linux board.
+[Happy Bubbles](https://www.happybubbles.tech) works with their own BLE beacon presence detector hardware, which unfortunately is not for sale anymore. room-assistant allows you to do the same thing and much more, but with any Linux board.
+
+### ESP32-mqtt-room
+
+[ESP32-mqtt-room](https://jptrsn.github.io/ESP32-mqtt-room/) integrates with the Home Assistant [mqtt_room](https://www.home-assistant.io/integrations/mqtt_room/) component to deliver room presence data for BLE devices. This is great as ESP32s are quite cheap, but it also requires you to either carry a BLE beacon around or have an app open on your Android phone at all times. room-assistant supports many more integrations, including [Bluetooth Classic](/integrations/bluetooth-classic), which allows you to track your phone even without a special app running. That way you can track iOS devices and smart watches as well.
+
+### FIND3
+
+[FIND3](https://www.internalpositioning.com/doc/) lets a device detect its own location based on what it sees in its surroundings. This can be achieved without having to place e.g. Raspberry Pis in every room, but it requires an app to run on the phone/computer in the background at all times. This app is not available for iOS or smart watch devices. room-assistant is capable of tracking any Bluetooth devices, no app required.
 
 ### Motion Sensors
 
 You can buy readily assembled motion sensors from many different brands, e.g. Philips Hue.
-Motion is not a good metric for room occupancy though: you may just be sitting at your desk and working on something, without moving much.
-That will cause the lights to turn off after some timeout, requiring you to wave your hands in the air frantically to turn them on again.
-room-assistant has integrations that allow you to track occupancy even if the people are stationary.
+Motion is not a good metric for room occupancy though: you may just be sitting at your desk and working on something, without moving much. That will cause the lights to turn off after some timeout, requiring you to wave your hands in the air frantically to turn them on again. room-assistant has integrations that allow you to track occupancy even if the people are stationary.
 And if you still want to have a motion detector: you can easily use that with room-assistant as well.
