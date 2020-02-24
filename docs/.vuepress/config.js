@@ -53,6 +53,15 @@ module.exports = {
             '/guide/cluster',
             '/guide/cli'
           ]
+        },
+        {
+          title: 'Quickstart',
+          collapsable: false,
+          children: [
+            '/guide/quickstart-pi-zero-w',
+            '/guide/quickstart-pi',
+            '/guide/quickstart-docker'
+          ]
         }
       ],
       '/integrations/': [

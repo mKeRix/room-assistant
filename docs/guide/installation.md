@@ -1,5 +1,11 @@
 # Installation
 
+::: tip
+
+Also checkout the quickstart guides in the menu on the left!
+
+:::
+
 ## Running with NodeJS
 
 ### Requirements
