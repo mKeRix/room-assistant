@@ -53,7 +53,7 @@ export class RoomPresenceDistanceSensor extends Sensor {
         this.attributes.distance = closestInRange[1].distance;
         this.attributes.lastUpdatedAt = closestInRange[1].lastUpdatedAt.toISOString();
       }
-    } else {
+    } else if (this.state !== STATE_NOT_HOME) {
       this.setNotHome();
     }
   }

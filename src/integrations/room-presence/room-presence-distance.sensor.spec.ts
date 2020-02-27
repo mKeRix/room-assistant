@@ -138,4 +138,11 @@ describe('RoomPresenceDistanceSensor', () => {
     expect(sensor.state).toBe(STATE_NOT_HOME);
     expect(sensor.attributes.distance).toBeUndefined();
   });
+
+  it('should stop sending attribute updates after not_home has been set', () => {
+    sensor.state = STATE_NOT_HOME;
+    sensor.handleNewDistance('room1', 10, true);
+
+    expect(sensor.attributes.lastUpdatedAt).toBeUndefined();
+  });
 });
