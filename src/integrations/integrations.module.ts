@@ -1,4 +1,4 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Logger, Module } from '@nestjs/common';
 
 @Module({})
 export class IntegrationsModule {
@@ -13,6 +13,11 @@ export class IntegrationsModule {
 
   private static resolveModules(ids: string[]): Promise<DynamicModule[]> {
     const loadedModules: Array<Promise<DynamicModule>> = [];
+
+    Logger.log(
+      `Loading integrations: ${ids?.length > 0 ? ids.join(', ') : 'none'}`,
+      IntegrationsModule.name
+    );
     ids.forEach(id => {
       const loadPromise = IntegrationsModule.loadModule(
         `./${id}/${id}.module`
