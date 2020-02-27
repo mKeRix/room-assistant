@@ -36,6 +36,10 @@ module.exports = {
     editLinks: true,
     lastUpdated: true,
     docsDir: 'docs',
+    algolia: {
+      apiKey: '122374495be1e51186e78b13b1169885',
+      indexName: 'room-assistant'
+    },
     nav: [
       { text: 'Guide', link: '/guide/' },
       { text: 'Integrations', link: '/integrations/' }
