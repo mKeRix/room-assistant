@@ -113,7 +113,7 @@ When starting room-assistant you will see warnings about the Apple Bonjour compa
    Description=room-assistant service
    
    [Service]
-   ExecStart=/opt/nodejs/bin/room-assistant
+   ExecStart=/usr/bin/room-assistant
    WorkingDirectory=/home/pi/room-assistant
    Restart=always
    RestartSec=10
