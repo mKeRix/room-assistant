@@ -12,6 +12,7 @@ WORKDIR /room-assistant
 RUN apk add --no-cache bluez bluez-deprecated libusb avahi-dev bind-tools dmidecode \
     && setcap cap_net_raw+eip $(eval readlink -f `which node`) \
     && setcap cap_net_raw+eip $(eval readlink -f `which hcitool`) \
+    && setcap cap_net_admin+eip $(eval readlink -f `which hciconfig`) \
     && ln -s /usr/local/lib/node_modules/room-assistant/bin/room-assistant.js /usr/local/bin/room-assistant
 COPY --from=build /usr/local/lib/node_modules/room-assistant /usr/local/lib/node_modules/room-assistant
 

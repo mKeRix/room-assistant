@@ -65,6 +65,7 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
    ```shell
    sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
    sudo setcap cap_net_raw+eip $(eval readlink -f `which hcitool`)
+   sudo setcap cap_net_admin+eip $(eval readlink -f `which hciconfig`)
    ```
 
    

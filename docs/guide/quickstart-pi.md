@@ -68,6 +68,7 @@ This page will guide you through setting up a Raspberry Pi 3 or 4 to run room-as
    ```shell
    sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
    sudo setcap cap_net_raw+eip $(eval readlink -f `which hcitool`)
+   sudo setcap cap_net_admin+eip $(eval readlink -f `which hciconfig`)
    ```
 
 
