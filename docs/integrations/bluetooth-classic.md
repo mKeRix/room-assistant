@@ -31,7 +31,17 @@ sudo setcap cap_net_admin+eip $(eval readlink -f `which hciconfig`)
 
 ### Running with Docker
 
-This integration requires you to run room-assistant in the `host` network.
+This integration requires you to run room-assistant in the `host` network and the `NET_ADMIN` capability. In a docker-compose file you can set these things as shown in the following example.
+
+```yaml
+version: '3'
+services:
+  room-assistant:
+  	image: mkerix/room-assistant
+  	network_mode: host
+    cap_add:
+      - NET_ADMIN
+```
 
 ## How it works
 
