@@ -76,7 +76,14 @@ export class ClusterService extends Democracy
   onApplicationBootstrap(): void {
     if (this.config.autoDiscovery) {
       if (mdns !== undefined) {
-        this.startBonjourDiscovery();
+        try {
+          this.startBonjourDiscovery();
+        } catch (e) {
+          this.logger.error(
+            `Failed to start mdns discovery (${e.message})`,
+            e.stack
+          );
+        }
       } else {
         this.logger.warn(
           'Dependency "mdns" was not found, automatic discovery has been disabled. You will have to provide the addresses of other room-assistant nodes manually in the config.'
