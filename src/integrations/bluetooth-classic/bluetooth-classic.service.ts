@@ -183,7 +183,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
     this.logger.debug(`Querying for RSSI of ${address} using hcitool`);
     try {
       const output = await execPromise(
-        `hcitool cc "${address}" && hcitool rssi "${address}"`,
+        `hcitool -i hci${this.config.hciDeviceId} cc "${address}" && hcitool -i hci${this.config.hciDeviceId} rssi "${address}"`,
         {
           timeout: 5.5 * 1000,
           killSignal: 'SIGKILL'
@@ -194,7 +194,9 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
       return matches?.length > 0 ? parseInt(matches[0], 10) : undefined;
     } catch (e) {
       if (e.signal === 'SIGKILL') {
-        this.logger.warn(`Query of ${address} took too long, resetting hci0`);
+        this.logger.warn(
+          `Query of ${address} took too long, resetting hci${this.config.hciDeviceId}`
+        );
         this.resetHciDevice();
       } else {
         this.logger.debug(e.message);
@@ -223,7 +225,9 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    */
   async inquireDeviceInfo(address: string): Promise<Device> {
     try {
-      const output = await execPromise(`hcitool info "${address}"`);
+      const output = await execPromise(
+        `hcitool -i hci${this.config.hciDeviceId} info "${address}"`
+      );
 
       const nameMatches = /Device Name: (.+)/g.exec(output.stdout);
       const manufacturerMatches = /OUI Company: (.+) \(.+\)/g.exec(
@@ -271,7 +275,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    */
   protected async resetHciDevice(): Promise<void> {
     try {
-      await execPromise('hciconfig hci0 reset');
+      await execPromise(`hciconfig hci${this.config.hciDeviceId} reset`);
     } catch (e) {
       this.logger.error(e.message);
     }

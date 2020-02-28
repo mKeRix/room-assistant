@@ -1,3 +1,4 @@
+import './env';
 import { DynamicModule, Module } from '@nestjs/common';
 import { BluetoothLowEnergyService } from './bluetooth-low-energy.service';
 import { EntitiesModule } from '../../entities/entities.module';

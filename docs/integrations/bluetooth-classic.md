@@ -4,7 +4,7 @@
 
 ::: warning
 
-This integration cannot be used together with [Bluetooth Low Energy](./bluetooth-low-energy).
+Using this together with [Bluetooth Low Energy](./bluetooth-low-energy) requires multiple Bluetooth adapters.
 
 :::
 
@@ -47,10 +47,11 @@ You could use this to reduce the resources used by room-assistant when you are c
 
 ## Settings
 
-| Name        | Type   | Default | Description                                                  |
-| ----------- | ------ | ------- | ------------------------------------------------------------ |
-| `addresses` | Array  |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
-| `minRssi`   | Number |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
+| Name          | Type   | Default | Description                                                  |
+| ------------- | ------ | ------- | ------------------------------------------------------------ |
+| `addresses`   | Array  |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
+| `minRssi`     | Number |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
+| `hciDeviceId` | Number | 0       | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
 
 ::: details Example Config
 ```yaml
