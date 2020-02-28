@@ -29,6 +29,7 @@ import { Switch } from '../../entities/switch';
 import { SwitchConfig } from '../home-assistant/switch-config';
 
 const INTERVAL = 6 * 1000;
+const execPromise = util.promisify(exec);
 
 @Injectable()
 export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
@@ -53,8 +54,6 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    * Lifecycle hook, called once the host module has been initialized.
    */
   async onModuleInit(): Promise<void> {
-    const execPromise = util.promisify(exec);
-
     try {
       await execPromise('hcitool -h');
     } catch (e) {
@@ -169,7 +168,6 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    * @returns RSSI value
    */
   async inquireRssi(address: string): Promise<number> {
-    const execPromise = util.promisify(exec);
     const regex = new RegExp(/-?[0-9]+/);
 
     this.logger.debug(`Querying for RSSI of ${address} using hcitool`);
@@ -214,8 +212,6 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    * @returns Device information
    */
   async inquireDeviceInfo(address: string): Promise<Device> {
-    const execPromise = util.promisify(exec);
-
     try {
       const output = await execPromise(`hcitool info "${address}"`);
 
@@ -264,8 +260,6 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    * Reset the hci (Bluetooth) device used for inquiries.
    */
   protected async resetHciDevice(): Promise<void> {
-    const execPromise = util.promisify(exec);
-
     try {
       await execPromise('hciconfig hci0 reset');
     } catch (e) {

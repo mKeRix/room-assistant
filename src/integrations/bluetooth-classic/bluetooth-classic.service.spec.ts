@@ -1,3 +1,5 @@
+const mockExec = jest.fn();
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { BluetoothClassicService } from './bluetooth-classic.service';
 import { ConfigModule } from '../../config/config.module';
@@ -29,7 +31,8 @@ jest.mock('kalmanjs', () => {
 });
 jest.mock('util', () => ({
   ...jest.requireActual('util'),
-  promisify: jest.fn()
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  promisify: () => mockExec
 }));
 
 describe('BluetoothClassicService', () => {
@@ -86,17 +89,13 @@ describe('BluetoothClassicService', () => {
   });
 
   it('should throw an error if hcitool is not installed', async () => {
-    jest.spyOn(util, 'promisify').mockImplementation(() => {
-      return jest.fn().mockRejectedValue({ stderr: 'hcitool not found' });
-    });
+    mockExec.mockRejectedValue({ stderr: 'hcitool not found' });
 
     await expect(service.onModuleInit()).rejects.toThrow();
   });
 
   it('should not throw an error if hcitool is found', async () => {
-    jest.spyOn(util, 'promisify').mockImplementation(() => {
-      return jest.fn().mockResolvedValue({ stdout: 'hcitool help' });
-    });
+    mockExec.mockResolvedValue({ stdout: 'hcitool help' });
 
     await expect(service.onModuleInit()).resolves.not.toThrow();
   });
@@ -137,9 +136,7 @@ describe('BluetoothClassicService', () => {
   });
 
   it('should return measured RSSI value from command output', () => {
-    jest.spyOn(util, 'promisify').mockImplementation(() => {
-      return jest.fn().mockResolvedValue({ stdout: 'RSSI return value: -4' });
-    });
+    mockExec.mockResolvedValue({ stdout: 'RSSI return value: -4' });
 
     const address = '77:50:fb:4d:ab:70';
 
@@ -147,39 +144,31 @@ describe('BluetoothClassicService', () => {
   });
 
   it('should return undefined if no RSSI could be determined', () => {
-    jest.spyOn(util, 'promisify').mockImplementation(() => {
-      return jest.fn().mockResolvedValue({
-        stdout: "Can't create connection: Input/output error",
-        stderr: 'Not connected.'
-      });
+    mockExec.mockResolvedValue({
+      stdout: "Can't create connection: Input/output error",
+      stderr: 'Not connected.'
     });
 
     expect(service.inquireRssi('08:05:90:ed:3b:60')).resolves.toBeUndefined();
   });
 
   it('should return undefined if the command failed', () => {
-    jest.spyOn(util, 'promisify').mockImplementation(() => {
-      return jest.fn().mockRejectedValue({ message: 'Command failed' });
-    });
+    mockExec.mockRejectedValue({ message: 'Command failed' });
 
     expect(service.inquireRssi('08:05:90:ed:3b:60')).resolves.toBeUndefined();
   });
 
   it('should return reset the HCI device if the query took too long', async () => {
-    const execMock = jest.fn().mockRejectedValue({ signal: 'SIGKILL' });
-    jest.spyOn(util, 'promisify').mockImplementation(() => {
-      return execMock;
-    });
+    mockExec.mockRejectedValue({ signal: 'SIGKILL' });
 
     const result = await service.inquireRssi('08:05:90:ed:3b:60');
     expect(result).toBeUndefined();
-    expect(execMock).toHaveBeenCalledWith('hciconfig hci0 reset');
+    expect(mockExec).toHaveBeenCalledWith('hciconfig hci0 reset');
   });
 
   it('should return device information based on parsed output', async () => {
-    jest.spyOn(util, 'promisify').mockImplementation(() => {
-      return jest.fn().mockResolvedValue({
-        stdout: `
+    mockExec.mockResolvedValue({
+      stdout: `
 Requesting information ...
 \tBD Address:  F0:99:B6:12:34:AB
 \tOUI Company: Apple, Inc. (F0-99-B6)
@@ -190,7 +179,6 @@ Requesting information ...
 \tFeatures page 1:
 \tFeatures page 2:
       `
-      });
     });
 
     expect(await service.inquireDeviceInfo('F0:99:B6:12:34:AB')).toStrictEqual({
@@ -201,10 +189,8 @@ Requesting information ...
   });
 
   it('should return the address as device name if none was found', async () => {
-    jest.spyOn(util, 'promisify').mockImplementation(() => {
-      return jest.fn().mockResolvedValue({
-        stdout: 'IO error'
-      });
+    mockExec.mockResolvedValue({
+      stdout: 'IO error'
     });
 
     expect(await service.inquireDeviceInfo('F0:99:B6:12:34:AB')).toStrictEqual({
@@ -215,9 +201,7 @@ Requesting information ...
   });
 
   it('should return barebones information if request fails', async () => {
-    jest.spyOn(util, 'promisify').mockImplementation(() => {
-      return jest.fn().mockRejectedValue({ stderr: 'I/O Error' });
-    });
+    mockExec.mockRejectedValue({ stderr: 'I/O Error' });
 
     expect(await service.inquireDeviceInfo('F0:99:B6:12:34:CD')).toStrictEqual({
       address: 'F0:99:B6:12:34:CD',
