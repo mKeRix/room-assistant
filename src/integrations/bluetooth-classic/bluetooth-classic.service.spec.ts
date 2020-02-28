@@ -165,6 +165,17 @@ describe('BluetoothClassicService', () => {
     expect(service.inquireRssi('08:05:90:ed:3b:60')).resolves.toBeUndefined();
   });
 
+  it('should return reset the HCI device if the query took too long', async () => {
+    const execMock = jest.fn().mockRejectedValue({ signal: 'SIGKILL' });
+    jest.spyOn(util, 'promisify').mockImplementation(() => {
+      return execMock;
+    });
+
+    const result = await service.inquireRssi('08:05:90:ed:3b:60');
+    expect(result).toBeUndefined();
+    expect(execMock).toHaveBeenCalledWith('hciconfig hci0 reset');
+  });
+
   it('should return device information based on parsed output', async () => {
     jest.spyOn(util, 'promisify').mockImplementation(() => {
       return jest.fn().mockResolvedValue({

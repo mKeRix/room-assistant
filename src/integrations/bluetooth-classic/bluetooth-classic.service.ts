@@ -175,13 +175,23 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
     this.logger.debug(`Querying for RSSI of ${address} using hcitool`);
     try {
       const output = await execPromise(
-        `hcitool cc "${address}" && hcitool rssi "${address}"`
+        `hcitool cc "${address}" && hcitool rssi "${address}"`,
+        {
+          timeout: 5.5 * 1000,
+          killSignal: 'SIGKILL'
+        }
       );
       const matches = output.stdout.match(regex);
 
       return matches?.length > 0 ? parseInt(matches[0], 10) : undefined;
     } catch (e) {
-      this.logger.debug(e.message);
+      if (e.signal === 'SIGKILL') {
+        this.logger.warn(`Query of ${address} took too long, resetting hci0`);
+        this.resetHciDevice();
+      } else {
+        this.logger.debug(e.message);
+      }
+
       return undefined;
     }
   }
@@ -248,6 +258,19 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    */
   shouldInquire(): boolean {
     return this.inquiriesSwitch?.state;
+  }
+
+  /**
+   * Reset the hci (Bluetooth) device used for inquiries.
+   */
+  protected async resetHciDevice(): Promise<void> {
+    const execPromise = util.promisify(exec);
+
+    try {
+      await execPromise('hciconfig hci0 reset');
+    } catch (e) {
+      this.logger.error(e.message);
+    }
   }
 
   /**
