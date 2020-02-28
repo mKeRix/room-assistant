@@ -8,7 +8,6 @@ import { ClusterModule } from '../../cluster/cluster.module';
 import { EntitiesService } from '../../entities/entities.service';
 import { ClusterService } from '../../cluster/cluster.service';
 import { ScheduleModule } from '@nestjs/schedule';
-import * as util from 'util';
 import {
   NEW_RSSI_CHANNEL,
   REQUEST_RSSI_CHANNEL
@@ -20,6 +19,7 @@ import { Switch } from '../../entities/switch';
 import { BluetoothClassicConfig } from './bluetooth-classic.config';
 import c from 'config';
 import { ConfigService } from '../../config/config.service';
+import { Device } from './device';
 
 jest.mock('../room-presence/room-presence-distance.sensor');
 jest.mock('kalmanjs', () => {
@@ -215,9 +215,11 @@ Requesting information ...
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
-
     const address = '77:50:fb:4d:ab:70';
-    const expectedEvent = new NewRssiEvent('test-instance', address, 0);
+    const device = new Device(address, 'Test Device');
+    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+
+    const expectedEvent = new NewRssiEvent('test-instance', device, 0);
 
     await service.handleRssiRequest(address);
     expect(clusterService.publish).toHaveBeenCalledWith(
@@ -275,7 +277,10 @@ Requesting information ...
     config.minRssi = -10;
 
     const address = '77:50:fb:4d:ab:70';
-    const expectedEvent = new NewRssiEvent('test-instance', address, -11, true);
+    const device = new Device(address, 'Test Device');
+    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+
+    const expectedEvent = new NewRssiEvent('test-instance', device, -11, true);
 
     await service.handleRssiRequest(address);
     expect(handleRssiMock).toHaveBeenCalledWith(expectedEvent);
@@ -283,6 +288,42 @@ Requesting information ...
       NEW_RSSI_CHANNEL,
       expectedEvent
     );
+  });
+
+  it('should gather the device info for previously unkown addresses', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    jest.spyOn(service, 'inquireRssi').mockResolvedValue(0);
+    jest.spyOn(service, 'handleNewRssi').mockImplementation(() => undefined);
+
+    const address = '77:50:fb:4d:ab:70';
+    const device = new Device(address, 'Test Device');
+    const infoSpy = jest
+      .spyOn(service, 'inquireDeviceInfo')
+      .mockResolvedValue(device);
+
+    await service.handleRssiRequest(address);
+
+    expect(infoSpy).toHaveBeenCalledWith('77:50:fb:4d:ab:70');
+  });
+
+  it('should re-use already gathered device information', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    jest.spyOn(service, 'inquireRssi').mockResolvedValue(0);
+    const handleSpy = jest
+      .spyOn(service, 'handleNewRssi')
+      .mockImplementation(() => undefined);
+
+    const address = '77:50:fb:4d:ab:70';
+    const device = new Device(address, 'Test Device');
+    const infoSpy = jest
+      .spyOn(service, 'inquireDeviceInfo')
+      .mockResolvedValue(device);
+
+    await service.handleRssiRequest(address);
+    await service.handleRssiRequest(address);
+
+    expect(infoSpy).toHaveBeenCalledTimes(1);
+    expect(handleSpy.mock.calls[1][0].device).toEqual(device);
   });
 
   it('should ignore RSSI requests of inquiries are disabled', () => {
@@ -307,7 +348,11 @@ Requesting information ...
     });
     jest.useFakeTimers();
 
-    const event = new NewRssiEvent('test-instance', '10:36:cf:ca:9a:18', -10);
+    const event = new NewRssiEvent(
+      'test-instance',
+      new Device('10:36:cf:ca:9a:18', 'Test Device'),
+      -10
+    );
     await service.handleNewRssi(event);
 
     expect(entitiesService.add).toHaveBeenCalledWith(
@@ -473,7 +518,10 @@ Requesting information ...
       .mockReturnValue(-5.2);
 
     const address = 'ab:cd:01:23:00:70';
-    const expectedEvent = new NewRssiEvent('test-instance', address, -5.2);
+    const device = new Device(address, 'Test Device');
+    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+
+    const expectedEvent = new NewRssiEvent('test-instance', device, -5.2);
 
     await service.handleRssiRequest(address);
     expect(filterRssiMock).toHaveBeenCalled();

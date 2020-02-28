@@ -37,6 +37,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
   private readonly config: BluetoothClassicConfig;
   private rotationOffset = 0;
   private inquiriesSwitch: Switch;
+  private deviceMap = new Map<string, Device>();
   private logger: Logger;
 
   constructor(
@@ -86,9 +87,18 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
 
       if (rssi !== undefined) {
         rssi = _.round(this.filterRssi(address, rssi), 1);
+
+        let device: Device;
+        if (this.deviceMap.has(address)) {
+          device = this.deviceMap.get(address);
+        } else {
+          device = await this.inquireDeviceInfo(address);
+          this.deviceMap.set(address, device);
+        }
+
         const event = new NewRssiEvent(
           this.configService.get('global').instanceName,
-          address,
+          device,
           rssi,
           rssi < this.config.minRssi
         );
@@ -107,15 +117,15 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    */
   async handleNewRssi(event: NewRssiEvent): Promise<void> {
     this.logger.debug(
-      `Received RSSI of ${event.rssi} for ${event.address} from ${event.instanceName}`
+      `Received RSSI of ${event.rssi} for ${event.device.address} from ${event.instanceName}`
     );
 
-    const sensorId = makeId(`bluetooth-classic ${event.address}`);
+    const sensorId = makeId(`bluetooth-classic ${event.device.address}`);
     let sensor: RoomPresenceDistanceSensor;
     if (this.entitiesService.has(sensorId)) {
       sensor = this.entitiesService.get(sensorId) as RoomPresenceDistanceSensor;
     } else {
-      sensor = await this.createSensor(sensorId, event.address);
+      sensor = await this.createSensor(sensorId, event.device);
     }
 
     sensor.timeout = this.calculateCurrentTimeout();
@@ -298,25 +308,23 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    * Creates and registers a new room presence sensor.
    *
    * @param sensorId - Entity ID for the new sensor
-   * @param address - Bluetooth MAC address of the matching device
+   * @param device - Device information of the peripheral
    * @returns Registered sensor
    */
   protected async createSensor(
     sensorId: string,
-    address: string
+    device: Device
   ): Promise<RoomPresenceDistanceSensor> {
-    const deviceInfo = await this.inquireDeviceInfo(address);
-
     const customizations: Array<EntityCustomization<any>> = [
       {
         for: SensorConfig,
         overrides: {
           icon: 'mdi:bluetooth',
           device: {
-            identifiers: deviceInfo.address,
-            name: deviceInfo.name,
-            manufacturer: deviceInfo.manufacturer,
-            connections: [['mac', deviceInfo.address]],
+            identifiers: device.address,
+            name: device.name,
+            manufacturer: device.manufacturer,
+            connections: [['mac', device.address]],
             viaDevice: DISTRIBUTED_DEVICE_ID
           }
         }
@@ -325,7 +333,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
     const sensor = this.entitiesService.add(
       new RoomPresenceDistanceSensor(
         sensorId,
-        `${deviceInfo.name} Room Presence`,
+        `${device.name} Room Presence`,
         0
       ),
       customizations
