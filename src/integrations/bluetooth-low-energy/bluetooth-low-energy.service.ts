@@ -44,9 +44,6 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
    * Lifecycle hook, called once the host module has been initialized.
    */
   onModuleInit(): void {
-    noble.on('stateChange', BluetoothLowEnergyService.handleStateChange);
-    noble.on('discover', this.handleDiscovery.bind(this));
-
     if (!this.isWhitelistEnabled()) {
       this.logger.warn(
         'The whitelist is empty, no sensors will be created! Please add some of the discovered IDs below to your configuration.'
@@ -58,6 +55,9 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
    * Lifecycle hook, called once the application has started.
    */
   onApplicationBootstrap(): void {
+    noble.on('stateChange', BluetoothLowEnergyService.handleStateChange);
+    noble.on('discover', this.handleDiscovery.bind(this));
+
     this.clusterService.on(
       NEW_DISTANCE_CHANNEL,
       this.handleNewDistance.bind(this)

@@ -115,8 +115,8 @@ describe('BluetoothLowEnergyService', () => {
     service = module.get<BluetoothLowEnergyService>(BluetoothLowEnergyService);
   });
 
-  it('should setup noble listeners on init', () => {
-    service.onModuleInit();
+  it('should setup noble listeners on bootstrap', () => {
+    service.onApplicationBootstrap();
     expect(mockNoble.on).toHaveBeenCalledWith(
       'stateChange',
       expect.any(Function)
