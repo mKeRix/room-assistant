@@ -13,6 +13,12 @@ A clear and concise description of what the bug is.
 **To reproduce**
 Steps required to reproduce the issue.
 
+**Relevant logs**
+Log output that correlates to the bug. You can get debug output with `room-assistant -v`.
+
+```text
+```
+
 **Relevant configuration**
 Paste the relevant parts of your configuration below.
 
