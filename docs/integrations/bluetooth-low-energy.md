@@ -37,7 +37,7 @@ This integration requires you to run room-assistant in the `host` network.
 
 ## Determining the IDs
 
-In order to not clutter your home automation software with the many BLE devices broadcasting their status nearby, room-assistant requires you to set up a whitelist before it will pass on any information. For regular BLE devices this is the MAC address in kebab-case, for example `77-50-fb-4d-ab-70`. When using iBeacons the ID will be in the format of `uuid-major-minor`, for example `2f234454cf6d4a0fadf2f4911ba9ffa6-1-2`.
+In order to not clutter your home automation software with the many BLE devices broadcasting their status nearby, room-assistant requires you to set up a whitelist before it will pass on any information. For regular BLE devices this is the lowercase MAC address without `:`, for example `7750fb4dab70` for a peripheral with the MAC address `77:50:FB:4D:AB:70`. When using iBeacons the ID will be in the format of `uuid-major-minor`, for example `2f234454cf6d4a0fadf2f4911ba9ffa6-1-2`.
 
 If you are unsure what ID your device has you can start room-assistant with the BLE integration enabled, but no whitelist. Devices that are seen for the first time after starting will be logged with their ID to the console.
 
@@ -45,7 +45,7 @@ If you are unsure what ID your device has you can start room-assistant with the 
 
 | Name             | Type                            | Default  | Description                                                  |
 | ---------------- | ------------------------------- | -------- | ------------------------------------------------------------ |
-| `whitelist`      | Array                           |          | A list of BLE tag IDs that should be tracked. Will in most cases either be the MAC address or the iBeacon UUID in kebap-case. |
+| `whitelist`      | Array                           |          | A list of [BLE tag IDs](#determining-the-ids) that should be tracked. |
 | `whitelistRegex` | Boolean                         | `false`  | Whether the whitelist should be evaluated as a list of [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) or not. |
 | `processIBeacon` | Boolean                         | `true`   | Whether additional data from iBeacon devices should be taken into account or not. Affects tag IDs and distance estimation. |
 | `onlyIBeacon`    | Boolean                         | `false`  | Whether only iBeacons should be considered when scanning for devices ot not. |
@@ -72,11 +72,11 @@ global:
     - bluetoothLowEnergy
 bluetoothLowEnergy:
   whitelist:
-    - 77-50-fb-4d-ab-70
+    - 7750fb4dab70
     - 2f234454cf6d4a0fadf2f4911ba9ffa6-1-2
   maxDistance: 7
   tagOverrides:
-    77-50-fb-4d-ab-70:
+    7750fb4dab70:
       name: Cool BLE Tag
       measuredPower: -61
 ```
