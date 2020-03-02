@@ -83,7 +83,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
       this.seenIds.add(tag.id);
     }
 
-    if (this.isOnWhitelist(tag.id)) {
+    if (this.isOnWhitelist(tag.id) || this.isOnWhitelist(tag.name)) {
       tag = this.applyOverrides(tag);
       tag.rssi = this.filterRssi(tag.id, tag.rssi);
 
@@ -106,18 +106,24 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
    * @param event - Event with new distance data
    */
   handleNewDistance(event: NewDistanceEvent): void {
-    const sensorId = makeId(`ble ${event.tagId}`);
+    const sensorId = makeId(`ble ${event.tagName}`);
     let sensor: RoomPresenceDistanceSensor;
     if (this.entitiesService.has(sensorId)) {
       sensor = this.entitiesService.get(sensorId) as RoomPresenceDistanceSensor;
     } else {
-      sensor = this.createRoomPresenceSensor(
-        sensorId,
-        event.tagId,
-        event.tagName
-      );
-    }
-
+      if (this.isOnWhitelist(event.tagId)) {
+        sensor = this.createRoomPresenceSensor(
+          sensorId,
+          event.tagId,
+          event.tagName
+        );
+        } else {
+        sensor = this.createRoomPresenceSensor(
+            sensorId,
+            event.tagName,
+            event.tagName
+        );
+      }
     sensor.handleNewDistance(
       event.instanceName,
       event.distance,
