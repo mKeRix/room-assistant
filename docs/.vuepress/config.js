@@ -65,6 +65,7 @@ module.exports = {
           children: [
             '/guide/quickstart-pi-zero-w',
             '/guide/quickstart-pi',
+            '/guide/quickstart-ansible',
             '/guide/quickstart-docker'
           ]
         }
