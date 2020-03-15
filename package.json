@@ -40,9 +40,9 @@
     "docs:build": "vuepress build docs"
   },
   "dependencies": {
-    "@nestjs/common": "^6.7.2",
-    "@nestjs/core": "^6.7.2",
-    "@nestjs/platform-express": "^6.10.14",
+    "@nestjs/common": "^6.11.8",
+    "@nestjs/core": "^6.11.8",
+    "@nestjs/platform-express": "^6.11.8",
     "@nestjs/schedule": "^0.1.1",
     "async-mqtt": "^2.4.2",
     "command-line-args": "^5.1.1",
