@@ -14,6 +14,16 @@ Place a small Linux board like the Raspberry Pi Zero W into any room you want to
 For example, if you want to track the bedroom, living room and kitchen you would need to setup 3 different devices that are then placed in those rooms.
 If you don't require the room-level features you can of course also only setup a single instance in your home.
 
+## Community Guides
+
+Here you can find community made guides, tutorials & videos about how to install and use room-assistant
+
+[Presence Detection using Room-Assistant, Home Assistant and Raspberry Pi (video tutorial)](https://youtu.be/QbOez63XlFs)
+
+[Reddit thread](https://www.reddit.com/r/homeautomation/comments/f7fo62/roomassistant_v20_room_presence_with_any/)
+
+If you find more links out there - let us know.
+
 ## Why not...?
 
 ### monitor
