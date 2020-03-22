@@ -329,6 +329,22 @@ Requesting information ...
     expect(handleSpy.mock.calls[1][0].device).toEqual(device);
   });
 
+  it('should not trigger Bluetooth commands for undefined addresses', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    const inquireSpy = jest.spyOn(service, 'inquireRssi');
+
+    await service.handleRssiRequest(undefined);
+    expect(inquireSpy).not.toHaveBeenCalled();
+  });
+
+  it('should not trigger Bluetooth commands for empty addresses', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    const inquireSpy = jest.spyOn(service, 'inquireRssi');
+
+    await service.handleRssiRequest('');
+    expect(inquireSpy).not.toHaveBeenCalled();
+  });
+
   it('should ignore RSSI requests of inquiries are disabled', () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(false);
     const handleRssiMock = jest

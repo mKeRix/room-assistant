@@ -90,6 +90,11 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
    * @param address - Bluetooth MAC address
    */
   async handleRssiRequest(address: string): Promise<void> {
+    if (_.isEmpty(address)) {
+      this.logger.error('RSSI update for empty address requested');
+      return;
+    }
+
     if (this.shouldInquire()) {
       let rssi = await this.inquireRssi(address);
 
