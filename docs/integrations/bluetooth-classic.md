@@ -71,9 +71,9 @@ Bluetooth uses the 2.4 GHz band, which may also be used by some of your other Wi
 | --------------- | ------ | ------- | ------------------------------------------------------------ |
 | `addresses`     | Array  |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
 | `minRssi`       | Number |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
-| `hciDeviceId`   | Number | 0       | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
-| `interval`      | Number | 6       | The interval at which the Bluetooth devices are queried in seconds. |
-| `timeoutCycles` | Number | 2       | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
+| `hciDeviceId`   | Number | `0`     | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
+| `interval`      | Number | `6`     | The interval at which the Bluetooth devices are queried in seconds. |
+| `timeoutCycles` | Number | `2`     | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
 
 ::: details Example Config
 ```yaml
