@@ -53,15 +53,27 @@ Each configured device will create a sensor that has the name of the closest roo
 
 Each instance running this integration will also create a switch for enabling or disabling Bluetooth inquiries. A disabled switch blocks all Bluetooth requests of the instance, which essentially means that your Bluetooth device won't be discovered by this instance anymore. It does not take the instance out of the rotation however, so the time to detection stays the same.
 
-You could use this to reduce the resources used by room-assistant when you are certain nobody is home. Another example would be disabling the inquiries when you are asleep to save the batteries of your Bluetooth devices at night. 
+You could use this to reduce the resources used by room-assistant when you are certain nobody is home. Another example would be disabling the inquiries when you are asleep to save the batteries of your Bluetooth devices at night.
+
+## Troubleshooting
+
+### Random incorrect not_home states
+
+This happens when no measurements were collected for the device recently. To make the timeout a bit more lax and get rid of these incorrect states you can raise the `timeoutCycles` value. Note that this will also delay your device being reported as `not_home` when it really has gone away.
+
+### WiFi/Bluetooth interference
+
+Bluetooth uses the 2.4 GHz band, which may also be used by some of your other WiFi devices. This can cause interferences. Some Bluetooth devices may also handle a too aggressive refresh interval badly. If you are noticing any issues (e.g. WiFi devices dropping off the network, Bluetooth headphones disconnecting randomly) try raising the `interval` a bit. Note that this will also make the state updates a bit slower.
 
 ## Settings
 
-| Name          | Type   | Default | Description                                                  |
-| ------------- | ------ | ------- | ------------------------------------------------------------ |
-| `addresses`   | Array  |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
-| `minRssi`     | Number |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
-| `hciDeviceId` | Number | 0       | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
+| Name            | Type   | Default | Description                                                  |
+| --------------- | ------ | ------- | ------------------------------------------------------------ |
+| `addresses`     | Array  |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
+| `minRssi`       | Number |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
+| `hciDeviceId`   | Number | 0       | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
+| `interval`      | Number | 6       | The interval at which the Bluetooth devices are queried in seconds. |
+| `timeoutCycles` | Number | 2       | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
 
 ::: details Example Config
 ```yaml

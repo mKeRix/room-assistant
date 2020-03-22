@@ -57,7 +57,9 @@ describe('BluetoothClassicService', () => {
   };
   const config: Partial<BluetoothClassicConfig> = {
     addresses: ['8d:ad:e3:e2:7a:01', 'f7:6c:e3:10:55:b5'],
-    hciDeviceId: 0
+    hciDeviceId: 0,
+    interval: 6,
+    timeoutCycles: 2
   };
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
