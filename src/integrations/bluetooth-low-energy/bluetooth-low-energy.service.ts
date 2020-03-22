@@ -44,9 +44,9 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
    * Lifecycle hook, called once the host module has been initialized.
    */
   onModuleInit(): void {
-    if (!this.isWhitelistEnabled()) {
+    if (!this.isWhitelistEnabled() && !this.isBlacklistEnabled()) {
       this.logger.warn(
-        'The whitelist is empty, no sensors will be created! Please add some of the discovered IDs below to your configuration.'
+        'The whitelist and blacklist are empty, no sensors will be created! Please add some of the discovered IDs below to your configuration.'
       );
     }
   }
@@ -83,7 +83,11 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
       this.seenIds.add(tag.id);
     }
 
-    if (this.isOnWhitelist(tag.id)) {
+    if (
+      (this.isOnWhitelist(tag.id) ||
+        (!this.isWhitelistEnabled() && this.isBlacklistEnabled())) &&
+      !this.isOnBlacklist(tag.id)
+    ) {
       tag = this.applyOverrides(tag);
       tag.rssi = this.filterRssi(tag.id, tag.rssi);
 
@@ -151,8 +155,16 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   }
 
   /**
+   * Determines whether a blacklist has been configured or not.
+   *
+   * @returns Blacklist status
+   */
+  isBlacklistEnabled(): boolean {
+    return this.config.blacklist?.length > 0;
+  }
+
+  /**
    * Checks if an id is on the whitelist of this component.
-   * Always returns true if the whitelist is empty.
    *
    * @param id - Device id
    * @return Whether the id is on the whitelist or not
@@ -166,6 +178,23 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
     return this.config.whitelistRegex
       ? whitelist.some(regex => id.match(regex))
       : whitelist.includes(id);
+  }
+
+  /**
+   * Checks if an id is on the blacklist of this component.
+   *
+   * @param id - Device id
+   * @return Whether the id is on the blacklist or not
+   */
+  isOnBlacklist(id: string): boolean {
+    const blacklist = this.config.blacklist;
+    if (blacklist === undefined || blacklist.length === 0) {
+      return false;
+    }
+
+    return this.config.blacklistRegex
+      ? blacklist.some(regex => id.match(regex))
+      : blacklist.includes(id);
   }
 
   /**

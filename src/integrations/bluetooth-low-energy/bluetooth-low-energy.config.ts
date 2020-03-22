@@ -2,6 +2,8 @@ export class BluetoothLowEnergyConfig {
   hciDeviceId = 0;
   whitelist: string[] = [];
   whitelistRegex = false;
+  blacklist: string[] = [];
+  blacklistRegex = false;
   processIBeacon = true;
   onlyIBeacon = false;
   majorMask = 0xffff;

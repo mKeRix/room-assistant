@@ -37,7 +37,7 @@ This integration requires you to run room-assistant in the `host` network.
 
 ## Determining the IDs
 
-In order to not clutter your home automation software with the many BLE devices broadcasting their status nearby, room-assistant requires you to set up a whitelist before it will pass on any information. For regular BLE devices this is the lowercase MAC address without `:`, for example `7750fb4dab70` for a peripheral with the MAC address `77:50:FB:4D:AB:70`. When using iBeacons the ID will be in the format of `uuid-major-minor`, for example `2f234454cf6d4a0fadf2f4911ba9ffa6-1-2`.
+In order to not clutter your home automation software with the many BLE devices broadcasting their status nearby, room-assistant requires you to set up a whitelist or blacklist before it will pass on any information. For regular BLE devices this is the lowercase MAC address without `:`, for example `7750fb4dab70` for a peripheral with the MAC address `77:50:FB:4D:AB:70`. When using iBeacons the ID will be in the format of `uuid-major-minor`, for example `2f234454cf6d4a0fadf2f4911ba9ffa6-1-2`.
 
 If you are unsure what ID your device has you can start room-assistant with the BLE integration enabled, but no whitelist. Devices that are seen for the first time after starting will be logged with their ID to the console.
 
@@ -47,6 +47,8 @@ If you are unsure what ID your device has you can start room-assistant with the 
 | ---------------- | ------------------------------- | -------- | ------------------------------------------------------------ |
 | `whitelist`      | Array                           |          | A list of [BLE tag IDs](#determining-the-ids) that should be tracked. |
 | `whitelistRegex` | Boolean                         | `false`  | Whether the whitelist should be evaluated as a list of [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) or not. |
+| `blacklist`      | Array                           |          | A list of [BLE tag IDs](#determining-the-ids) that should not be tracked. If an ID matches both whitelist and blacklist it will not be tracked. |
+| `blacklistRegex` | Boolean                         | `false`  | Whether the blacklist should be evaluated as a list of [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) or not. |
 | `processIBeacon` | Boolean                         | `true`   | Whether additional data from iBeacon devices should be taken into account or not. Affects tag IDs and distance estimation. |
 | `onlyIBeacon`    | Boolean                         | `false`  | Whether only iBeacons should be considered when scanning for devices ot not. |
 | `timeout`        | Number                          | `5`      | The time after which a recorded distance is considered outdated. This value should be higher than the advertisement frequency of your peripheral. |
@@ -54,7 +56,7 @@ If you are unsure what ID your device has you can start room-assistant with the 
 | `majorMask`      | Number                          | `0xffff` | Filter out bits of the major ID to make dynamic tag IDs with encoded information consistent for filtering. |
 | `minorMask`      | Number                          | `0xffff` | Filter out bits of the minor ID to make dynamic tag IDs with encoded information consistent for filtering. |
 | `tagOverrides`   | [Tag Overrides](#tag-overrides) |          | Allows you to override some properties of the tracked devices. |
-| `hciDeviceId`    | Number                          | 0        | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
+| `hciDeviceId`    | Number                          | `0`      | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
 
 ### Tag Overrides
 
