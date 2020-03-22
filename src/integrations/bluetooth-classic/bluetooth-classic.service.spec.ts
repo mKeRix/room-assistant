@@ -34,6 +34,7 @@ jest.mock('util', () => ({
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   promisify: () => mockExec
 }));
+jest.useFakeTimers();
 
 describe('BluetoothClassicService', () => {
   let service: BluetoothClassicService;
