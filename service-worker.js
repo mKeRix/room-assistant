@@ -27,7 +27,7 @@ self.addEventListener('message', (event) => {
 self.__precacheManifest = [
   {
     "url": "404.html",
-    "revision": "4392a1b086b7bf22ce401fa3d7c3f5bd"
+    "revision": "e509e0fad09156daa1e29965dd4d3fc7"
   },
   {
     "url": "android-chrome-192x192.png",
@@ -94,16 +94,16 @@ self.__precacheManifest = [
     "revision": "8863e95bbe49fbd0061db6ca74ff2978"
   },
   {
-    "url": "assets/js/20.97f980d7.js",
-    "revision": "8e5fd6aaff34501017ac15fbbaa778ce"
+    "url": "assets/js/20.0815e91f.js",
+    "revision": "d84e37663734b43cdfb570b5609796ce"
   },
   {
-    "url": "assets/js/21.3144b23a.js",
-    "revision": "8eb6a34b9f20369e084e1a2e3c159aba"
+    "url": "assets/js/21.e39c35cc.js",
+    "revision": "64a5cc0475e68c48f1912aef0979a030"
   },
   {
-    "url": "assets/js/22.20f18cbf.js",
-    "revision": "c99862261dc62fc0724001c593907029"
+    "url": "assets/js/22.2cf88b7d.js",
+    "revision": "b91bf0ef8024e653f71b0362fb5058dd"
   },
   {
     "url": "assets/js/23.b3e12275.js",
@@ -114,8 +114,8 @@ self.__precacheManifest = [
     "revision": "5f224635e125716833b4d607ee239627"
   },
   {
-    "url": "assets/js/25.2925a862.js",
-    "revision": "3f32cc4e17ec3463e25a43f4490a6d5b"
+    "url": "assets/js/25.f70c503e.js",
+    "revision": "c648e47d0973b6fb2ab7c408d6ab8699"
   },
   {
     "url": "assets/js/26.233fec51.js",
@@ -150,8 +150,8 @@ self.__precacheManifest = [
     "revision": "a22cabe6078f594ba2208f319fcbf87e"
   },
   {
-    "url": "assets/js/app.da92d76c.js",
-    "revision": "c4f400315ebd3dcb3506c83503853b3a"
+    "url": "assets/js/app.ca9ebcbe.js",
+    "revision": "0749927ac404e106fc9b8e347daccc28"
   },
   {
     "url": "assets/js/vendors~docsearch.4a1fb7f1.js",
@@ -167,79 +167,79 @@ self.__precacheManifest = [
   },
   {
     "url": "guide/cli.html",
-    "revision": "119ad367ab08a56596adf432bb03504f"
+    "revision": "c94c032d299f574c89d3950e871c0250"
   },
   {
     "url": "guide/cluster.html",
-    "revision": "b51235f3a9900ee7244ad1bdf1eba5f6"
+    "revision": "010bf8a967e82793eb4e353a64da1c40"
   },
   {
     "url": "guide/configuration.html",
-    "revision": "b830bb8805a348aad68308d4b05dbbc2"
+    "revision": "6a32a04cf42de5ff1f6e9d4c03cce0ed"
   },
   {
     "url": "guide/index.html",
-    "revision": "1defea0c6645e330549c508687a61c20"
+    "revision": "134ff198afc22eb83fb28ff62b1b01ad"
   },
   {
     "url": "guide/installation.html",
-    "revision": "56966d0f58fb3ca568861eb2b17953e6"
+    "revision": "c1e0aaa23539896e8a7e16bac1451f64"
   },
   {
     "url": "guide/quickstart-ansible.html",
-    "revision": "563ef15864a07a94b627eb64632bcc09"
+    "revision": "7de2e40468505ec3d7fc3fe18a83e30a"
   },
   {
     "url": "guide/quickstart-docker.html",
-    "revision": "98d2762970a25e5596ebbe02fd3c6081"
+    "revision": "cde0c4ee70feafb8a068d450d825ced0"
   },
   {
     "url": "guide/quickstart-pi-zero-w.html",
-    "revision": "82a0db5e586720722dd2c93414aed971"
+    "revision": "f4fafcac4c7f7f69de1e2d40286f4693"
   },
   {
     "url": "guide/quickstart-pi.html",
-    "revision": "168c3272608d1636b8233454ecbec819"
+    "revision": "12e0c3ac4254469a4974c5a73522ec28"
   },
   {
     "url": "guide/upgrading.html",
-    "revision": "3da3db0859f88dea3eeeec19736114d4"
+    "revision": "cec524cd8767684eb78047c8391a3bf6"
   },
   {
     "url": "index.html",
-    "revision": "7ff44938305a8330f4879bad42bce244"
+    "revision": "f7350b96a3461c0919c5ddba33b77d45"
   },
   {
     "url": "integrations/bluetooth-classic.html",
-    "revision": "d58bc6c89c8620b664cd5a9b81a8f23f"
+    "revision": "e13b84286467a3e753e054359620592f"
   },
   {
     "url": "integrations/bluetooth-low-energy.html",
-    "revision": "46cad68c79e323827bb0f18581d54a21"
+    "revision": "f7f062e828ebdcd2f4a3802d48e2594e"
   },
   {
     "url": "integrations/gpio.html",
-    "revision": "9444956e2eebdb0fa5c285deb77b8398"
+    "revision": "4ed7961ac3664dc9564a8bf3f83f1929"
   },
   {
     "url": "integrations/grid-eye.html",
-    "revision": "7ea4a5b855c3fb00df21681be3048315"
+    "revision": "a6749c9f818de5baf7aeda66ce3c0355"
   },
   {
     "url": "integrations/home-assistant.html",
-    "revision": "d8ffc475f581399cbf1670954f0ba391"
+    "revision": "5884b9a79be5da11863eafc7795fcee3"
   },
   {
     "url": "integrations/index.html",
-    "revision": "eb229b2f705302e4a17b87335b0c4ecd"
+    "revision": "b8a6ad2652f94b259d79d93d6c528ab1"
   },
   {
     "url": "integrations/omron-d6t.html",
-    "revision": "7a025e8e13c0b30e7cc08832575b10e2"
+    "revision": "f1b43a702946898bc7ddbabb4942981a"
   },
   {
     "url": "integrations/shell.html",
-    "revision": "6a6147b1cd57c43b22b6b2a9969bb65e"
+    "revision": "d81094e19db7fef1b49766c1f6747885"
   },
   {
     "url": "mstile-150x150.png",
