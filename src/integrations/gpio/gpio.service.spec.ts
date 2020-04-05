@@ -8,6 +8,7 @@ import { BinarySensorConfig } from '../home-assistant/binary-sensor-config';
 import { Gpio } from 'onoff';
 import { mocked } from 'ts-jest/utils';
 import { ClusterService } from '../../cluster/cluster.service';
+import { GpioSwitch } from './gpio.switch';
 
 jest.mock('onoff');
 
@@ -43,13 +44,17 @@ describe('GpioService', () => {
   it('should register entities on bootstrap', () => {
     service.onApplicationBootstrap();
 
-    expect(entitiesService.add).toHaveBeenCalledTimes(2);
+    expect(entitiesService.add).toHaveBeenCalledTimes(3);
     expect(entitiesService.add).toHaveBeenCalledWith(
       new BinarySensor('gpio-pir-sensor', 'PIR Sensor'),
       expect.any(Array)
     );
     expect(entitiesService.add).toHaveBeenCalledWith(
       new BinarySensor('gpio-radar', 'Radar'),
+      expect.any(Array)
+    );
+    expect(entitiesService.add).toHaveBeenCalledWith(
+      new GpioSwitch('gpio-test-switch', 'Test Switch', expect.any(Gpio)),
       expect.any(Array)
     );
   });
@@ -63,6 +68,12 @@ describe('GpioService', () => {
         deviceClass: 'motion'
       }
     });
+  });
+
+  it('should export the switches as output pins', () => {
+    service.onApplicationBootstrap();
+
+    expect(mockGpio).toHaveBeenCalledWith(17, 'out');
   });
 
   it('should export the binary sensors as input pins', () => {

@@ -49,6 +49,7 @@ services:
 | Name            | Type                                   | Default | Description                            |
 | --------------- | -------------------------------------- | ------- | -------------------------------------- |
 | `binarySensors` | [GPIO Binary Sensors](#binary-sensors) |         | Array of binary sensor configurations. |
+| `switches`      | [GPIO Switches](#switches)             |         | Array of switch configurations.        |
 
 ### Binary Sensors
 
@@ -57,6 +58,14 @@ services:
 | `name`        | String |         | Friendly name for this sensor.                               |
 | `pin`         | Number |         | Number of the GPIO pin that should be tracked.               |
 | `deviceClass` | String |         | Home Assistant [device class](https://www.home-assistant.io/integrations/binary_sensor/#device-class) that the sensor should be shown as. |
+
+### Switches
+
+| Name   | Type   | Default | Description                                                  |
+| ------ | ------ | ------- | ------------------------------------------------------------ |
+| `name` | String |         | Friendly name for this sensor.                               |
+| `pin`  | Number |         | Number of the GPIO pin that should be used as output.        |
+| `icon` | String |         | Icon to display for the switch in the Home Assistant frontend. |
 
 ::: details Example Config
 
@@ -69,6 +78,9 @@ gpio:
     - name: Bedroom Motion Sensor
       pin: 17
       deviceClass: motion
+  switches:
+    - name: LED
+      pin: 18
 ```
 
 :::

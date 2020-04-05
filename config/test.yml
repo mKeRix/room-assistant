@@ -9,6 +9,9 @@ gpio:
     - name: Radar
       pin: 24
       deviceClass: motion
+  switches:
+    - name: Test Switch
+      pin: 17
 shell:
   sensors:
     - name: Simple Test

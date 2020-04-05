@@ -15,6 +15,9 @@ import {
   BinarySensorConfig,
   BinarySensorDeviceClass
 } from '../home-assistant/binary-sensor-config';
+import { SwitchConfig } from '../home-assistant/switch-config';
+import { GpioSwitch } from './gpio.switch';
+import { Switch } from '../../entities/switch';
 
 @Injectable()
 export class GpioService
@@ -40,6 +43,14 @@ export class GpioService
         binarySensor.name,
         binarySensor.pin,
         binarySensor.deviceClass
+      );
+    });
+
+    this.config.switches.forEach(switchOptions => {
+      this.createSwitch(
+        switchOptions.name,
+        switchOptions.pin,
+        switchOptions.icon
       );
     });
   }
@@ -94,5 +105,33 @@ export class GpioService
     });
 
     return binarySensor;
+  }
+
+  /**
+   * Creates a new switch that controls a GPIO output.
+   *
+   * @param name - Friendly name of the switch
+   * @param pin - GPIO pin to output to
+   * @param icon - Icon to use
+   * @returns Registered switch
+   */
+  protected createSwitch(name: string, pin: number, icon?: string): Switch {
+    const id = makeId(`gpio ${name}`);
+    const customizations: Array<EntityCustomization<any>> = [
+      {
+        for: SwitchConfig,
+        overrides: {
+          icon
+        }
+      }
+    ];
+
+    const gpio = new Gpio(pin, 'out');
+    this.gpios.push(gpio);
+
+    return this.entitiesService.add(
+      new GpioSwitch(id, name, gpio),
+      customizations
+    ) as Switch;
   }
 }
