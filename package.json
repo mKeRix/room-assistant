@@ -54,6 +54,7 @@
     "lodash": "^4.17.15",
     "mathjs": "^6.5.0",
     "nest-emitter": "^1.1.0",
+    "node-pre-gyp": "^0.14.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
     "rxjs": "^6.5.3",
