@@ -1,5 +1,6 @@
 export class ShellConfig {
   sensors: ShellSensorOptions[] = [];
+  switches: ShellSwitchOptions[] = [];
 }
 
 class ShellSensorOptions {
@@ -10,4 +11,11 @@ class ShellSensorOptions {
   icon?: string;
   unitOfMeasurement?: string;
   deviceClass?: string;
+}
+
+class ShellSwitchOptions {
+  name: string;
+  onCommand: string;
+  offCommand: string;
+  icon?: string;
 }

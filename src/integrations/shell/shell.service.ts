@@ -10,6 +10,9 @@ import { Sensor } from '../../entities/sensor';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { CronJob } from 'cron';
+import { Switch } from '../../entities/switch';
+import { SwitchConfig } from '../home-assistant/switch-config';
+import { ShellSwitch } from './shell.switch';
 
 @Injectable()
 export class ShellService implements OnApplicationBootstrap {
@@ -48,6 +51,15 @@ export class ShellService implements OnApplicationBootstrap {
         job
       );
       job.start();
+    });
+
+    this.config.switches.forEach(switchOptions => {
+      this.createSwitch(
+        switchOptions.name,
+        switchOptions.onCommand,
+        switchOptions.offCommand,
+        switchOptions.icon
+      );
     });
   }
 
@@ -104,5 +116,35 @@ export class ShellService implements OnApplicationBootstrap {
       new Sensor(id, name),
       customizations
     ) as Sensor;
+  }
+
+  /**
+   * Creates a shell switch.
+   *
+   * @param name - Name of the switch
+   * @param onCommand - Shell command to execute when turned on
+   * @param offCommand - Shell command to execute when turned off
+   * @param icon - Icon to use
+   * @returns Registered switch
+   */
+  protected createSwitch(
+    name: string,
+    onCommand: string,
+    offCommand: string,
+    icon?: string
+  ): Switch {
+    const id = makeId(`shell ${name}`);
+    const customizations: Array<EntityCustomization<any>> = [
+      {
+        for: SwitchConfig,
+        overrides: {
+          icon
+        }
+      }
+    ];
+    return this.entitiesService.add(
+      new ShellSwitch(id, name, onCommand, offCommand),
+      customizations
+    ) as Switch;
   }
 }

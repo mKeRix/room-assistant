@@ -8,9 +8,10 @@ The commands are run with the same user that room-assistant is running with, so 
 
 ## Settings
 
-| Name      | Type                      | Default | Description                           |
-| --------- | ------------------------- | ------- | ------------------------------------- |
-| `sensors` | [Shell Sensors](#sensors) |         | An array of shell sensor definitions. |
+| Name       | Type                        | Default | Description                           |
+| ---------- | --------------------------- | ------- | ------------------------------------- |
+| `sensors`  | [Shell Sensors](#sensors)   |         | An array of shell sensor definitions. |
+| `switches` | [Shell Switches](#switches) |         | An array of shell switch definitions. |
 
 ### Sensors
 
@@ -23,6 +24,15 @@ The commands are run with the same user that room-assistant is running with, so 
 | `icon`              | String |         | Icon that the sensor should be represented with in Home Assistant. |
 | `unitOfMeasurement` | String |         | Unit of measurement of the sensor state, leave empty if none. |
 | `deviceClass`       | String |         | Home Assistant [device class](https://www.home-assistant.io/integrations/sensor/#device-class) to be used for this sensor. |
+
+### Switches
+
+| Name         | Type   | Default | Description                                                  |
+| ------------ | ------ | ------- | ------------------------------------------------------------ |
+| `name`       | String |         | Friendly name of this switch.                                |
+| `onCommand`  | String |         | Shell command that should be executed when the switch is turned on. |
+| `offCommand` | String |         | Shell command that should be executed when the switch is turned off. |
+| `icon`       | String |         | Icon that the sensor should be represented with in Home Assistant. |
 
 ::: details Example Config
 
@@ -39,6 +49,10 @@ shell:
       icon: mdi:wifi
       unitOfMeasurement: dBm
       deviceClass: signal_strength
+  switches:
+    - name: Onboard LED
+      onCommand: 'echo mmc0 | sudo tee /sys/class/leds/led0/trigger'
+      offCommand: 'echo none | sudo tee /sys/class/leds/led0/trigger && echo 1 | sudo tee /sys/class/leds/led0/brightness'
 ```
 
 :::

@@ -21,3 +21,7 @@ shell:
       deviceClass: 'timestamp'
       icon: 'mdi:test'
       unitOfMeasurement: 'tests'
+  switches:
+    - name: Test Switch
+      onCommand: echo on
+      offCommand: echo off

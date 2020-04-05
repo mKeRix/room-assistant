@@ -9,6 +9,7 @@ import { ScheduleModule, SchedulerRegistry } from '@nestjs/schedule';
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { CronJob } from 'cron';
 import * as util from 'util';
+import { ShellSwitch } from './shell.switch';
 
 jest.mock('cron');
 jest.mock('util', () => ({
@@ -43,16 +44,25 @@ describe('ShellService', () => {
     service = module.get<ShellService>(ShellService);
   });
 
-  it('should register sensors on bootstrap', () => {
+  it('should register entities on bootstrap', () => {
     service.onApplicationBootstrap();
 
-    expect(entitiesService.add).toHaveBeenCalledTimes(2);
+    expect(entitiesService.add).toHaveBeenCalledTimes(3);
     expect(entitiesService.add).toHaveBeenCalledWith(
       new Sensor('shell-simple-test', 'Simple Test'),
       expect.any(Array)
     );
     expect(entitiesService.add).toHaveBeenCalledWith(
       new Sensor('shell-regex-test', 'Regex Test'),
+      expect.any(Array)
+    );
+    expect(entitiesService.add).toHaveBeenCalledWith(
+      new ShellSwitch(
+        'shell-test-switch',
+        'Test Switch',
+        'echo on',
+        'echo off'
+      ),
       expect.any(Array)
     );
   });
