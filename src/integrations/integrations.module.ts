@@ -1,9 +1,12 @@
-import { DynamicModule, Logger, Module } from '@nestjs/common';
+import { DynamicModule, LoggerService, Module } from '@nestjs/common';
 
 @Module({})
 export class IntegrationsModule {
-  public static async register(ids: string[]): Promise<DynamicModule> {
-    const modules = await IntegrationsModule.resolveModules(ids);
+  public static async register(
+    ids: string[],
+    logger?: LoggerService
+  ): Promise<DynamicModule> {
+    const modules = await IntegrationsModule.resolveModules(ids, logger);
 
     return {
       module: IntegrationsModule,
@@ -11,10 +14,13 @@ export class IntegrationsModule {
     };
   }
 
-  private static resolveModules(ids: string[]): Promise<DynamicModule[]> {
+  private static resolveModules(
+    ids: string[],
+    logger?: LoggerService
+  ): Promise<DynamicModule[]> {
     const loadedModules: Array<Promise<DynamicModule>> = [];
 
-    Logger.log(
+    logger?.log(
       `Loading integrations: ${ids?.length > 0 ? ids.join(', ') : 'none'}`,
       IntegrationsModule.name
     );

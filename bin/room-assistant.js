@@ -49,8 +49,8 @@ if (options.help) {
 }
 
 process.env.NODE_LOG_LEVEL = options.verbose
-  ? 'verbose'
-  : process.env.NODE_LOG_LEVEL || 'production';
+  ? 'debug'
+  : process.env.NODE_LOG_LEVEL || 'info';
 process.env.NODE_CONFIG_DIR = options.config;
 
 if (options.digResolver) {

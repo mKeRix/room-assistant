@@ -8,6 +8,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import _ from 'lodash';
 import { NestEmitterModule } from 'nest-emitter';
 import { EventEmitter } from 'events';
+import { WINSTON_LOGGER } from './logger';
 
 export const VERSION = require('../package.json').version;
 export const CONFIGURED_INTEGRATIONS = c
@@ -22,7 +23,7 @@ export const CONFIGURED_INTEGRATIONS = c
     ClusterModule,
     ScheduleModule.forRoot(),
     NestEmitterModule.forRoot(new EventEmitter()),
-    IntegrationsModule.register(CONFIGURED_INTEGRATIONS)
+    IntegrationsModule.register(CONFIGURED_INTEGRATIONS, WINSTON_LOGGER)
   ]
 })
 export class AppModule {}
