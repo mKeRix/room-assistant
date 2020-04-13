@@ -20,7 +20,8 @@
   "types": "dist/src/main.d.ts",
   "files": [
     "dist/**/*.{js,ts}",
-    "bin/*.js"
+    "bin/*.js",
+    ".github/FUNDING.yml"
   ],
   "scripts": {
     "prepack": "npm run build",
