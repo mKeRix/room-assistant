@@ -19,6 +19,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { KalmanFilterable } from '../../util/filters';
 import { makeId } from '../../util/id';
 import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
+import * as _ from 'lodash';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 
@@ -28,6 +29,9 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   private readonly config: BluetoothLowEnergyConfig;
   private readonly logger: Logger;
   private readonly seenIds = new Set<string>();
+  private tagUpdaters: {
+    [tagId: string]: (event: NewDistanceEvent) => void;
+  } = {};
 
   constructor(
     private readonly entitiesService: EntitiesService,
@@ -99,8 +103,15 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
         tag.distance,
         tag.distance > this.config.maxDistance
       );
-      this.handleNewDistance(event);
-      this.clusterService.publish(NEW_DISTANCE_CHANNEL, event);
+
+      if (!this.tagUpdaters.hasOwnProperty(tag.id)) {
+        this.tagUpdaters[tag.id] = _.throttle((event: NewDistanceEvent) => {
+          this.handleNewDistance(event);
+          this.clusterService.publish(NEW_DISTANCE_CHANNEL, event);
+        }, this.config.updateFrequency * 1000);
+      }
+
+      this.tagUpdaters[tag.id](event);
     }
   }
 

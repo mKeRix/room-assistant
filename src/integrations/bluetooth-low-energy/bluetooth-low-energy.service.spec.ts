@@ -36,6 +36,8 @@ import { NewDistanceEvent } from './new-distance.event';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import KalmanFilter from 'kalmanjs';
 
+jest.useFakeTimers();
+
 describe('BluetoothLowEnergyService', () => {
   let service: BluetoothLowEnergyService;
   const clusterService = {
@@ -536,6 +538,94 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
+  it('should throttle distance reporting if updateFrequency is configured', () => {
+    const handleDistanceSpy = jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    mockConfig.updateFrequency = 10;
+    const now = new Date();
+
+    service.handleDiscovery({
+      id: '12:ab:cd:12:cd',
+      rssi: -89,
+      advertisement: {
+        localName: 'Test BLE Device'
+      }
+    } as Peripheral);
+    service.handleDiscovery({
+      id: 'ab:ab:cd:cd:cd',
+      rssi: -90,
+      advertisement: {
+        localName: 'Test BLE Device'
+      }
+    } as Peripheral);
+    service.handleDiscovery({
+      id: '12:ab:cd:12:cd',
+      rssi: -91,
+      advertisement: {
+        localName: 'Test BLE Device'
+      }
+    } as Peripheral);
+
+    expect(handleDistanceSpy).toHaveBeenCalledTimes(2);
+    expect(handleDistanceSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        distance: 21.5
+      })
+    );
+
+    jest
+      .spyOn(Date, 'now')
+      .mockReturnValue(now.setSeconds(now.getSeconds() + 11));
+    service.handleDiscovery({
+      id: '12:ab:cd:12:cd',
+      rssi: -100,
+      advertisement: {
+        localName: 'Test BLE Device'
+      }
+    } as Peripheral);
+    expect(handleDistanceSpy).toHaveBeenCalledTimes(3);
+    expect(handleDistanceSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        distance: 52.7
+      })
+    );
+  });
+
+  it('should allow immediate updates if no updateFrequency was configured', () => {
+    const handleDistanceSpy = jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+
+    service.handleDiscovery({
+      id: '12:ab:cd:12:cd',
+      rssi: -89,
+      advertisement: {
+        localName: 'Test BLE Device'
+      }
+    } as Peripheral);
+    service.handleDiscovery({
+      id: 'ab:ab:cd:cd:cd',
+      rssi: -90,
+      advertisement: {
+        localName: 'Test BLE Device'
+      }
+    } as Peripheral);
+    service.handleDiscovery({
+      id: '12:ab:cd:12:cd',
+      rssi: -91,
+      advertisement: {
+        localName: 'Test BLE Device'
+      }
+    } as Peripheral);
+
+    expect(handleDistanceSpy).toHaveBeenCalledTimes(3);
+  });
+
   it('should reuse existing Kalman filters for the same id', () => {
     const sensor = new Sensor('testid', 'Test');
     entitiesService.has.mockReturnValue(true);
@@ -579,7 +669,6 @@ describe('BluetoothLowEnergyService', () => {
   });
 
   it('should add new room presence sensor if no matching ones exist yet', () => {
-    jest.useFakeTimers();
     const sensor = new RoomPresenceDistanceSensor('test', 'Test', 0);
     entitiesService.has.mockReturnValue(false);
     entitiesService.add.mockReturnValue(sensor);
