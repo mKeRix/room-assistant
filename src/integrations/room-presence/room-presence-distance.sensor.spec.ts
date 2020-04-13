@@ -42,9 +42,7 @@ describe('RoomPresenceDistanceSensor', () => {
   it('should update the state with a further away measurement if timeout has passed', () => {
     sensor.timeout = 60;
     sensor.handleNewDistance('room1', 1);
-    sensor.distances.get('room1').lastUpdatedAt = new Date(
-      Date.now() - 61 * 1000
-    );
+    sensor.distances.room1.lastUpdatedAt = new Date(Date.now() - 61 * 1000);
 
     sensor.handleNewDistance('room2', 5);
     expect(sensor.state).toBe('room2');
@@ -54,9 +52,7 @@ describe('RoomPresenceDistanceSensor', () => {
   it('should set the state to not_home if timeout has passed with no other measurements', () => {
     sensor.timeout = 15;
     sensor.handleNewDistance('room1', 1);
-    sensor.distances.get('room1').lastUpdatedAt = new Date(
-      Date.now() - 20 * 1000
-    );
+    sensor.distances.room1.lastUpdatedAt = new Date(Date.now() - 20 * 1000);
 
     sensor.updateState();
     expect(sensor.state).toBe(STATE_NOT_HOME);
@@ -66,7 +62,7 @@ describe('RoomPresenceDistanceSensor', () => {
   it('should disable the timeout check if set to 0', () => {
     sensor.timeout = 0;
     sensor.handleNewDistance('room1', 3.3);
-    sensor.distances.get('room1').lastUpdatedAt = new Date(
+    sensor.distances.room1.lastUpdatedAt = new Date(
       Date.now() - 60 * 60 * 1000
     );
 
@@ -77,9 +73,7 @@ describe('RoomPresenceDistanceSensor', () => {
   it('should not set the state to not_home if the timeout has not passed yet', () => {
     sensor.timeout = 30;
     sensor.handleNewDistance('room1', 1.2);
-    sensor.distances.get('room1').lastUpdatedAt = new Date(
-      Date.now() - 10 * 1000
-    );
+    sensor.distances.room1.lastUpdatedAt = new Date(Date.now() - 10 * 1000);
 
     sensor.updateState();
     expect(sensor.state).toBe('room1');
@@ -108,9 +102,7 @@ describe('RoomPresenceDistanceSensor', () => {
     sensor.handleNewDistance('room2', 4);
     sensor.handleNewDistance('room3', 5);
     sensor.timeout = 10;
-    sensor.distances.get('room2').lastUpdatedAt = new Date(
-      Date.now() - 20 * 1000
-    );
+    sensor.distances.room2.lastUpdatedAt = new Date(Date.now() - 20 * 1000);
     sensor.handleNewDistance('room1', 7);
 
     expect(sensor.state).toBe('room3');
@@ -130,9 +122,7 @@ describe('RoomPresenceDistanceSensor', () => {
     sensor.handleNewDistance('room1', 3);
     sensor.handleNewDistance('room2', 4);
     sensor.timeout = 5;
-    sensor.distances.get('room2').lastUpdatedAt = new Date(
-      Date.now() - 10 * 1000
-    );
+    sensor.distances.room2.lastUpdatedAt = new Date(Date.now() - 10 * 1000);
     sensor.handleNewDistance('room1', 5, true);
 
     expect(sensor.state).toBe(STATE_NOT_HOME);

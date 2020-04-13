@@ -15,7 +15,7 @@ class TimedDistance {
 
 export class RoomPresenceDistanceSensor extends Sensor {
   timeout: number;
-  distances = new Map<string, TimedDistance>();
+  distances: { [instance: string]: TimedDistance } = {};
 
   constructor(id: string, name: string, timeout: number) {
     super(id, name, true);
@@ -34,7 +34,7 @@ export class RoomPresenceDistanceSensor extends Sensor {
     distance: number,
     outOfRange = false
   ): void {
-    this.distances.set(instanceName, new TimedDistance(distance, outOfRange));
+    this.distances[instanceName] = new TimedDistance(distance, outOfRange);
     this.updateState();
   }
 
@@ -64,7 +64,7 @@ export class RoomPresenceDistanceSensor extends Sensor {
    * @returns Tuple of the instance name and the timed distance to it
    */
   protected getClosestInRange(): [string, TimedDistance] {
-    const distances = Array.from(this.distances.entries())
+    const distances = Array.from(Object.entries(this.distances))
       .filter(value => {
         return (
           !value[1].outOfRange &&
