@@ -294,6 +294,80 @@ Requesting information ...
     );
   });
 
+  it('should handle minRssi per device', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-11);
+    const handleRssiMock = jest
+      .spyOn(service, 'handleNewRssi')
+      .mockImplementation(() => undefined);
+    config.minRssi = {
+      '77:50:fb:4d:ab:70': -10,
+      default: -20
+    };
+
+    const address = '77:50:fb:4d:ab:70';
+    const device = new Device(address, 'Test Device');
+    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+
+    const expectedEvent = new NewRssiEvent('test-instance', device, -11, true);
+
+    await service.handleRssiRequest(address);
+    expect(handleRssiMock).toHaveBeenCalledWith(expectedEvent);
+    expect(clusterService.publish).toHaveBeenCalledWith(
+      NEW_RSSI_CHANNEL,
+      expectedEvent
+    );
+  });
+
+  it('should pick the default minRssi if no device-specific one is configured', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-11);
+    const handleRssiMock = jest
+      .spyOn(service, 'handleNewRssi')
+      .mockImplementation(() => undefined);
+    config.minRssi = {
+      '77:50:fb:4d:ab:70': -10,
+      default: -20
+    };
+
+    const address = '50:50:50:50:50:50';
+    const device = new Device(address, 'Test Device');
+    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+
+    const expectedEvent = new NewRssiEvent('test-instance', device, -11, false);
+
+    await service.handleRssiRequest(address);
+    expect(handleRssiMock).toHaveBeenCalledWith(expectedEvent);
+    expect(clusterService.publish).toHaveBeenCalledWith(
+      NEW_RSSI_CHANNEL,
+      expectedEvent
+    );
+  });
+
+  it('should consider everything in range when no default minRssi is configured', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-25);
+    const handleRssiMock = jest
+      .spyOn(service, 'handleNewRssi')
+      .mockImplementation(() => undefined);
+    config.minRssi = {
+      '77:50:fb:4d:ab:70': -10
+    };
+
+    const address = '50:50:50:50:50:50';
+    const device = new Device(address, 'Test Device');
+    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+
+    const expectedEvent = new NewRssiEvent('test-instance', device, -25, false);
+
+    await service.handleRssiRequest(address);
+    expect(handleRssiMock).toHaveBeenCalledWith(expectedEvent);
+    expect(clusterService.publish).toHaveBeenCalledWith(
+      NEW_RSSI_CHANNEL,
+      expectedEvent
+    );
+  });
+
   it('should gather the device info for previously unkown addresses', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
     jest.spyOn(service, 'inquireRssi').mockResolvedValue(0);

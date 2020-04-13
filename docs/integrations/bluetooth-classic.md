@@ -67,15 +67,20 @@ Bluetooth uses the 2.4 GHz band, which may also be used by some of your other Wi
 
 ## Settings
 
-| Name            | Type   | Default | Description                                                  |
-| --------------- | ------ | ------- | ------------------------------------------------------------ |
-| `addresses`     | Array  |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
-| `minRssi`       | Number |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
-| `hciDeviceId`   | Number | `0`     | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
-| `interval`      | Number | `6`     | The interval at which the Bluetooth devices are queried in seconds. |
-| `timeoutCycles` | Number | `2`     | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
+| Name            | Type                                         | Default | Description                                                  |
+| --------------- | -------------------------------------------- | ------- | ------------------------------------------------------------ |
+| `addresses`     | Array                                        |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
+| `minRssi`       | Number _or_ [detailed config](#minimum-rssi) |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
+| `hciDeviceId`   | Number                                       | `0`     | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
+| `interval`      | Number                                       | `6`     | The interval at which the Bluetooth devices are queried in seconds. |
+| `timeoutCycles` | Number                                       | `2`     | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
 
-::: details Example Config
+### Minimum RSSI
+
+`minRssi` can either be specified as a number that is applied to all devices like shown in the simple example config, or as a map of addresses and `minRssi` values as shown in the advanced example config. The latter allows you to configure different cutoffs for the devices you are using, as they may end up showing different RSSI levels even when placed at the same distance. The `minRssi.default` setting will be applied to all addresses that have not been configured specifically. If it is not set, all devices that don't have a specific value will always be considered to be in range.
+
+::: details Simple Example Config
+
 ```yaml
 global:
   integrations:
@@ -86,4 +91,24 @@ bluetoothClassic:
     - '08:05:90:ed:3b:60'
     - '77:50:fb:4d:ab:70'
 ```
+:::
+
+::: details Advanced Example Config
+
+```yaml
+global:
+  integrations:
+    - bluetoothClassic
+bluetoothClassic:
+  hciDeviceId: 1
+  interval: 20
+  timeoutCycles: 2.5
+  minRssi:
+    '08:05:90:ed:3b:60': -10
+    default: -20
+  addresses:
+    - '08:05:90:ed:3b:60'
+    - '77:50:fb:4d:ab:70'
+```
+
 :::

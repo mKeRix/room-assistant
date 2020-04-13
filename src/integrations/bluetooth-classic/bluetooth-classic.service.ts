@@ -109,11 +109,21 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
           this.deviceMap.set(address, device);
         }
 
+        let minRssi: number;
+        if (_.isObject(this.config.minRssi)) {
+          minRssi = _.defaultTo(
+            this.config.minRssi[address],
+            this.config.minRssi.default
+          );
+        } else if (_.isNumber(this.config.minRssi)) {
+          minRssi = this.config.minRssi;
+        }
+
         const event = new NewRssiEvent(
           this.configService.get('global').instanceName,
           device,
           rssi,
-          rssi < this.config.minRssi
+          rssi < minRssi
         );
 
         this.clusterService.publish(NEW_RSSI_CHANNEL, event);
