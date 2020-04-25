@@ -7,6 +7,7 @@ import { GridEyeConfig } from '../../integrations/grid-eye/grid-eye.config';
 import { BluetoothClassicConfig } from '../../integrations/bluetooth-classic/bluetooth-classic.config';
 import { GpioConfig } from '../../integrations/gpio/gpio.config';
 import { ShellConfig } from '../../integrations/shell/shell.config';
+import { XiaomiMiConfig } from '../../integrations/xiaomi-mi/xiaomi-mi.config';
 
 export class AppConfig {
   global: GlobalConfig = new GlobalConfig();
@@ -17,6 +18,7 @@ export class AppConfig {
   gridEye: GridEyeConfig = new GridEyeConfig();
   gpio: GpioConfig = new GpioConfig();
   shell: ShellConfig = new ShellConfig();
+  xiaomiMi: XiaomiMiConfig = new XiaomiMiConfig();
   homeAssistant: HomeAssistantConfig = new HomeAssistantConfig();
 }
 
