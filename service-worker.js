@@ -27,7 +27,7 @@ self.addEventListener('message', (event) => {
 self.__precacheManifest = [
   {
     "url": "404.html",
-    "revision": "bd3cfe89fe7dc1b2c07032247ee479a7"
+    "revision": "2f623684d4c3b8db4cd2f0f07e9ba420"
   },
   {
     "url": "android-chrome-192x192.png",
@@ -82,44 +82,48 @@ self.__precacheManifest = [
     "revision": "2a5cd77817354d7e2d0259d0308916c5"
   },
   {
-    "url": "assets/js/17.115607d2.js",
-    "revision": "1d46ba0f82c67374c77d9c85d68e5631"
+    "url": "assets/js/17.c2965f33.js",
+    "revision": "1af6c8a49f6c64e57360fb70a048d1d6"
   },
   {
-    "url": "assets/js/18.f24b7b10.js",
-    "revision": "9f242fa0a3ed87d30a4b4e2787e4e177"
+    "url": "assets/js/18.073b45f8.js",
+    "revision": "279bdf7a16390eebf72b2f7d61ef37ed"
   },
   {
-    "url": "assets/js/19.e48ff166.js",
-    "revision": "7f404fbbad9370f88aaaa3885765dbf9"
+    "url": "assets/js/19.f7fcc8c1.js",
+    "revision": "c8de28d488f35e6907451d39b5fac223"
   },
   {
-    "url": "assets/js/20.4ee63976.js",
-    "revision": "cf018692dd1fcacec532f3ac47e32f0e"
+    "url": "assets/js/20.797f18d8.js",
+    "revision": "4dec1bbc02adf5e1122d6bace0b6251b"
   },
   {
-    "url": "assets/js/21.0f37c9fd.js",
-    "revision": "a44b8cba1a91452867af347e2606185c"
+    "url": "assets/js/21.a612051e.js",
+    "revision": "2264237a6bb7b8b10ff6b08a98cd65d6"
   },
   {
-    "url": "assets/js/22.20f18cbf.js",
-    "revision": "c99862261dc62fc0724001c593907029"
+    "url": "assets/js/22.59c99daa.js",
+    "revision": "2af8b5be56bd410fa600aad82a3fa2a3"
   },
   {
-    "url": "assets/js/23.b3e12275.js",
-    "revision": "525856b13c6b8111a8b554f7949aa8b9"
+    "url": "assets/js/23.2170ecab.js",
+    "revision": "6ee8acd723b6d7eb01987ccbec22ec37"
   },
   {
-    "url": "assets/js/24.4a8bf004.js",
-    "revision": "5f224635e125716833b4d607ee239627"
+    "url": "assets/js/24.8461a930.js",
+    "revision": "186c62b2e6a928b1d06a53ec1a7b340c"
   },
   {
-    "url": "assets/js/25.f70c503e.js",
-    "revision": "c648e47d0973b6fb2ab7c408d6ab8699"
+    "url": "assets/js/25.1ad334ff.js",
+    "revision": "091fe36e4c42996219a0d0ae07339c38"
   },
   {
-    "url": "assets/js/26.233fec51.js",
-    "revision": "05a1bdd8fe9ec5af9d8bec5527d18fc9"
+    "url": "assets/js/26.81a9325b.js",
+    "revision": "77eb6ea032fa6f7763f3fb2caece1ca6"
+  },
+  {
+    "url": "assets/js/27.93621802.js",
+    "revision": "789e2c14d61e81f4f4cd3ca4b756769c"
   },
   {
     "url": "assets/js/3.50b3844a.js",
@@ -130,8 +134,8 @@ self.__precacheManifest = [
     "revision": "5771909da8d4920aad42e2cf8d9651c9"
   },
   {
-    "url": "assets/js/5.eea95714.js",
-    "revision": "139b3b85b5cc5413172d373cfc3f788a"
+    "url": "assets/js/5.7a7da1f9.js",
+    "revision": "58225da79c4c79c14429cb4249586a09"
   },
   {
     "url": "assets/js/6.7b1242b0.js",
@@ -150,8 +154,8 @@ self.__precacheManifest = [
     "revision": "a22cabe6078f594ba2208f319fcbf87e"
   },
   {
-    "url": "assets/js/app.b0c94d44.js",
-    "revision": "ca3d77579caf0fe728ddd1491bb99f0b"
+    "url": "assets/js/app.59604680.js",
+    "revision": "54c780814187280b0cb8773692cb64e0"
   },
   {
     "url": "assets/js/vendors~docsearch.4a1fb7f1.js",
@@ -167,79 +171,83 @@ self.__precacheManifest = [
   },
   {
     "url": "guide/cli.html",
-    "revision": "ecea19d11243fa2d0888810d7c0ece40"
+    "revision": "7f5cb9e810f15650166e441968e52e0c"
   },
   {
     "url": "guide/cluster.html",
-    "revision": "1550d3e0033280f61d804c115a0464f7"
+    "revision": "a5c2c04077e5a233721960610ceda30e"
   },
   {
     "url": "guide/configuration.html",
-    "revision": "54a6ddabd75ec604adee26c8064b8777"
+    "revision": "2d0e5747698230436a919076aefc053d"
   },
   {
     "url": "guide/index.html",
-    "revision": "b80b6a1ccaa5581e07e1b0c8fd391496"
+    "revision": "bfaaf3b5f25c040f6da44f01210e6549"
   },
   {
     "url": "guide/installation.html",
-    "revision": "5324b10d5a77f295bcf95fcc0888e821"
+    "revision": "f57d4f5df3f03b5e885ece5058bfd495"
   },
   {
     "url": "guide/quickstart-ansible.html",
-    "revision": "369cdb6ad5a70b9ad2e2b6ed2d16c8ac"
+    "revision": "7d66a572e66341808739d21bbf929f82"
   },
   {
     "url": "guide/quickstart-docker.html",
-    "revision": "d4e1c5686902a0da1be598143d6a3ff0"
+    "revision": "cb4560eed9df17cf5294e77f47fede8f"
   },
   {
     "url": "guide/quickstart-pi-zero-w.html",
-    "revision": "5fab6e8b3df7adef48b321f48f9c5864"
+    "revision": "cee0967a0fa1379a23e9df9964e9157b"
   },
   {
     "url": "guide/quickstart-pi.html",
-    "revision": "013fdab89e8f899425dd767d49db7177"
+    "revision": "0abcbf7cc056633116df3d033212fd42"
+  },
+  {
+    "url": "guide/troubleshooting.html",
+    "revision": "0097d70efa63a169afaef83712200e3a"
   },
   {
     "url": "guide/upgrading.html",
-    "revision": "a7ba8b5049522790ff55eba6aebfe265"
+    "revision": "95693324b019740fe4b7c16891167ca8"
   },
   {
     "url": "index.html",
-    "revision": "fdb5a02c7169061555c8b0f533e0c010"
+    "revision": "17d6a0ca3a272c7e854ad2c0779285de"
   },
   {
     "url": "integrations/bluetooth-classic.html",
-    "revision": "807756d2731b511b3739714d16f179c3"
+    "revision": "f31386585177141c857674d4ce084d69"
   },
   {
     "url": "integrations/bluetooth-low-energy.html",
-    "revision": "6307138b939c313cf2e61e968650ca0e"
+    "revision": "da22c99dbec9ca7a3618165474b7baaf"
   },
   {
     "url": "integrations/gpio.html",
-    "revision": "55647a40c68f2e5de8c0f61929cf045d"
+    "revision": "d43594e5d59e7aeeb8571e5af2245401"
   },
   {
     "url": "integrations/grid-eye.html",
-    "revision": "52cada80661aa944437c7adad76113e4"
+    "revision": "95217b191b199caefbdf37f69a75a60b"
   },
   {
     "url": "integrations/home-assistant.html",
-    "revision": "ccd96010e03bb01b53e73d1d84af00a1"
+    "revision": "462dcebd8c7e8fb1e4ae7ea3bec33ab9"
   },
   {
     "url": "integrations/index.html",
-    "revision": "0020480a657cb741f68c7b873e4cc6b3"
+    "revision": "7f64d1373f0008271bea2028feba0574"
   },
   {
     "url": "integrations/omron-d6t.html",
-    "revision": "1b54c366a255b22f68d151cd8cebc4aa"
+    "revision": "77c2907cbc1c38f3884966f86b3378f4"
   },
   {
     "url": "integrations/shell.html",
-    "revision": "306b2ac2f4dbfda401329d7101afca83"
+    "revision": "861e5fbbe5d46e8ba98f3928395f477c"
   },
   {
     "url": "mstile-150x150.png",
