@@ -1,5 +1,5 @@
 # Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
-version: v1.13.5
+version: v1.14.1
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
   SNYK-JS-MINIMIST-559764:
@@ -30,4 +30,10 @@ ignore:
     - '@abandonware/noble > @abandonware/bluetooth-hci-socket > usb > prebuild-install > rc > minimist':
         reason: None given
         expires: '2020-05-05T13:14:44.193Z'
-patch: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-LODASH-567746:
+    - lodash:
+        patched: '2020-05-01T04:55:22.535Z'
+    - winston > async > lodash:
+        patched: '2020-05-01T04:55:22.535Z'
