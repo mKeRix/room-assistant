@@ -23,6 +23,8 @@ import { BinarySensor } from '../../entities/binary-sensor';
 import { BinarySensorConfig } from './binary-sensor-config';
 import { Switch } from '../../entities/switch';
 import { SwitchConfig } from './switch-config';
+import { DeviceTracker } from '../../entities/device-tracker';
+import { DeviceTrackerConfig } from './device-tracker-config';
 
 const PROPERTY_BLACKLIST = ['component', 'configTopic', 'commandStore'];
 
@@ -125,18 +127,27 @@ export class HomeAssistantService
 
     config = this.applyCustomizations(config, customizations);
 
-    this.logger.debug(
-      `Registering entity ${config.uniqueId} under ${config.configTopic}`
-    );
     this.entityConfigs.set(combinedId, config);
-    this.mqttClient.publish(
-      config.configTopic,
-      JSON.stringify(this.formatMessage(config)),
-      {
-        qos: 0,
-        retain: true
-      }
-    );
+
+    if (config instanceof DeviceTrackerConfig) {
+      // auto discovery not supported by Home Assistant yet
+      this.logger.log(
+        `Device tracker requires manual setup in Home Assistant with topic: ${config.stateTopic}`
+      );
+    } else {
+      this.logger.debug(
+        `Registering entity ${config.uniqueId} under ${config.configTopic}`
+      );
+      this.mqttClient.publish(
+        config.configTopic,
+        JSON.stringify(this.formatMessage(config)),
+        {
+          qos: 0,
+          retain: true
+        }
+      );
+    }
+
     this.mqttClient.publish(config.availabilityTopic, config.payloadAvailable, {
       qos: 0,
       retain: true
@@ -289,6 +300,8 @@ export class HomeAssistantService
       );
       this.mqttClient.subscribe(config.commandTopic, { qos: 0 });
       return config;
+    } else if (entity instanceof DeviceTracker) {
+      return new DeviceTrackerConfig(combinedId, entity.name);
     } else {
       return;
     }

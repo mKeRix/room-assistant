@@ -20,6 +20,8 @@ import { BluetoothClassicConfig } from './bluetooth-classic.config';
 import c from 'config';
 import { ConfigService } from '../../config/config.service';
 import { Device } from './device';
+import { DeviceTracker } from '../../entities/device-tracker';
+import * as util from 'util';
 
 jest.mock('../room-presence/room-presence-distance.sensor');
 jest.mock('kalmanjs', () => {
@@ -450,9 +452,19 @@ Requesting information ...
     await service.handleNewRssi(event);
 
     expect(entitiesService.add).toHaveBeenCalledWith(
+      new DeviceTracker(
+        'bluetooth-classic-10-36-cf-ca-9a-18-tracker',
+        'Test Device',
+        true
+      )
+    );
+    expect(entitiesService.add).toHaveBeenCalledWith(
       expect.any(RoomPresenceDistanceSensor),
       expect.any(Array)
     );
+    expect(
+      util.types.isProxy(entitiesService.add.mock.calls[1][0])
+    ).toBeTruthy();
     expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 6000);
 
     const sensorInstance = (RoomPresenceDistanceSensor as jest.Mock).mock

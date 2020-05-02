@@ -35,6 +35,8 @@ import c from 'config';
 import { NewDistanceEvent } from './new-distance.event';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import KalmanFilter from 'kalmanjs';
+import { DeviceTracker } from '../../entities/device-tracker';
+import * as util from 'util';
 
 jest.useFakeTimers();
 
@@ -687,6 +689,12 @@ describe('BluetoothLowEnergyService', () => {
       }),
       expect.any(Array)
     );
+    expect(entitiesService.add).toHaveBeenCalledWith(
+      new DeviceTracker('ble-new-tracker', 'New Tag', true)
+    );
+    expect(
+      util.types.isProxy(entitiesService.add.mock.calls[1][0])
+    ).toBeTruthy();
     expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 20 * 1000);
     expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 1.3, false);
   });

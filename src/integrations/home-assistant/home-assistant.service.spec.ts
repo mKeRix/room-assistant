@@ -20,6 +20,7 @@ import { Entity } from '../../entities/entity';
 import { Sensor } from '../../entities/sensor';
 import { BinarySensor } from '../../entities/binary-sensor';
 import { Switch } from '../../entities/switch';
+import { DeviceTracker } from '../../entities/device-tracker';
 import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
 
 jest.mock('async-mqtt', () => {
@@ -277,6 +278,15 @@ describe('HomeAssistantService', () => {
       'room-assistant/switch/test-instance-test-switch/command',
       { qos: 0 }
     );
+  });
+
+  it('should not publish discovery information for a new device tracker', async () => {
+    await service.onModuleInit();
+    service.handleNewEntity(
+      new DeviceTracker('test-tracker', 'Test Tracker', true)
+    );
+
+    expect(mockMqttClient.publish).toHaveBeenCalledTimes(1);
   });
 
   it('should include device information in the discovery message', async () => {

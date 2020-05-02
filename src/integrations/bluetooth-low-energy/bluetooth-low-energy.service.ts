@@ -20,6 +20,8 @@ import { KalmanFilterable } from '../../util/filters';
 import { makeId } from '../../util/id';
 import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
 import * as _ from 'lodash';
+import { DeviceTracker } from '../../entities/device-tracker';
+import { RoomPresenceDeviceTrackerProxyHandler } from '../room-presence/room-presence-device-tracker.proxy';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 
@@ -232,6 +234,11 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
     deviceId: string,
     deviceName: string
   ): RoomPresenceDistanceSensor {
+    const deviceTracker = this.createDeviceTracker(
+      makeId(`${sensorId}-tracker`),
+      deviceName
+    );
+
     const sensorName = `${deviceName} Room Presence`;
     const customizations: Array<EntityCustomization<any>> = [
       {
@@ -246,8 +253,17 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
         }
       }
     ];
+    const rawSensor = new RoomPresenceDistanceSensor(
+      sensorId,
+      sensorName,
+      this.config.timeout
+    );
+    const proxiedSensor = new Proxy<RoomPresenceDistanceSensor>(
+      rawSensor,
+      new RoomPresenceDeviceTrackerProxyHandler(deviceTracker)
+    );
     const sensor = this.entitiesService.add(
-      new RoomPresenceDistanceSensor(sensorId, sensorName, this.config.timeout),
+      proxiedSensor,
       customizations
     ) as RoomPresenceDistanceSensor;
 
@@ -258,6 +274,19 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
     this.schedulerRegistry.addInterval(`${sensorId}_timeout_check`, interval);
 
     return sensor;
+  }
+
+  /**
+   * Creates and registers a new device tracker.
+   *
+   * @param id - Entity ID for the new device tracker
+   * @param name - Name for the new device tracker
+   * @returns Registered device tracker
+   */
+  protected createDeviceTracker(id: string, name: string): DeviceTracker {
+    return this.entitiesService.add(
+      new DeviceTracker(id, name, true)
+    ) as DeviceTracker;
   }
 
   /**

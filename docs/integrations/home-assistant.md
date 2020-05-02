@@ -16,6 +16,20 @@ You will need to setup an MQTT broker that both your instance of Home Assistant 
 
 room-assistant makes use of the [MQTT auto discovery](https://www.home-assistant.io/docs/mqtt/discovery/) features provided by Home Assistant to automatically create all entities for you. It is strongly recommended that you enable this feature when setting up the MQTT integration in Home Assistant.
 
+## Device Trackers
+
+Some integrations, such as [Bluetooth Classic](bluetooth-classic.md) or [Bluetooth Low Energy](bluetooth-low-energy.md) support the [MQTT device tracker](https://www.home-assistant.io/integrations/device_tracker.mqtt/) in Home Assistant. This is for example useful if you want to integrate the room-assistant presence detection with others in the form of a [person](https://www.home-assistant.io/integrations/person/). Unfortunately, device trackers can not be auto discovered by Home Assistant. To enable this feature you will have to edit your Home Assistant configuration manually and add a few lines as shown in the example below. You can get all your available device tracker topics from the room-assistant logs.
+
+```yaml
+device_tracker:
+- platform: mqtt
+  devices:
+    apple_watch: 'room-assistant/device_tracker/bluetooth-classic-aa-aa-aa-aa-aa-aa-tracker/state'
+  payload_home: 'true'
+  payload_not_home: 'false'
+  source_type: bluetooth
+```
+
 ## Settings
 
 | Name          | Type                          | Default                 | Description                                 |
