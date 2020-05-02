@@ -4,6 +4,12 @@ room-assistant ships with multiple integrations that you can pick and choose fro
 
 ## Home Automation
 
+::: tip
+
+Looking for a way to integrate OpenHAB? You can use the [Home Assistant](home-assistant.md) integration together with the [Home Assistant OpenHAB Binding](https://www.openhab.org/addons/bindings/mqtt.homeassistant/).
+
+:::
+
 | Integration                           | Supported entities |
 | ------------------------------------- | ------------------ |
 | [Home Assistant](./home-assistant.md) | All                |
