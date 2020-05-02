@@ -63,6 +63,9 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   onApplicationBootstrap(): void {
     noble.on('stateChange', BluetoothLowEnergyService.handleStateChange);
     noble.on('discover', this.handleDiscovery.bind(this));
+    noble.on('warning', message => {
+      this.logger.warn(message);
+    });
 
     this.clusterService.on(
       NEW_DISTANCE_CHANNEL,
