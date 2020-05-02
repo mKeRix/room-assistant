@@ -15,7 +15,7 @@ declare module 'democracy' {
     protected checkBallots(candidate: string): this;
     hello(): this;
     nodes(): { [key: string]: Node };
-    leader(): Node;
+    leader(): Node | undefined;
     resign(): this;
     isLeader(): boolean;
     send(customEvent: string, extraData?: any, id?: string): this;

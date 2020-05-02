@@ -46,7 +46,7 @@ export class StatusService implements OnApplicationBootstrap {
    * Updates the cluster leader sensor based on the currently elected leader.
    */
   updateClusterLeaderSensor(): void {
-    this.clusterLeaderSensor.state = this.clusterService.leader().id;
+    this.clusterLeaderSensor.state = this.clusterService.leader()?.id || 'none';
     this.clusterLeaderSensor.attributes.quorumReached = this.clusterService.quorumReached();
   }
 
