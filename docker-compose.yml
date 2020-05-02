@@ -1,7 +1,9 @@
 version: '3'
 services:
   room-assistant:
-    build: .
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
     network_mode: host
     environment:
       NODE_CONFIG: >
