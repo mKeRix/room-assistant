@@ -1,0 +1,11 @@
+import { Module } from '@nestjs/common';
+import { StatusService } from './status.service';
+import { ClusterModule } from '../cluster/cluster.module';
+import { EntitiesModule } from '../entities/entities.module';
+import { ConfigModule } from '../config/config.module';
+
+@Module({
+  imports: [ClusterModule, EntitiesModule, ConfigModule],
+  providers: [StatusService]
+})
+export class StatusModule {}
