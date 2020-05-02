@@ -8,7 +8,7 @@ Using this together with [Bluetooth Low Energy](./bluetooth-low-energy) requires
 
 :::
 
-The Bluetooth Classic integration can detect the location of any Bluetooth device within the home. It does this by sending out connection requests to the device addresses you configure on rotation and then checking the signal strength of the response. The configured Bluetooth devices do not do not need to be paired with your machines running room-assistant.
+The Bluetooth Classic integration can detect the location of any Bluetooth device within the home. It does this by sending out connection requests to the device addresses you configure on rotation and then checking the signal strength of the response. The configured Bluetooth devices do not need to be paired with your machines running room-assistant.
 
 The integration has been tested to work great with the Apple Watch. You may see a minor hit on the battery life of the Bluetooth devices when enabling this.
 
