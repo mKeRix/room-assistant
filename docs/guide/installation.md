@@ -76,8 +76,8 @@ services:
 
 :::
 
-## Running with Hass.io
+## Running with Home Assistant OS
 
-You can install room-assistant as Hass.io add-on by [adding the following URL as repository](https://www.home-assistant.io/hassio/installing_third_party_addons/):
+You can install room-assistant as Home Assistant OS add-on by [adding the following URL as repository](https://www.home-assistant.io/hassio/installing_third_party_addons/):
 
 `https://github.com/mKeRix/hassio-repo`

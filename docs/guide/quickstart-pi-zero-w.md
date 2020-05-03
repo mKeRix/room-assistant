@@ -74,7 +74,7 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 
 1. Create a config folder for room-assistant with `mkdir -p ~/room-assistant/config`.
 
-2. Create a new config file with `nano ~/room-assistant/config/local.yml` and put your room-assistant configuration in it. The example below configures the [Home Assistant](/integrations/home-assistant) and [Bluetooth Classic](/integrations/bluetooth-classic) integrations. If you want to use something else check out the [integrations](/integrations) section.
+2. Create a new config file with `nano ~/room-assistant/config/local.yml` and put your room-assistant configuration in it. The example below configures the [Home Assistant Core](/integrations/home-assistant) and [Bluetooth Classic](/integrations/bluetooth-classic) integrations. If you want to use something else check out the [integrations](/integrations) section.
 
    ```yaml
    global:
@@ -82,7 +82,7 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
        - homeAssistant
        - bluetoothClassic
    homeAssistant:
-     mqttUrl: 'mqtt://hassio.local:1883'
+     mqttUrl: 'mqtt://homeassistant.local:1883'
      mqttOptions:
        username: youruser
        password: yourpass
@@ -93,7 +93,7 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 
 3. Go to your room-assistant directory by executing `cd ~/room-assistant`.
 
-4. Run room-assistant by executing `room-assistant`. Watch the logs - are all integrations are loaded correctly and is the MQTT connection succesful? The congratulations, you configured room-assistant correctly! :tada: New entities should now be appearing under the MQTT integration in Home Assistant, which can be viewed in Settings > Integrations.
+4. Run room-assistant by executing `room-assistant`. Watch the logs - are all integrations are loaded correctly and is the MQTT connection succesful? The congratulations, you configured room-assistant correctly! :tada: New entities should now be appearing under the MQTT integration in Home Assistant Core, which can be viewed in Settings > Integrations.
 
 ::: tip
 

@@ -40,7 +40,7 @@ This guide will show you how to manage multiple instances of room-assistant arou
              - homeAssistant
              - bluetoothClassic
          homeAssistant:
-           mqttUrl: mqtt://hassio.local:1883
+           mqttUrl: mqtt://homeassistant.local:1883
            mqttOptions:
              username: room-assistant
              password: secretpass

@@ -57,7 +57,7 @@ services:
 | ------------- | ------ | ------- | ------------------------------------------------------------ |
 | `name`        | String |         | Friendly name for this sensor.                               |
 | `pin`         | Number |         | Number of the GPIO pin that should be tracked.               |
-| `deviceClass` | String |         | Home Assistant [device class](https://www.home-assistant.io/integrations/binary_sensor/#device-class) that the sensor should be shown as. |
+| `deviceClass` | String |         | Home Assistant Core [device class](https://www.home-assistant.io/integrations/binary_sensor/#device-class) that the sensor should be shown as. |
 
 ### Switches
 
@@ -65,7 +65,7 @@ services:
 | ------ | ------ | ------- | ------------------------------------------------------------ |
 | `name` | String |         | Friendly name for this sensor.                               |
 | `pin`  | Number |         | Number of the GPIO pin that should be used as output.        |
-| `icon` | String |         | Icon to display for the switch in the Home Assistant frontend. |
+| `icon` | String |         | Icon to display for the switch in the Home Assistant Core frontend. |
 
 ::: details Example Config
 

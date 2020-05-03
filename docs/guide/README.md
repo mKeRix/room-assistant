@@ -26,7 +26,7 @@ If you don't require the room-level features you can of course also only setup a
 
 ### ESP32-mqtt-room
 
-[ESP32-mqtt-room](https://jptrsn.github.io/ESP32-mqtt-room/) integrates with the Home Assistant [mqtt_room](https://www.home-assistant.io/integrations/mqtt_room/) component to deliver room presence data for BLE devices. This is great as ESP32s are quite cheap, but it also requires you to either carry a BLE beacon around or have an app open on your Android phone at all times. room-assistant supports many more integrations, including [Bluetooth Classic](/integrations/bluetooth-classic), which allows you to track your phone even without a special app running. That way you can track iOS devices and smart watches as well.
+[ESP32-mqtt-room](https://jptrsn.github.io/ESP32-mqtt-room/) integrates with the Home Assistant Core [mqtt_room](https://www.home-assistant.io/integrations/mqtt_room/) component to deliver room presence data for BLE devices. This is great as ESP32s are quite cheap, but it also requires you to either carry a BLE beacon around or have an app open on your Android phone at all times. room-assistant supports many more integrations, including [Bluetooth Classic](/integrations/bluetooth-classic), which allows you to track your phone even without a special app running. That way you can track iOS devices and smart watches as well.
 
 ### FIND3
 

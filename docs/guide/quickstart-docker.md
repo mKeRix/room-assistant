@@ -4,7 +4,7 @@ This page will guide you through setting up room-assistant with Docker and docke
 
 1. Create a new folder to store your room-assistant files in with `mkdir -p ~/room-assistant/config`.
 
-2. Create the file `~/room-assistant/config/local.yml` and put your configuration into it. The example below configures the [Home Assistant](/integrations/home-assistant) and [Bluetooth Classic](/integrations/bluetooth-classic) integrations, but there are many others to choose from. For all options take a look at the [integrations](/integrations) section.
+2. Create the file `~/room-assistant/config/local.yml` and put your configuration into it. The example below configures the [Home Assistant Core](/integrations/home-assistant) and [Bluetooth Classic](/integrations/bluetooth-classic) integrations, but there are many others to choose from. For all options take a look at the [integrations](/integrations) section.
 
    ```yaml
    global:
@@ -36,5 +36,5 @@ This page will guide you through setting up room-assistant with Docker and docke
          - <host-path-to>/room-assistant/config:/room-assistant/config
    ```
 
-4. From the `~/room-assistant` directory run `docker-compose up`. You should see all configured integrations load and the MQTT connection being established in the logs. New entities should now be appearing under the MQTT integration in Home Assistant, which can be viewed in Settings > Integrations. Congratulations, you are done! :confetti_ball:
+4. From the `~/room-assistant` directory run `docker-compose up`. You should see all configured integrations load and the MQTT connection being established in the logs. New entities should now be appearing under the MQTT integration in Home Assistant Core, which can be viewed in Settings > Integrations. Congratulations, you are done! :confetti_ball:
 

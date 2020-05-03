@@ -42,9 +42,9 @@ services:
 
 :::
 
-### Running with Hass.io
+### Running with Home Assistant OS
 
-You will need to enable the i2c interface by following the [official Hass.io guide](https://www.home-assistant.io/hassio/enable_i2c/). The `config.txt` file that you create should also contain an additional option, leading to the following contents:
+You will need to enable the i2c interface by following the [official Home Assistant OS guide](https://www.home-assistant.io/hassio/enable_i2c/). The `config.txt` file that you create should also contain an additional option, leading to the following contents:
 
 ```
 dtparam=i2c1=on

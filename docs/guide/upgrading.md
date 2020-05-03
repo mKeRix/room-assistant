@@ -2,7 +2,7 @@
 
 room-assistant uses [semantic versioning](https://semver.org/). Minor version upgrades should require no additional steps, major upgrades may require you do [some additional steps](#major-upgrades).
 
-## Upgrade process
+## Upgrade Process
 
 ### NodeJS
 
@@ -12,11 +12,11 @@ Stop room-assistant on the machine, then run `sudo npm i --global --unsafe-perm 
 
 If you're using images with specific version tags you can just exchange the tag with the new version. For `latest` or `beta` you need to pull the image again to retrieve the latest version. Then just recreate your container with the latest image version - e.g. with docker-compose `docker-compose stop && docker-compose up`.
 
-### Hass.io
+### Home Assistant OS
 
-Upgrade the room-assistant add-on from the Supervisor Add-on Store panel. Note that the Hass.io release is slightly delayed to the other releases and may not immediately be visible.
+Upgrade the room-assistant add-on from the Supervisor Add-on Store panel. Note that the Home Assistant OS release is slightly delayed to the other releases and may not immediately be visible.
 
-## Major upgrades
+## Major Upgrades
 
 ### 0.x or 1.x to 2.x
 
@@ -28,7 +28,7 @@ The installation process has changed and is not git-based anymore when running r
 
 For Docker-based installations note that on Linux systems you should also mount the `/var/run/dbus` folder into the container now to make use of the auto-discovery features.
 
-The Hass.io addon has changed its ID from `room-assistant` to `room_assistant` to comply with the standard and therefore needs to be reinstalled as a different add-on.
+The Home Assistant OS addon has changed its ID from `room-assistant` to `room_assistant` to comply with the standard and therefore needs to be reinstalled as a different add-on.
 
 #### Dependencies
 
@@ -48,7 +48,7 @@ Run `npm install` to get the latest versions of the dependencies.
 
 In room-assistant 1.1.x we integrated the MQTT auto discovery feature. If you do not want to use this you do not need to change anything.
 
-If you do, please restructure the configuration of your room-assistant AND Home Assistant instances to support this feature.
+If you do, please restructure the configuration of your room-assistant AND Home Assistant Core instances to support this feature.
 
 **If you used the prometheus service:**
 
