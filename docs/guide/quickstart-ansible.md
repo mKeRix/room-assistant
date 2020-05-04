@@ -34,6 +34,7 @@ This guide will show you how to manage multiple instances of room-assistant arou
                  deviceClass: motion
        'bedroom.local':
      vars:
+       room_assistant_version: latest
        room_assistant_global_config:
          global:
            integrations:
@@ -51,5 +52,5 @@ This guide will show you how to manage multiple instances of room-assistant arou
 
 5. Execute the playbook with `ansible-playbook -i hosts.yml -u pi room-assistant.yml` to install the required dependencies and room-assistant as a service on all of the hosts in your inventory file. Note that some tasks will take a while on the first run, for example the "Install room-assistant" step. Be patient and let it finish.
 
-6. Congratulations, you have installed room-assistant across a cluster of devices and can manage it from a central point now! :tada: Whenever you want to update or change something you can simply edit your `hosts.yml` file as needed and re-run `ansible-playbook -i hosts.yml -u pi room-assistant.yml`.
+6. Congratulations, you have installed room-assistant across a cluster of devices and can manage it from a central point now! :tada: Whenever you want to change something you can simply edit your `hosts.yml` file as needed, for example by changing `room_assistant_version` to update. Then re-run `ansible-playbook -i hosts.yml -u pi room-assistant.yml` to apply your changes.
 
