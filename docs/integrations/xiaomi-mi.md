@@ -33,7 +33,7 @@ This integration has been tested with these devices:
 
 | Name              | Type                              | Default  | Description                     |
 | ----------------- | --------------------------------- | -------- | ------------------------------- |
-| `sensors`         | [Sensor options)[#sensor-options) |          | An array of sensor definitions. |
+| `sensors`         | [Sensor options](#sensor-options) |          | An array of sensor definitions. |
 | `hciDeviceId`     | Number                            | `0`      | Bluetooth Device ID (e.g. `0` to use `hci0`). |
 
 ### Sensor Options
