@@ -1,11 +1,10 @@
 export class XiaomiMiConfig {
   hciDeviceId = 0;
   sensors: XiaomiMiSensorOptions[] = [];
-
-  timeout = 5;
 }
 
-class XiaomiMiSensorOptions {
+export class XiaomiMiSensorOptions {
   name: string;
   address: string;
+  bindKey?: string;
 }

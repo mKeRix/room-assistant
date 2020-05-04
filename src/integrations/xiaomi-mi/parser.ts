@@ -198,7 +198,7 @@ export class Parser {
     return this.buffer.readUInt8(this.eventOffset + 2);
   }
 
-  decryptPayload() {
+  decryptPayload(): void {
     const msgLength = this.buffer.length;
     const eventLength = msgLength - this.eventOffset;
 
@@ -242,7 +242,7 @@ export class Parser {
     ]);
   }
 
-  parseEventData() {
+  parseEventData(): Event | null {
     if (!this.frameControl.hasEvent) {
       return null;
     }
