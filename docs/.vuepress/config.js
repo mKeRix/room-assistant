@@ -82,7 +82,8 @@ module.exports = {
             '/integrations/omron-d6t',
             '/integrations/grid-eye',
             '/integrations/gpio',
-            '/integrations/shell'
+            '/integrations/shell',
+            '/integrations/xiaomi-mi'
           ]
         }
       ]

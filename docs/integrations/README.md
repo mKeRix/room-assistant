@@ -23,4 +23,5 @@ room-assistant ships with multiple integrations that you can pick and choose fro
 | ------------------- | ------------------ |
 | [GPIO](./gpio.md)   | Binary sensors     |
 | [Shell](./shell.md) | Binary sensors     |
+| [Xiaomi Mi](./xiaomi-mi.md) | Temperature, humidity, etc sensors |
 
