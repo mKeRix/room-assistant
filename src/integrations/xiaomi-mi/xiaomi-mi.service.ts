@@ -181,7 +181,7 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
         break;
       }
       case EventTypes.moisture: {
-        this.recordMeasure(options.name, 'moisture', '', event.moisture);
+        this.recordMeasure(options.name, 'moisture', '%', event.moisture);
         break;
       }
       case EventTypes.fertility: {

@@ -1,3 +1,8 @@
+/**
+ * This parser was originally ported from:
+ *
+ * https://github.com/hannseman/homebridge-mi-hygrothermograph/blob/master/lib/parser.js
+ */
 import * as crypto from 'crypto';
 export const SERVICE_DATA_UUID = 'fe95';
 
