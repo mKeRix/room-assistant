@@ -1,7 +1,27 @@
 #!/usr/bin/env node
-const version = require('../package.json').version;
+/* eslint-disable @typescript-eslint/no-var-requires */
+const pkg = require('../package.json');
+const updateNotifier = require('update-notifier');
+const chalk = require('chalk');
 const commandLineUsage = require('command-line-usage');
 const commandLineArgs = require('command-line-args');
+
+const isBeta = pkg.version.includes('beta');
+let updateCommand = 'npm i -g --unsafe-perm {packageName}';
+if (isBeta) {
+  updateCommand += '@beta';
+}
+
+updateNotifier({
+  pkg,
+  distTag: isBeta ? 'beta' : 'latest'
+}).notify({
+  message: `Update available ${chalk.dim('{currentVersion}')} ${chalk.reset(
+    '→'
+  )} ${chalk.green('{latestVersion}')} \nRun ${chalk.cyan(
+    updateCommand
+  )} to update`
+});
 
 const optionDefinitions = [
   {
@@ -32,7 +52,7 @@ const optionDefinitions = [
 ];
 const usage = commandLineUsage([
   {
-    header: `room-assistant ${version}`,
+    header: `room-assistant ${pkg.version}`,
     content:
       'A companion client for Home Assistant to handle presence detection and sensors in multiple rooms.'
   },
