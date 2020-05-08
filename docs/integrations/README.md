@@ -29,4 +29,5 @@ Looking for a way to integrate OpenHAB? You can use the [Home Assistant Core](ho
 | ------------------- | ------------------ |
 | [GPIO](./gpio.md)   | Binary sensors     |
 | [Shell](./shell.md) | Binary sensors     |
+| [Xiaomi Mi](./xiaomi-mi.md) | Temperature, humidity, etc sensors |
 
