@@ -2,7 +2,7 @@ import {
   Injectable,
   Logger,
   OnApplicationBootstrap,
-  OnApplicationShutdown
+  OnApplicationShutdown,
 } from '@nestjs/common';
 import i2cBus, { PromisifiedBus } from 'i2c-bus';
 import { Entity } from '../../entities/entity';
@@ -152,9 +152,9 @@ export class GridEyeService extends ThermopileOccupancyService
         for: SensorConfig,
         overrides: {
           icon: 'mdi:account',
-          unitOfMeasurement: 'person'
-        }
-      }
+          unitOfMeasurement: 'person',
+        },
+      },
     ];
     return this.entitiesService.add(
       new Sensor('grideye_occupancy_count', 'GridEYE Occupancy Count'),

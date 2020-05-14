@@ -32,7 +32,7 @@ export class ShellService implements OnApplicationBootstrap {
    * Lifecycle hook, called once the application has started.
    */
   onApplicationBootstrap(): void {
-    this.config.sensors.forEach(sensorOptions => {
+    this.config.sensors.forEach((sensorOptions) => {
       const sensor = this.createSensor(
         sensorOptions.name,
         sensorOptions.deviceClass,
@@ -53,7 +53,7 @@ export class ShellService implements OnApplicationBootstrap {
       job.start();
     });
 
-    this.config.switches.forEach(switchOptions => {
+    this.config.switches.forEach((switchOptions) => {
       this.createSwitch(
         switchOptions.name,
         switchOptions.onCommand,
@@ -108,9 +108,9 @@ export class ShellService implements OnApplicationBootstrap {
         overrides: {
           deviceClass,
           unitOfMeasurement,
-          icon
-        }
-      }
+          icon,
+        },
+      },
     ];
     return this.entitiesService.add(
       new Sensor(id, name),
@@ -138,9 +138,9 @@ export class ShellService implements OnApplicationBootstrap {
       {
         for: SwitchConfig,
         overrides: {
-          icon
-        }
-      }
+          icon,
+        },
+      },
     ];
     return this.entitiesService.add(
       new ShellSwitch(id, name, onCommand, offCommand),

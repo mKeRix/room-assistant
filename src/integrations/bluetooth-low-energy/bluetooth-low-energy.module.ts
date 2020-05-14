@@ -15,9 +15,9 @@ export default class BluetoothLowEnergyModule {
         EntitiesModule,
         ConfigModule,
         ClusterModule,
-        ScheduleModule.forRoot()
+        ScheduleModule.forRoot(),
       ],
-      providers: [BluetoothLowEnergyService]
+      providers: [BluetoothLowEnergyService],
     };
   }
 }

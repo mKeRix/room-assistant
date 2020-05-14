@@ -14,16 +14,16 @@ import { ShellSwitch } from './shell.switch';
 jest.mock('cron');
 jest.mock('util', () => ({
   ...jest.requireActual('util'),
-  promisify: jest.fn()
+  promisify: jest.fn(),
 }));
 
 describe('ShellService', () => {
   let service: ShellService;
   const entitiesService = {
-    add: jest.fn()
+    add: jest.fn(),
   };
   const schedulerRegistry = {
-    addCronJob: jest.fn()
+    addCronJob: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -31,7 +31,7 @@ describe('ShellService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule, EntitiesModule, ScheduleModule.forRoot()],
-      providers: [ShellService]
+      providers: [ShellService],
     })
       .overrideProvider(EntitiesService)
       .useValue(entitiesService)
@@ -75,8 +75,8 @@ describe('ShellService', () => {
       overrides: {
         deviceClass: 'timestamp',
         icon: 'mdi:test',
-        unitOfMeasurement: 'tests'
-      }
+        unitOfMeasurement: 'tests',
+      },
     });
   });
 

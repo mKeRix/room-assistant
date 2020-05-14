@@ -19,7 +19,7 @@ export class SwitchConfig extends EntityConfig {
     this.commandTopic = `room-assistant/${this.component}/${id}/command`;
     this.commandStore = {
       on: onCallback,
-      off: offCallback
+      off: offCallback,
     };
   }
 }

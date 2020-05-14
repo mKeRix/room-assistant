@@ -8,12 +8,12 @@ describe('ConfigService', () => {
     log: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    debug: jest.fn()
+    debug: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ConfigService]
+      providers: [ConfigService],
     }).compile();
     module.useLogger(loggerService);
 
@@ -34,8 +34,8 @@ describe('ConfigService', () => {
     jest.spyOn(c.util, 'getConfigSources').mockReturnValue([
       {
         name: 'defaultDir',
-        parsed: undefined
-      }
+        parsed: undefined,
+      },
     ]);
     service.onModuleInit();
 

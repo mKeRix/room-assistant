@@ -19,7 +19,7 @@ describe('Entities Controller', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [NestEmitterModule.forRoot(emitter), ClusterModule],
       controllers: [EntitiesController],
-      providers: [EntitiesService]
+      providers: [EntitiesService],
     })
       .overrideProvider(ClusterService)
       .useValue(clusterService)
@@ -32,7 +32,7 @@ describe('Entities Controller', () => {
   it('should return all registered entities', () => {
     const entities: Entity[] = [
       new Sensor('sensor', 'Test Sensor'),
-      new Switch('switch', 'Test Switch')
+      new Switch('switch', 'Test Switch'),
     ];
     jest.spyOn(service, 'getAll').mockImplementation(() => {
       return entities;

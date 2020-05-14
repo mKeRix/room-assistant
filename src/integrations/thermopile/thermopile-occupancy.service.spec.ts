@@ -11,13 +11,13 @@ const PRESENCE_TEMPERATURES = [
   [23.0, 21.5, 21.0, 20.25],
   [23.5, 21.2, 20.5, 21.0],
   [21.6, 20.1, 20.3, 20.8],
-  [21.0, 20.8, 23.8, 23.5]
+  [21.0, 20.8, 23.8, 23.5],
 ];
 const ABSENCE_TEMPERATURES = [
   [20.0, 21.5, 21.0, 20.25],
   [21.5, 21.2, 20.5, 21.0],
   [21.6, 20.1, 20.3, 20.8],
-  [21.0, 20.8, 20.8, 21.5]
+  [21.0, 20.8, 20.8, 21.5],
 ];
 
 describe('ThermopileOccupancySensor', () => {
@@ -33,7 +33,7 @@ describe('ThermopileOccupancySensor', () => {
       new Pixel(0, 0, 23),
       new Pixel(0, 1, 23.5),
       new Pixel(2, 3, 23.8),
-      new Pixel(3, 3, 23.5)
+      new Pixel(3, 3, 23.5),
     ]);
   });
 
@@ -41,7 +41,7 @@ describe('ThermopileOccupancySensor', () => {
     const pixels = [
       new Pixel(1, 1, 23),
       new Pixel(2, 1, 23),
-      new Pixel(0, 3, 23)
+      new Pixel(0, 3, 23),
     ];
     const clusters = mockSensor.clusterPixels(pixels);
     expect(clusters).toHaveLength(2);
@@ -62,7 +62,7 @@ describe('ThermopileOccupancySensor', () => {
     const coordinates = await mockSensor.getCoordinates(1.5);
     expect(coordinates).toStrictEqual([
       [0, 1],
-      [2, 3]
+      [2, 3],
     ]);
   });
 

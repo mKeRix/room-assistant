@@ -15,12 +15,12 @@ jest.mock('onoff');
 describe('GpioService', () => {
   let service: GpioService;
   const entitiesService = {
-    add: jest.fn()
+    add: jest.fn(),
   };
   const loggerService = {
     log: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
+    warn: jest.fn(),
   };
   const mockGpio = mocked(Gpio);
 
@@ -29,7 +29,7 @@ describe('GpioService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule, EntitiesModule],
-      providers: [GpioService]
+      providers: [GpioService],
     })
       .overrideProvider(EntitiesService)
       .useValue(entitiesService)
@@ -65,8 +65,8 @@ describe('GpioService', () => {
     expect(entitiesService.add.mock.calls[1][1]).toContainEqual({
       for: BinarySensorConfig,
       overrides: {
-        deviceClass: 'motion'
-      }
+        deviceClass: 'motion',
+      },
     });
   });
 

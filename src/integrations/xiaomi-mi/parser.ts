@@ -16,7 +16,7 @@ const FrameControlFlags = {
   hasEvent: 1 << 6,
   hasCustomData: 1 << 7,
   hasSubtitle: 1 << 8,
-  hasBinding: 1 << 9
+  hasBinding: 1 << 9,
 };
 
 class FrameControl {
@@ -36,7 +36,7 @@ const CapabilityFlags = {
   connectable: 1 << 0,
   central: 1 << 1,
   secure: 1 << 2,
-  io: (1 << 3) | (1 << 4)
+  io: (1 << 3) | (1 << 4),
 };
 
 class Capabilities {
@@ -53,7 +53,7 @@ export const EventTypes = {
   moisture: 4104,
   fertility: 4105,
   battery: 4106,
-  temperatureAndHumidity: 4109
+  temperatureAndHumidity: 4109,
 };
 
 export class Event {
@@ -122,7 +122,7 @@ export class Parser {
       capabilities,
       eventType: this.eventType,
       eventLength,
-      event
+      event,
     };
   }
 
@@ -154,9 +154,7 @@ export class Parser {
       this.baseByteLength,
       this.baseByteLength + 6
     );
-    return Buffer.from(macBuffer)
-      .reverse()
-      .toString('hex');
+    return Buffer.from(macBuffer).reverse().toString('hex');
   }
 
   get capabilityOffset(): number {
@@ -220,7 +218,7 @@ export class Parser {
       this.buffer.slice(5, 11), //mac_reversed
       this.buffer.slice(2, 4), //device_type
       this.buffer.slice(4, 5), //frame_cnt
-      encryptedPayload.slice(-7, -4) //ext_cnt
+      encryptedPayload.slice(-7, -4), //ext_cnt
     ]);
 
     const decipher = crypto.createDecipheriv(
@@ -234,7 +232,7 @@ export class Parser {
 
     decipher.setAuthTag(encryptedPayload.slice(-4));
     decipher.setAAD(Buffer.from('11', 'hex'), {
-      plaintextLength: ciphertext.length
+      plaintextLength: ciphertext.length,
     });
 
     const receivedPlaintext = decipher.update(ciphertext);
@@ -243,7 +241,7 @@ export class Parser {
 
     this.buffer = Buffer.concat([
       this.buffer.slice(0, this.eventOffset),
-      receivedPlaintext
+      receivedPlaintext,
     ]);
   }
 
@@ -283,19 +281,19 @@ export class Parser {
 
   parseTemperatureEvent(): Event {
     return {
-      temperature: this.buffer.readInt16LE(this.eventOffset + 3) / 10
+      temperature: this.buffer.readInt16LE(this.eventOffset + 3) / 10,
     };
   }
 
   parseHumidityEvent(): Event {
     return {
-      humidity: this.buffer.readUInt16LE(this.eventOffset + 3) / 10
+      humidity: this.buffer.readUInt16LE(this.eventOffset + 3) / 10,
     };
   }
 
   parseBatteryEvent(): Event {
     return {
-      battery: this.buffer.readUInt8(this.eventOffset + 3)
+      battery: this.buffer.readUInt8(this.eventOffset + 3),
     };
   }
 
@@ -307,19 +305,19 @@ export class Parser {
 
   parseIlluminanceEvent(): Event {
     return {
-      illuminance: this.buffer.readUIntLE(this.eventOffset + 3, 3)
+      illuminance: this.buffer.readUIntLE(this.eventOffset + 3, 3),
     };
   }
 
   parseFertilityEvent(): Event {
     return {
-      fertility: this.buffer.readInt16LE(this.eventOffset + 3)
+      fertility: this.buffer.readInt16LE(this.eventOffset + 3),
     };
   }
 
   parseMoistureEvent(): Event {
     return {
-      moisture: this.buffer.readInt8(this.eventOffset + 3)
+      moisture: this.buffer.readInt8(this.eventOffset + 3),
     };
   }
 

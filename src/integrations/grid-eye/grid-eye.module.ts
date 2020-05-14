@@ -10,7 +10,7 @@ export default class GridEyeModule {
     return {
       module: GridEyeModule,
       imports: [EntitiesModule, ConfigModule, ScheduleModule.forRoot()],
-      providers: [GridEyeService]
+      providers: [GridEyeService],
     };
   }
 }

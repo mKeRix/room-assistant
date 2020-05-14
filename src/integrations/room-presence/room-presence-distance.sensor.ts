@@ -65,7 +65,7 @@ export class RoomPresenceDistanceSensor extends Sensor {
    */
   protected getClosestInRange(): [string, TimedDistance] {
     const distances = Array.from(Object.entries(this.distances))
-      .filter(value => {
+      .filter((value) => {
         return (
           !value[1].outOfRange &&
           (this.timeout <= 0 ||

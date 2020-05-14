@@ -1,5 +1,5 @@
 const mockNoble = {
-  on: jest.fn()
+  on: jest.fn(),
 };
 jest.mock(
   '@abandonware/noble',
@@ -26,29 +26,29 @@ describe('XiaomiMiService', () => {
   let service: XiaomiMiService;
   const entitiesService = {
     get: jest.fn(),
-    add: jest.fn()
+    add: jest.fn(),
   };
   const mockConfig: Partial<XiaomiMiConfig> = {
-    sensors: []
+    sensors: [],
   };
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
       return key === 'xiaomiMi' ? mockConfig : c.get(key);
-    })
+    }),
   };
   const loggerService = {
     log: jest.fn(),
     debug: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
+    warn: jest.fn(),
   };
 
   function advert(address: string, serviceData: string): Peripheral {
     return {
       id: address,
       advertisement: {
-        serviceData: [{ uuid: 'fe95', data: Buffer.from(serviceData, 'hex') }]
-      }
+        serviceData: [{ uuid: 'fe95', data: Buffer.from(serviceData, 'hex') }],
+      },
     } as Peripheral;
   }
 
@@ -65,7 +65,7 @@ describe('XiaomiMiService', () => {
     moistureNoMac: '60209800a80d08100112',
     illuminance: '71209800a764aed0a8654c0d0710030e0000',
     fertility: '71209800a564aed0a8654c0d091002b800',
-    encrypted: '58585b05db184bf838c1a472c3fa42cd050000ce7b8a28'
+    encrypted: '58585b05db184bf838c1a472c3fa42cd050000ce7b8a28',
   };
   const bindKey = 'b2d46f0cd168c18b247c0c79e9ad5b8d';
 
@@ -75,7 +75,7 @@ describe('XiaomiMiService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [EntitiesModule, ConfigModule],
-      providers: [XiaomiMiService]
+      providers: [XiaomiMiService],
     })
       .overrideProvider(EntitiesService)
       .useValue(entitiesService)
@@ -123,10 +123,10 @@ describe('XiaomiMiService', () => {
         serviceData: [
           {
             uuid: 'bad',
-            data: Buffer.from(serviceData.temperature, 'hex')
-          }
-        ]
-      }
+            data: Buffer.from(serviceData.temperature, 'hex'),
+          },
+        ],
+      },
     } as Peripheral);
     expect(loggerService.warn).toHaveBeenCalled();
   });
@@ -142,8 +142,8 @@ describe('XiaomiMiService', () => {
       for: SensorConfig,
       overrides: {
         deviceClass: 'temperature',
-        unitOfMeasurement: '°C'
-      }
+        unitOfMeasurement: '°C',
+      },
     });
   });
 
@@ -158,8 +158,8 @@ describe('XiaomiMiService', () => {
       for: SensorConfig,
       overrides: {
         deviceClass: 'humidity',
-        unitOfMeasurement: '%'
-      }
+        unitOfMeasurement: '%',
+      },
     });
   });
 
@@ -178,16 +178,16 @@ describe('XiaomiMiService', () => {
       for: SensorConfig,
       overrides: {
         deviceClass: 'temperature',
-        unitOfMeasurement: '°C'
-      }
+        unitOfMeasurement: '°C',
+      },
     });
 
     expect(entitiesService.add.mock.calls[1][1]).toContainEqual({
       for: SensorConfig,
       overrides: {
         deviceClass: 'humidity',
-        unitOfMeasurement: '%'
-      }
+        unitOfMeasurement: '%',
+      },
     });
   });
 
@@ -202,8 +202,8 @@ describe('XiaomiMiService', () => {
       for: SensorConfig,
       overrides: {
         deviceClass: 'battery',
-        unitOfMeasurement: '%'
-      }
+        unitOfMeasurement: '%',
+      },
     });
   });
 
@@ -218,8 +218,8 @@ describe('XiaomiMiService', () => {
       for: SensorConfig,
       overrides: {
         deviceClass: 'moisture',
-        unitOfMeasurement: '%'
-      }
+        unitOfMeasurement: '%',
+      },
     });
   });
 
@@ -243,8 +243,8 @@ describe('XiaomiMiService', () => {
       for: SensorConfig,
       overrides: {
         deviceClass: 'illuminance',
-        unitOfMeasurement: 'lx'
-      }
+        unitOfMeasurement: 'lx',
+      },
     });
   });
 
@@ -259,8 +259,8 @@ describe('XiaomiMiService', () => {
       for: SensorConfig,
       overrides: {
         deviceClass: 'fertility',
-        unitOfMeasurement: ''
-      }
+        unitOfMeasurement: '',
+      },
     });
   });
 
@@ -286,8 +286,8 @@ describe('XiaomiMiService', () => {
       {
         name: 'test',
         address: testAddress,
-        bindKey: bindKey
-      }
+        bindKey: bindKey,
+      },
     ];
     service.onModuleInit();
     const sensor = new Sensor('testid', 'Test');
@@ -314,8 +314,8 @@ describe('XiaomiMiService', () => {
     service.handleDiscovery({
       id: testAddress,
       advertisement: {
-        serviceData: [{ uuid: 'fe95', data: null }]
-      }
+        serviceData: [{ uuid: 'fe95', data: null }],
+      },
     } as Peripheral);
     expect(loggerService.warn).toHaveBeenCalled();
   });

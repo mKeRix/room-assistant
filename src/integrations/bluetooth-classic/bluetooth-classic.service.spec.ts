@@ -10,7 +10,7 @@ import { ClusterService } from '../../cluster/cluster.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import {
   NEW_RSSI_CHANNEL,
-  REQUEST_RSSI_CHANNEL
+  REQUEST_RSSI_CHANNEL,
 } from './bluetooth-classic.const';
 import { NewRssiEvent } from './new-rssi.event';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
@@ -27,14 +27,14 @@ jest.mock('../room-presence/room-presence-distance.sensor');
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {
     return {
-      filter: (z: number): number => z
+      filter: (z: number): number => z,
     };
   });
 });
 jest.mock('util', () => ({
   ...jest.requireActual('util'),
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  promisify: () => mockExec
+  promisify: () => mockExec,
 }));
 jest.useFakeTimers();
 
@@ -43,7 +43,7 @@ describe('BluetoothClassicService', () => {
   const entitiesService = {
     add: jest.fn(),
     get: jest.fn(),
-    has: jest.fn()
+    has: jest.fn(),
   };
   const clusterService = {
     on: jest.fn(),
@@ -51,23 +51,23 @@ describe('BluetoothClassicService', () => {
     send: jest.fn(),
     publish: jest.fn(),
     subscribe: jest.fn(),
-    isMajorityLeader: jest.fn()
+    isMajorityLeader: jest.fn(),
   };
   const loggerService = {
     log: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
+    warn: jest.fn(),
   };
   const config: Partial<BluetoothClassicConfig> = {
     addresses: ['8d:ad:e3:e2:7a:01', 'f7:6c:e3:10:55:b5'],
     hciDeviceId: 0,
     interval: 6,
-    timeoutCycles: 2
+    timeoutCycles: 2,
   };
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
       return key === 'bluetoothClassic' ? config : c.get(key);
-    })
+    }),
   };
 
   beforeEach(async () => {
@@ -78,9 +78,9 @@ describe('BluetoothClassicService', () => {
         ConfigModule,
         EntitiesModule,
         ClusterModule,
-        ScheduleModule.forRoot()
+        ScheduleModule.forRoot(),
       ],
-      providers: [BluetoothClassicService]
+      providers: [BluetoothClassicService],
     })
       .overrideProvider(EntitiesService)
       .useValue(entitiesService)
@@ -134,7 +134,7 @@ describe('BluetoothClassicService', () => {
     expect(entitiesService.add).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'bluetooth-classic-inquiries-switch',
-        name: 'test-instance Bluetooth Inquiries'
+        name: 'test-instance Bluetooth Inquiries',
       }),
       expect.any(Array)
     );
@@ -152,7 +152,7 @@ describe('BluetoothClassicService', () => {
   it('should return undefined if no RSSI could be determined', () => {
     mockExec.mockResolvedValue({
       stdout: "Can't create connection: Input/output error",
-      stderr: 'Not connected.'
+      stderr: 'Not connected.',
     });
 
     expect(service.inquireRssi('08:05:90:ed:3b:60')).resolves.toBeUndefined();
@@ -184,25 +184,25 @@ Requesting information ...
 \tFeatures page 0:
 \tFeatures page 1:
 \tFeatures page 2:
-      `
+      `,
     });
 
     expect(await service.inquireDeviceInfo('F0:99:B6:12:34:AB')).toStrictEqual({
       address: 'F0:99:B6:12:34:AB',
       name: 'Test iPhone',
-      manufacturer: 'Apple, Inc.'
+      manufacturer: 'Apple, Inc.',
     });
   });
 
   it('should return the address as device name if none was found', async () => {
     mockExec.mockResolvedValue({
-      stdout: 'IO error'
+      stdout: 'IO error',
     });
 
     expect(await service.inquireDeviceInfo('F0:99:B6:12:34:AB')).toStrictEqual({
       address: 'F0:99:B6:12:34:AB',
       name: 'F0:99:B6:12:34:AB',
-      manufacturer: undefined
+      manufacturer: undefined,
     });
   });
 
@@ -211,7 +211,7 @@ Requesting information ...
 
     expect(await service.inquireDeviceInfo('F0:99:B6:12:34:CD')).toStrictEqual({
       address: 'F0:99:B6:12:34:CD',
-      name: 'F0:99:B6:12:34:CD'
+      name: 'F0:99:B6:12:34:CD',
     });
   });
 
@@ -304,7 +304,7 @@ Requesting information ...
       .mockImplementation(() => undefined);
     config.minRssi = {
       '77:50:fb:4d:ab:70': -10,
-      default: -20
+      default: -20,
     };
 
     const address = '77:50:fb:4d:ab:70';
@@ -329,7 +329,7 @@ Requesting information ...
       .mockImplementation(() => undefined);
     config.minRssi = {
       '77:50:fb:4d:ab:70': -10,
-      default: -20
+      default: -20,
     };
 
     const address = '50:50:50:50:50:50';
@@ -353,7 +353,7 @@ Requesting information ...
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
     config.minRssi = {
-      '77:50:fb:4d:ab:70': -10
+      '77:50:fb:4d:ab:70': -10,
     };
 
     const address = '50:50:50:50:50:50';
@@ -434,13 +434,13 @@ Requesting information ...
 
   it('should register a new sensor for a previously unknown device', async () => {
     entitiesService.has.mockReturnValue(false);
-    entitiesService.add.mockImplementation(entity => entity);
+    entitiesService.add.mockImplementation((entity) => entity);
     clusterService.nodes.mockReturnValue({
-      abcd: { channels: [NEW_RSSI_CHANNEL] }
+      abcd: { channels: [NEW_RSSI_CHANNEL] },
     });
     jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue({
       address: '10:36:cf:ca:9a:18',
-      name: 'Test iPhone'
+      name: 'Test iPhone',
     });
     jest.useFakeTimers();
 
@@ -488,7 +488,7 @@ Requesting information ...
 
   it('should rotate inquiries correctly when there are more addresses than nodes', () => {
     clusterService.nodes.mockReturnValue({
-      abcd: { channels: [NEW_RSSI_CHANNEL] }
+      abcd: { channels: [NEW_RSSI_CHANNEL] },
     });
     clusterService.isMajorityLeader.mockReturnValue(true);
     const rssiRequestSpy = jest
@@ -508,7 +508,7 @@ Requesting information ...
   it('should rotate inquiries correctly when there are exactly as many addresses as nodes', () => {
     clusterService.nodes.mockReturnValue({
       abcd: { id: 'abcd', channels: [NEW_RSSI_CHANNEL] },
-      def: { id: 'def', channels: [NEW_RSSI_CHANNEL], last: new Date() }
+      def: { id: 'def', channels: [NEW_RSSI_CHANNEL], last: new Date() },
     });
     clusterService.isMajorityLeader.mockReturnValue(true);
     const handleRssiRequest = jest
@@ -544,7 +544,7 @@ Requesting information ...
     clusterService.nodes.mockReturnValue({
       abcd: { id: 'abcd', channels: [NEW_RSSI_CHANNEL] },
       def: { id: 'def', channels: [NEW_RSSI_CHANNEL], last: new Date() },
-      xyz: { id: 'xyz', channels: [NEW_RSSI_CHANNEL], last: new Date() }
+      xyz: { id: 'xyz', channels: [NEW_RSSI_CHANNEL], last: new Date() },
     });
     clusterService.isMajorityLeader.mockReturnValue(true);
     const handleRssiRequest = jest
@@ -603,14 +603,14 @@ Requesting information ...
     clusterService.nodes.mockReturnValue({
       abcd: { id: 'abcd', channels: [NEW_RSSI_CHANNEL] },
       def: { id: 'def', channels: [NEW_RSSI_CHANNEL], last: new Date() },
-      xyz: { id: 'xyz', last: new Date() }
+      xyz: { id: 'xyz', last: new Date() },
     });
 
     const nodes = service.getParticipatingNodes();
     expect(nodes).toHaveLength(2);
-    expect(nodes.find(node => node.id === 'abcd')).not.toBeUndefined();
-    expect(nodes.find(node => node.id === 'def')).not.toBeUndefined();
-    expect(nodes.find(node => node.id === 'xyz')).toBeUndefined();
+    expect(nodes.find((node) => node.id === 'abcd')).not.toBeUndefined();
+    expect(nodes.find((node) => node.id === 'def')).not.toBeUndefined();
+    expect(nodes.find((node) => node.id === 'xyz')).toBeUndefined();
   });
 
   it('should filter the RSSI of inquired devices before publishing', async () => {

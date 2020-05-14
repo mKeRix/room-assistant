@@ -2,7 +2,7 @@ import {
   Injectable,
   Logger,
   OnApplicationBootstrap,
-  OnModuleInit
+  OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '../../config/config.service';
 import { EntitiesService } from '../../entities/entities.service';
@@ -18,7 +18,7 @@ import { EntityCustomization } from '../../entities/entity-customization.interfa
 import { SensorConfig } from '../home-assistant/sensor-config';
 import {
   NEW_RSSI_CHANNEL,
-  REQUEST_RSSI_CHANNEL
+  REQUEST_RSSI_CHANNEL,
 } from './bluetooth-classic.const';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import { KalmanFilterable } from '../../util/filters';
@@ -210,7 +210,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
         `hcitool -i hci${this.config.hciDeviceId} cc "${address}" && hcitool -i hci${this.config.hciDeviceId} rssi "${address}"`,
         {
           timeout: (this.config.interval - 0.5) * 1000,
-          killSignal: 'SIGKILL'
+          killSignal: 'SIGKILL',
         }
       );
       const matches = output.stdout.match(regex);
@@ -261,13 +261,13 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
       return {
         address,
         name: nameMatches ? nameMatches[1] : address,
-        manufacturer: manufacturerMatches ? manufacturerMatches[1] : undefined
+        manufacturer: manufacturerMatches ? manufacturerMatches[1] : undefined,
       };
     } catch (e) {
       this.logger.error(e.message, e.stack);
       return {
         address,
-        name: address
+        name: address,
       };
     }
   }
@@ -280,7 +280,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
   getParticipatingNodes(): Node[] {
     const nodes = Object.values(this.clusterService.nodes());
     return nodes.filter(
-      node =>
+      (node) =>
         node.state !== 'removed' && node.channels?.includes(NEW_RSSI_CHANNEL)
     );
   }
@@ -316,9 +316,9 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
       {
         for: SwitchConfig,
         overrides: {
-          icon: 'mdi:bluetooth-audio'
-        }
-      }
+          icon: 'mdi:bluetooth-audio',
+        },
+      },
     ];
     const inquiriesSwitch = this.entitiesService.add(
       new Switch(
@@ -358,10 +358,10 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
             name: device.name,
             manufacturer: device.manufacturer,
             connections: [['mac', device.address]],
-            viaDevice: DISTRIBUTED_DEVICE_ID
-          }
-        }
-      }
+            viaDevice: DISTRIBUTED_DEVICE_ID,
+          },
+        },
+      },
     ];
     const rawSensor = new RoomPresenceDistanceSensor(
       sensorId,

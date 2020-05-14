@@ -10,7 +10,7 @@ export class IntegrationsModule {
 
     return {
       module: IntegrationsModule,
-      imports: modules
+      imports: modules,
     };
   }
 
@@ -24,10 +24,10 @@ export class IntegrationsModule {
       `Loading integrations: ${ids?.length > 0 ? ids.join(', ') : 'none'}`,
       IntegrationsModule.name
     );
-    ids.forEach(id => {
+    ids.forEach((id) => {
       const loadPromise = IntegrationsModule.loadModule(
         `./${id}/${id}.module`
-      ).then(module => module.default.forRoot());
+      ).then((module) => module.default.forRoot());
       loadedModules.push(loadPromise);
     });
 

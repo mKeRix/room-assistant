@@ -2,7 +2,7 @@ import {
   Injectable,
   Logger,
   OnApplicationShutdown,
-  OnModuleInit
+  OnModuleInit,
 } from '@nestjs/common';
 import { Entity } from '../../entities/entity';
 import { Sensor } from '../../entities/sensor';
@@ -80,7 +80,7 @@ export class HomeAssistantService
    * Lifecycle hook, called once the application is shutting down.
    */
   async onApplicationShutdown(): Promise<void> {
-    this.entityConfigs.forEach(config => {
+    this.entityConfigs.forEach((config) => {
       if (
         config.device?.identifiers !== DISTRIBUTED_DEVICE_ID &&
         config.device?.viaDevice !== DISTRIBUTED_DEVICE_ID
@@ -91,7 +91,7 @@ export class HomeAssistantService
           config.payloadNotAvailable,
           {
             qos: 0,
-            retain: true
+            retain: true,
           }
         );
       }
@@ -143,14 +143,14 @@ export class HomeAssistantService
         JSON.stringify(this.formatMessage(config)),
         {
           qos: 0,
-          retain: true
+          retain: true,
         }
       );
     }
 
     this.mqttClient.publish(config.availabilityTopic, config.payloadAvailable, {
       qos: 0,
-      retain: true
+      retain: true,
     });
   }
 
@@ -174,7 +174,7 @@ export class HomeAssistantService
     this.logger.debug(`Sending new state ${state} for ${config.uniqueId}`);
     this.mqttClient.publish(config.stateTopic, String(state), {
       qos: 0,
-      retain: true
+      retain: true,
     });
   }
 
@@ -201,7 +201,7 @@ export class HomeAssistantService
     if (this.debounceFunctions.has(entityId)) {
       this.debounceFunctions.get(entityId)(attributes);
     } else {
-      const debouncedFunc = _.debounce(attributes => {
+      const debouncedFunc = _.debounce((attributes) => {
         this.logger.debug(
           `Sending new attributes ${JSON.stringify(attributes)} for ${
             config.uniqueId
@@ -226,7 +226,7 @@ export class HomeAssistantService
   handleIncomingMessage(topic: string, message: Buffer): void {
     const configs = Array.from(this.entityConfigs.values());
     const config = configs.find(
-      config => config instanceof SwitchConfig && config.commandTopic == topic
+      (config) => config instanceof SwitchConfig && config.commandTopic == topic
     );
     this.logger.debug(
       `Received message ${message.toString()} on ${topic} for ${
@@ -319,7 +319,7 @@ export class HomeAssistantService
     customizations: Array<EntityCustomization<any>>
   ): EntityConfig {
     const customization = customizations.find(
-      value => value.for.prototype instanceof EntityConfig
+      (value) => value.for.prototype instanceof EntityConfig
     );
     if (customization !== undefined) {
       Object.assign(config, customization.overrides);
@@ -336,7 +336,7 @@ export class HomeAssistantService
    */
   protected formatMessage(message: object): object {
     const filteredMessage = _.omit(message, PROPERTY_BLACKLIST);
-    return this.deepMap(filteredMessage, obj => {
+    return this.deepMap(filteredMessage, (obj) => {
       return _.mapKeys(obj, (v, k) => {
         return _.snakeCase(k);
       });
@@ -351,7 +351,7 @@ export class HomeAssistantService
    */
   private deepMap(obj: object, mapper: (v: object) => object): object {
     return mapper(
-      _.mapValues(obj, v => {
+      _.mapValues(obj, (v) => {
         return _.isObject(v) && !_.isArray(v) ? this.deepMap(v, mapper) : v;
       })
     );

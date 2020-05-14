@@ -15,13 +15,13 @@ describe('EntitiesService', () => {
   const emitter: EventEmitter = new EventEmitter();
   const clusterService = {
     isMajorityLeader: jest.fn(),
-    on: jest.fn()
+    on: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [NestEmitterModule.forRoot(emitter), ClusterModule],
-      providers: [EntitiesService]
+      providers: [EntitiesService],
     })
       .overrideProvider(ClusterService)
       .useValue(clusterService)
@@ -92,9 +92,9 @@ describe('EntitiesService', () => {
       {
         for: SensorConfig,
         overrides: {
-          icon: 'mdi:test'
-        }
-      }
+          icon: 'mdi:test',
+        },
+      },
     ];
     const spy = jest.spyOn(emitter, 'emit');
 
@@ -191,7 +191,7 @@ describe('EntitiesService', () => {
     const sensor1 = new Sensor('sensor1', 'Sensor 1');
     sensor1.state = 1;
     sensor1.attributes = {
-      test: 'abc'
+      test: 'abc',
     };
     service.add(sensor1);
     const sensor2 = new Sensor('sensor2', 'Sensor 2', true);
@@ -211,7 +211,7 @@ describe('EntitiesService', () => {
     const sensor1 = new Sensor('sensor1', 'Sensor 1');
     sensor1.state = 1;
     sensor1.attributes = {
-      test: 'abc'
+      test: 'abc',
     };
     service.add(sensor1);
     const sensor2 = new Sensor('sensor2', 'Sensor 2', true);

@@ -10,7 +10,7 @@ export default class OmronD6tModule {
     return {
       module: OmronD6tModule,
       imports: [EntitiesModule, ConfigModule, ScheduleModule.forRoot()],
-      providers: [OmronD6tService]
+      providers: [OmronD6tService],
     };
   }
 }

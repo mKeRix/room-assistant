@@ -2,7 +2,7 @@ import {
   Injectable,
   Logger,
   OnApplicationBootstrap,
-  OnModuleInit
+  OnModuleInit,
 } from '@nestjs/common';
 import noble, { Peripheral } from '@abandonware/noble';
 import { EntitiesService } from '../../entities/entities.service';
@@ -63,7 +63,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   onApplicationBootstrap(): void {
     noble.on('stateChange', BluetoothLowEnergyService.handleStateChange);
     noble.on('discover', this.handleDiscovery.bind(this));
-    noble.on('warning', message => {
+    noble.on('warning', (message) => {
       this.logger.warn(message);
     });
 
@@ -192,7 +192,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
     }
 
     return this.config.whitelistRegex
-      ? whitelist.some(regex => id.match(regex))
+      ? whitelist.some((regex) => id.match(regex))
       : whitelist.includes(id);
   }
 
@@ -209,7 +209,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
     }
 
     return this.config.blacklistRegex
-      ? blacklist.some(regex => id.match(regex))
+      ? blacklist.some((regex) => id.match(regex))
       : blacklist.includes(id);
   }
 
@@ -251,10 +251,10 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
           device: {
             identifiers: deviceId,
             name: deviceName,
-            viaDevice: DISTRIBUTED_DEVICE_ID
-          }
-        }
-      }
+            viaDevice: DISTRIBUTED_DEVICE_ID,
+          },
+        },
+      },
     ];
     const rawSensor = new RoomPresenceDistanceSensor(
       sensorId,

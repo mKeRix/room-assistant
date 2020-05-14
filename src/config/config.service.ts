@@ -15,11 +15,13 @@ export class ConfigService implements OnModuleInit {
    * Lifecycle hook, called once the host module has been initialized.
    */
   onModuleInit(): void {
-    const sources = c.util.getConfigSources().map(source => source.name);
+    const sources = c.util.getConfigSources().map((source) => source.name);
     this.logger.log(`Loading configuration from ${sources.join(', ')}`);
 
     if (sources.length == 1) {
-      const folders = process.env.NODE_CONFIG_DIR.split(delimiter).map(folder =>
+      const folders = process.env.NODE_CONFIG_DIR.split(
+        delimiter
+      ).map((folder) =>
         folder.startsWith('.') ? folder.replace('.', process.cwd()) : folder
       );
       folders.shift();

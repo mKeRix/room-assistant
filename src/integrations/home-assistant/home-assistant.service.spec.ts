@@ -3,7 +3,7 @@ const mockMqttClient = {
   on: jest.fn(),
   publish: jest.fn(),
   subscribe: jest.fn(),
-  end: jest.fn()
+  end: jest.fn(),
 };
 
 import { mocked } from 'ts-jest/utils';
@@ -25,12 +25,12 @@ import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
 
 jest.mock('async-mqtt', () => {
   return {
-    connectAsync: jest.fn().mockReturnValue(mockMqttClient)
+    connectAsync: jest.fn().mockReturnValue(mockMqttClient),
   };
 });
 jest.mock('systeminformation', () => {
   return {
-    system: jest.fn().mockReturnValue({})
+    system: jest.fn().mockReturnValue({}),
   };
 });
 
@@ -42,14 +42,14 @@ describe('HomeAssistantService', () => {
   const loggerService = {
     log: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
+    warn: jest.fn(),
   };
 
   beforeEach(async () => {
     emitter = new EventEmitter();
     const module: TestingModule = await Test.createTestingModule({
       imports: [NestEmitterModule.forRoot(emitter), ConfigModule],
-      providers: [HomeAssistantService]
+      providers: [HomeAssistantService],
     }).compile();
     module.useLogger(loggerService);
 
@@ -107,7 +107,7 @@ describe('HomeAssistantService', () => {
       'offline',
       {
         qos: 0,
-        retain: true
+        retain: true,
       }
     );
     expect(mockMqttClient.publish).toHaveBeenCalledTimes(2);
@@ -131,10 +131,10 @@ describe('HomeAssistantService', () => {
         overrides: {
           device: {
             identifiers: 'test-device-id',
-            viaDevice: DISTRIBUTED_DEVICE_ID
-          }
-        }
-      }
+            viaDevice: DISTRIBUTED_DEVICE_ID,
+          },
+        },
+      },
     ]);
     mockMqttClient.publish.mockClear();
 
@@ -159,7 +159,7 @@ describe('HomeAssistantService', () => {
       expect.any(String),
       {
         qos: 0,
-        retain: true
+        retain: true,
       }
     );
     expect(mockMqttClient.publish).toHaveBeenCalledWith(
@@ -167,7 +167,7 @@ describe('HomeAssistantService', () => {
       'online',
       {
         qos: 0,
-        retain: true
+        retain: true,
       }
     );
     expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject({
@@ -177,7 +177,7 @@ describe('HomeAssistantService', () => {
       json_attributes_topic:
         'room-assistant/sensor/test-instance-test-sensor/attributes',
       availability_topic:
-        'room-assistant/sensor/test-instance-test-sensor/status'
+        'room-assistant/sensor/test-instance-test-sensor/status',
     });
   });
 
@@ -193,8 +193,8 @@ describe('HomeAssistantService', () => {
       availability_topic: 'room-assistant/sensor/dist-sensor/status',
       device: {
         identifiers: 'room-assistant-distributed',
-        name: 'room-assistant hub'
-      }
+        name: 'room-assistant hub',
+      },
     });
   });
 
@@ -207,7 +207,7 @@ describe('HomeAssistantService', () => {
       expect.any(String),
       {
         qos: 0,
-        retain: true
+        retain: true,
       }
     );
     expect(mockMqttClient.publish).toHaveBeenCalledWith(
@@ -215,7 +215,7 @@ describe('HomeAssistantService', () => {
       'online',
       {
         qos: 0,
-        retain: true
+        retain: true,
       }
     );
     expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject({
@@ -228,7 +228,7 @@ describe('HomeAssistantService', () => {
       availability_topic:
         'room-assistant/binary_sensor/test-instance-bin-sensor/status',
       payload_on: 'true',
-      payload_off: 'false'
+      payload_off: 'false',
     });
   });
 
@@ -241,7 +241,7 @@ describe('HomeAssistantService', () => {
       expect.any(String),
       {
         qos: 0,
-        retain: true
+        retain: true,
       }
     );
     expect(mockMqttClient.publish).toHaveBeenCalledWith(
@@ -249,7 +249,7 @@ describe('HomeAssistantService', () => {
       'online',
       {
         qos: 0,
-        retain: true
+        retain: true,
       }
     );
     expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject({
@@ -264,7 +264,7 @@ describe('HomeAssistantService', () => {
       payload_on: 'on',
       payload_off: 'off',
       state_on: 'true',
-      state_off: 'false'
+      state_off: 'false',
     });
   });
 
@@ -293,7 +293,7 @@ describe('HomeAssistantService', () => {
     mockSystem.mockResolvedValue({
       serial: 'abcd',
       model: 'Raspberry Pi',
-      manufacturer: 'Foundation'
+      manufacturer: 'Foundation',
     } as SystemData);
 
     await service.onModuleInit();
@@ -304,8 +304,8 @@ describe('HomeAssistantService', () => {
         identifiers: 'abcd',
         name: 'test-instance',
         model: 'Raspberry Pi',
-        manufacturer: 'Foundation'
-      }
+        manufacturer: 'Foundation',
+      },
     });
   });
 
@@ -313,7 +313,7 @@ describe('HomeAssistantService', () => {
     mockSystem.mockResolvedValue({
       serial: '-',
       model: 'Docker Container',
-      manufacturer: ''
+      manufacturer: '',
     } as SystemData);
 
     await service.onModuleInit();
@@ -324,8 +324,8 @@ describe('HomeAssistantService', () => {
         identifiers: 'test-instance',
         name: 'test-instance',
         model: 'Docker Container',
-        manufacturer: ''
-      }
+        manufacturer: '',
+      },
     });
   });
 
@@ -336,14 +336,14 @@ describe('HomeAssistantService', () => {
         for: SensorConfig,
         overrides: {
           unitOfMeasurement: 'm',
-          icon: 'mdi:distance'
-        }
-      }
+          icon: 'mdi:distance',
+        },
+      },
     ]);
 
     expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject({
       unit_of_measurement: 'm',
-      icon: 'mdi:distance'
+      icon: 'mdi:distance',
     });
   });
 
@@ -353,11 +353,11 @@ describe('HomeAssistantService', () => {
 
     const configMsg = JSON.parse(mockMqttClient.publish.mock.calls[0][1]);
     expect(configMsg).not.toMatchObject({
-      component: 'sensor'
+      component: 'sensor',
     });
     expect(configMsg).not.toMatchObject({
       config_topic:
-        'homeassistant/sensor/room-assistant/test-instance-test-sensor/config'
+        'homeassistant/sensor/room-assistant/test-instance-test-sensor/config',
     });
   });
 
@@ -385,7 +385,7 @@ describe('HomeAssistantService', () => {
       '2',
       {
         qos: 0,
-        retain: true
+        retain: true,
       }
     );
   });

@@ -1,9 +1,9 @@
 const mockBrowser = {
   on: jest.fn(),
-  start: jest.fn()
+  start: jest.fn(),
 };
 const mockAdvertisement = {
-  start: jest.fn()
+  start: jest.fn(),
 };
 const mockMdns = {
   udp: jest.fn().mockImplementation((name: string) => {
@@ -15,10 +15,10 @@ const mockMdns = {
     DNSServiceResolve: jest.fn(),
     DNSServiceGetAddrInfo: jest.fn(),
     getaddrinfo: jest.fn(),
-    makeAddressesUnique: jest.fn()
+    makeAddressesUnique: jest.fn(),
   },
   // eslint-disable-next-line @typescript-eslint/camelcase
-  dns_sd: []
+  dns_sd: [],
 };
 
 import { networkInterfaces } from 'os';
@@ -40,7 +40,7 @@ describe('ClusterService', () => {
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
       return key === 'cluster' ? mockConfig : c.get(key);
-    })
+    }),
   };
 
   beforeAll(async () => {
@@ -49,21 +49,21 @@ describe('ClusterService', () => {
         {
           address: '127.0.0.1',
           family: 'IPv4',
-          internal: true
-        }
+          internal: true,
+        },
       ],
       eth0: [
         {
           address: '192.168.1.108',
           family: 'IPv4',
-          internal: false
+          internal: false,
         },
         {
           address: 'fe80::a00:27ff:fe4e:66a1',
           family: 'IPv6',
-          internal: false
-        }
-      ]
+          internal: false,
+        },
+      ],
     });
   });
 
@@ -72,7 +72,7 @@ describe('ClusterService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule],
-      providers: [ClusterService]
+      providers: [ClusterService],
     })
       .overrideProvider(ConfigService)
       .useValue(configService)
@@ -87,7 +87,7 @@ describe('ClusterService', () => {
       source: '192.168.1.108:6425',
       peers: [],
       timeout: 60000,
-      weight: undefined
+      weight: undefined,
     });
   });
 
@@ -97,7 +97,7 @@ describe('ClusterService', () => {
       { name: 'room-assistant' },
       6425,
       {
-        networkInterface: undefined
+        networkInterface: undefined,
       }
     );
     expect(mockMdns.createBrowser).toHaveBeenCalledWith(
@@ -119,8 +119,8 @@ describe('ClusterService', () => {
   it('should ignore the quorum if it is not configured', () => {
     jest.spyOn(service, 'nodes').mockReturnValue({
       abc: {
-        state: 'leader'
-      } as Node
+        state: 'leader',
+      } as Node,
     });
 
     expect(service.quorumReached()).toBeTruthy();
@@ -129,11 +129,11 @@ describe('ClusterService', () => {
   it('should consider the quorum reached if as many nodes are connected', () => {
     jest.spyOn(service, 'nodes').mockReturnValue({
       abc: {
-        state: 'leader'
+        state: 'leader',
       } as Node,
       def: {
-        state: 'citizen'
-      } as Node
+        state: 'citizen',
+      } as Node,
     });
     mockConfig.quorum = 2;
 
@@ -143,8 +143,8 @@ describe('ClusterService', () => {
   it('should not consider the quorum reached if less nodes are connected', () => {
     jest.spyOn(service, 'nodes').mockReturnValue({
       abc: {
-        state: 'leader'
-      } as Node
+        state: 'leader',
+      } as Node,
     });
     mockConfig.quorum = 2;
 
@@ -154,11 +154,11 @@ describe('ClusterService', () => {
   it('should not consider removed nodes for the quorum', () => {
     jest.spyOn(service, 'nodes').mockReturnValue({
       abc: {
-        state: 'removed'
+        state: 'removed',
       } as Node,
       def: {
-        state: 'leader'
-      } as Node
+        state: 'leader',
+      } as Node,
     });
     mockConfig.quorum = 2;
 

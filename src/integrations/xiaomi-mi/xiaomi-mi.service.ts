@@ -2,7 +2,7 @@ import {
   Injectable,
   Logger,
   OnApplicationBootstrap,
-  OnModuleInit
+  OnModuleInit,
 } from '@nestjs/common';
 import noble, { Peripheral, Advertisement } from '@abandonware/noble';
 import { EntitiesService } from '../../entities/entities.service';
@@ -31,7 +31,7 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
    */
   onModuleInit(): void {
     this.config = {};
-    this.configService.get('xiaomiMi').sensors.forEach(options => {
+    this.configService.get('xiaomiMi').sensors.forEach((options) => {
       this.config[options.address] = options;
     });
     if (!this.hasSensors()) {
@@ -91,9 +91,9 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
           for: SensorConfig,
           overrides: {
             deviceClass: kind,
-            unitOfMeasurement: units
-          }
-        }
+            unitOfMeasurement: units,
+          },
+        },
       ];
       entity = this.entitiesService.add(
         new Sensor(id, sensorName),
@@ -211,7 +211,7 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
       return null;
     }
     const uuidPair = advertisement.serviceData.find(
-      data => data.uuid.toLowerCase() === SERVICE_DATA_UUID
+      (data) => data.uuid.toLowerCase() === SERVICE_DATA_UUID
     );
     if (!uuidPair) {
       return null;

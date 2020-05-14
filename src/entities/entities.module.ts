@@ -7,6 +7,6 @@ import { EntitiesController } from './entities.controller';
   imports: [ClusterModule],
   providers: [EntitiesService],
   controllers: [EntitiesController],
-  exports: [EntitiesService]
+  exports: [EntitiesService],
 })
 export class EntitiesModule {}

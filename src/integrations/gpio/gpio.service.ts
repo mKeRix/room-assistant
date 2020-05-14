@@ -2,7 +2,7 @@ import {
   Injectable,
   Logger,
   OnApplicationBootstrap,
-  OnApplicationShutdown
+  OnApplicationShutdown,
 } from '@nestjs/common';
 import { EntitiesService } from '../../entities/entities.service';
 import { ConfigService } from '../../config/config.service';
@@ -13,7 +13,7 @@ import { makeId } from '../../util/id';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import {
   BinarySensorConfig,
-  BinarySensorDeviceClass
+  BinarySensorDeviceClass,
 } from '../home-assistant/binary-sensor-config';
 import { SwitchConfig } from '../home-assistant/switch-config';
 import { GpioSwitch } from './gpio.switch';
@@ -38,7 +38,7 @@ export class GpioService
    * Lifecycle hook, called once the application has started.
    */
   onApplicationBootstrap(): void {
-    this.config.binarySensors.forEach(binarySensor => {
+    this.config.binarySensors.forEach((binarySensor) => {
       this.createBinarySensor(
         binarySensor.name,
         binarySensor.pin,
@@ -46,7 +46,7 @@ export class GpioService
       );
     });
 
-    this.config.switches.forEach(switchOptions => {
+    this.config.switches.forEach((switchOptions) => {
       this.createSwitch(
         switchOptions.name,
         switchOptions.pin,
@@ -60,7 +60,7 @@ export class GpioService
    */
   onApplicationShutdown(): void {
     this.logger.log('Closing opened GPIO pins');
-    this.gpios.forEach(gpio => {
+    this.gpios.forEach((gpio) => {
       gpio.unexport();
     });
   }
@@ -83,9 +83,9 @@ export class GpioService
       {
         for: BinarySensorConfig,
         overrides: {
-          deviceClass: deviceClass
-        }
-      }
+          deviceClass: deviceClass,
+        },
+      },
     ];
     const binarySensor = this.entitiesService.add(
       new BinarySensor(id, name),
@@ -121,9 +121,9 @@ export class GpioService
       {
         for: SwitchConfig,
         overrides: {
-          icon
-        }
-      }
+          icon,
+        },
+      },
     ];
 
     const gpio = new Gpio(pin, 'out');

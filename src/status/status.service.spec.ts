@@ -10,13 +10,13 @@ import { Sensor } from '../entities/sensor';
 describe('StatusService', () => {
   let service: StatusService;
   const entitiesService = {
-    add: jest.fn()
+    add: jest.fn(),
   };
   const clusterService = {
     on: jest.fn(),
     nodes: jest.fn(),
     leader: jest.fn(),
-    quorumReached: jest.fn()
+    quorumReached: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -24,7 +24,7 @@ describe('StatusService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule, EntitiesModule, ClusterModule],
-      providers: [StatusService]
+      providers: [StatusService],
     })
       .overrideProvider(EntitiesService)
       .useValue(entitiesService)
@@ -95,7 +95,7 @@ describe('StatusService', () => {
 
     clusterService.nodes.mockReturnValue({
       node1: {},
-      node2: {}
+      node2: {},
     });
 
     service.updateClusterSizeSensor();
@@ -112,12 +112,12 @@ describe('StatusService', () => {
       .mockImplementation(() => undefined);
     entitiesService.add.mockReturnValue(sensor);
     clusterService.leader.mockReturnValue({
-      id: 'node1'
+      id: 'node1',
     });
     service.onApplicationBootstrap();
 
     clusterService.leader.mockReturnValue({
-      id: 'node2'
+      id: 'node2',
     });
     clusterService.quorumReached.mockReturnValue(true);
 

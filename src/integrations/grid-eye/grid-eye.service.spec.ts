@@ -1,7 +1,7 @@
 const mockI2cBus = {
   i2cWrite: jest.fn(),
   i2cRead: jest.fn(),
-  close: jest.fn()
+  close: jest.fn(),
 };
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -19,7 +19,7 @@ jest.mock(
   'i2c-bus',
   () => {
     return {
-      openPromisified: jest.fn().mockReturnValue(mockI2cBus)
+      openPromisified: jest.fn().mockReturnValue(mockI2cBus),
     };
   },
   { virtual: true }
@@ -28,7 +28,7 @@ jest.mock(
 describe('GridEyeService', () => {
   let service: GridEyeService;
   const entitiesService = {
-    add: jest.fn()
+    add: jest.fn(),
   };
   const clusterService = jest.fn();
 
@@ -37,7 +37,7 @@ describe('GridEyeService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [EntitiesModule, ConfigModule, ScheduleModule.forRoot()],
-      providers: [GridEyeService]
+      providers: [GridEyeService],
     })
       .overrideProvider(EntitiesService)
       .useValue(entitiesService)
@@ -67,7 +67,7 @@ describe('GridEyeService', () => {
     expect(entitiesService.add).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'grideye_occupancy_count',
-        name: 'GridEYE Occupancy Count'
+        name: 'GridEYE Occupancy Count',
       }),
       expect.any(Array)
     );
@@ -85,7 +85,7 @@ describe('GridEyeService', () => {
     entitiesService.add.mockReturnValue(mockSensor);
     jest.spyOn(service, 'getCoordinates').mockResolvedValue([
       [1, 2],
-      [8, 6]
+      [8, 6],
     ]);
 
     await service.onApplicationBootstrap();
@@ -94,8 +94,8 @@ describe('GridEyeService', () => {
     expect(mockSensor.attributes).toStrictEqual({
       coordinates: [
         [1, 2],
-        [8, 6]
-      ]
+        [8, 6],
+      ],
     });
   });
 

@@ -10,7 +10,7 @@ export default class BluetoothClassicModule {
     return {
       module: BluetoothClassicModule,
       imports: [ConfigModule, EntitiesModule, ClusterModule],
-      providers: [BluetoothClassicService]
+      providers: [BluetoothClassicService],
     };
   }
 }

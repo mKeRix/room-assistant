@@ -6,7 +6,7 @@ import { Service } from 'mdns';
 jest.mock('util', () => ({
   ...jest.requireActual('util'),
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  promisify: () => mockExec
+  promisify: () => mockExec,
 }));
 
 describe('resolvers', () => {
@@ -14,7 +14,7 @@ describe('resolvers', () => {
     jest.clearAllMocks();
   });
 
-  it('should return a single address correctly', done => {
+  it('should return a single address correctly', (done) => {
     const service: Service = {
       addresses: undefined,
       flags: undefined,
@@ -24,7 +24,7 @@ describe('resolvers', () => {
       networkInterface: undefined,
       port: undefined,
       replyDomain: undefined,
-      type: undefined
+      type: undefined,
     };
     mockExec.mockResolvedValue({ stdout: '192.168.1.20\n' });
 
@@ -38,7 +38,7 @@ describe('resolvers', () => {
     });
   });
 
-  it('should resolve multiple addresses correctly', done => {
+  it('should resolve multiple addresses correctly', (done) => {
     const service: Service = {
       addresses: undefined,
       flags: undefined,
@@ -48,7 +48,7 @@ describe('resolvers', () => {
       networkInterface: undefined,
       port: undefined,
       replyDomain: undefined,
-      type: undefined
+      type: undefined,
     };
     mockExec.mockResolvedValue({ stdout: '192.168.1.20\n192.168.1.21\n' });
 
@@ -56,7 +56,7 @@ describe('resolvers', () => {
       try {
         expect(service.addresses).toStrictEqual([
           '192.168.1.20',
-          '192.168.1.21'
+          '192.168.1.21',
         ]);
         done();
       } catch (e) {
@@ -65,7 +65,7 @@ describe('resolvers', () => {
     });
   });
 
-  it('should pass errors to the callback', done => {
+  it('should pass errors to the callback', (done) => {
     const service: Service = {
       addresses: undefined,
       flags: undefined,
@@ -75,11 +75,11 @@ describe('resolvers', () => {
       networkInterface: undefined,
       port: undefined,
       replyDomain: undefined,
-      type: undefined
+      type: undefined,
     };
     mockExec.mockRejectedValue({ stdout: 'dig not found' });
 
-    getAddrInfoDig(service, e => {
+    getAddrInfoDig(service, (e) => {
       try {
         expect(e).not.toBeUndefined();
         done();

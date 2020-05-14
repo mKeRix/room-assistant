@@ -8,6 +8,6 @@ import { StatusController } from './status.controller';
 @Module({
   imports: [ClusterModule, EntitiesModule, ConfigModule],
   providers: [StatusService],
-  controllers: [StatusController]
+  controllers: [StatusController],
 })
 export class StatusModule {}

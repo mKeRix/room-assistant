@@ -14,13 +14,13 @@ if (isBeta) {
 
 updateNotifier({
   pkg,
-  distTag: isBeta ? 'beta' : 'latest'
+  distTag: isBeta ? 'beta' : 'latest',
 }).notify({
   message: `Update available ${chalk.dim('{currentVersion}')} ${chalk.reset(
     '→'
   )} ${chalk.green('{latestVersion}')} \nRun ${chalk.cyan(
     updateCommand
-  )} to update`
+  )} to update`,
 });
 
 const optionDefinitions = [
@@ -28,38 +28,38 @@ const optionDefinitions = [
     name: 'help',
     description: 'Display this usage guide.',
     alias: 'h',
-    type: Boolean
+    type: Boolean,
   },
   {
     name: 'config',
     description: 'Path to the config folder the software should load.',
     alias: 'c',
     type: String,
-    defaultValue: './config'
+    defaultValue: './config',
   },
   {
     name: 'digResolver',
     description:
       'Use dig to resolve mdns hostnames instead of the native getaddrinfo.',
-    type: Boolean
+    type: Boolean,
   },
   {
     name: 'verbose',
     description: 'Turn on debugging output.',
     alias: 'v',
-    type: Boolean
-  }
+    type: Boolean,
+  },
 ];
 const usage = commandLineUsage([
   {
     header: `room-assistant ${pkg.version}`,
     content:
-      'A companion client for Home Assistant to handle presence detection and sensors in multiple rooms.'
+      'A companion client for Home Assistant to handle presence detection and sensors in multiple rooms.',
   },
   {
     header: 'Options',
-    optionList: optionDefinitions
-  }
+    optionList: optionDefinitions,
+  },
 ]);
 const options = commandLineArgs(optionDefinitions);
 

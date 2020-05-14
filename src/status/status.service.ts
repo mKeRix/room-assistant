@@ -62,9 +62,9 @@ export class StatusService implements OnApplicationBootstrap {
         for: SensorConfig,
         overrides: {
           icon: 'mdi:server',
-          unitOfMeasurement: 'instances'
-        }
-      }
+          unitOfMeasurement: 'instances',
+        },
+      },
     ];
     const clusterSizeSensor = this.entitiesService.add(
       new Sensor('status-cluster-size', `${instanceName} Cluster Size`),
@@ -85,9 +85,9 @@ export class StatusService implements OnApplicationBootstrap {
       {
         for: SensorConfig,
         overrides: {
-          icon: 'mdi:account-group'
-        }
-      }
+          icon: 'mdi:account-group',
+        },
+      },
     ];
     const clusterLeaderSensor = this.entitiesService.add(
       new Sensor('status-cluster-leader', `${instanceName} Cluster Leader`),

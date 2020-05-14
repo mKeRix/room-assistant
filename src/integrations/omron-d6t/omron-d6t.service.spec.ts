@@ -1,7 +1,7 @@
 const mockI2cBus = {
   i2cWrite: jest.fn(),
   i2cRead: jest.fn(),
-  close: jest.fn()
+  close: jest.fn(),
 };
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -18,7 +18,7 @@ jest.mock(
   'i2c-bus',
   () => {
     return {
-      openPromisified: jest.fn().mockReturnValue(mockI2cBus)
+      openPromisified: jest.fn().mockReturnValue(mockI2cBus),
     };
   },
   { virtual: true }
@@ -59,20 +59,20 @@ const VALID_RESPONSE = Buffer.from([
   0x00,
   0xc5,
   0x00,
-  0x24
+  0x24,
 ]);
 
 describe('OmronD6tService', () => {
   let service: OmronD6tService;
   const entitiesService = {
-    add: jest.fn()
+    add: jest.fn(),
   };
   const clusterService = jest.fn();
   const loggerService = {
     log: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    debug: jest.fn()
+    debug: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -80,7 +80,7 @@ describe('OmronD6tService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [EntitiesModule, ConfigModule],
-      providers: [OmronD6tService]
+      providers: [OmronD6tService],
     })
       .overrideProvider(EntitiesService)
       .useValue(entitiesService)
@@ -104,7 +104,7 @@ describe('OmronD6tService', () => {
     expect(entitiesService.add).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'd6t_occupancy_count',
-        name: 'D6T Occupancy Count'
+        name: 'D6T Occupancy Count',
       }),
       expect.any(Array)
     );
@@ -122,7 +122,7 @@ describe('OmronD6tService', () => {
     entitiesService.add.mockReturnValue(mockSensor);
     jest.spyOn(service, 'getCoordinates').mockResolvedValue([
       [1, 0],
-      [2, 3]
+      [2, 3],
     ]);
 
     await service.onApplicationBootstrap();
@@ -131,8 +131,8 @@ describe('OmronD6tService', () => {
     expect(mockSensor.attributes).toStrictEqual({
       coordinates: [
         [1, 0],
-        [2, 3]
-      ]
+        [2, 3],
+      ],
     });
   });
 
@@ -185,7 +185,7 @@ describe('OmronD6tService', () => {
       [20.1, 20.6, 20.3, 19.9],
       [20.2, 20.0, 19.9, 19.8],
       [20.3, 20.0, 19.9, 19.7],
-      [20.1, 20.0, 20.0, 19.7]
+      [20.1, 20.0, 20.0, 19.7],
     ]);
   });
 

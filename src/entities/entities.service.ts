@@ -89,7 +89,7 @@ export class EntitiesService implements OnApplicationBootstrap {
    */
   refreshStates(): void {
     this.logger.log('Refreshing entity states');
-    this.entities.forEach(entity => {
+    this.entities.forEach((entity) => {
       if (!entity.distributed || this.clusterService.isMajorityLeader()) {
         this.emitter.emit(
           'stateUpdate',

@@ -10,7 +10,7 @@ export default class XiaomiMiModule {
     return {
       module: XiaomiMiModule,
       imports: [EntitiesModule, ConfigModule],
-      providers: [XiaomiMiService]
+      providers: [XiaomiMiService],
     };
   }
 }

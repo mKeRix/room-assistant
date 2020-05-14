@@ -2,7 +2,7 @@ import {
   Injectable,
   Logger,
   OnApplicationBootstrap,
-  OnApplicationShutdown
+  OnApplicationShutdown,
 } from '@nestjs/common';
 import { EntitiesService } from '../../entities/entities.service';
 import { ConfigService } from '../../config/config.service';
@@ -155,9 +155,9 @@ export class OmronD6tService extends ThermopileOccupancyService
         for: SensorConfig,
         overrides: {
           icon: 'mdi:account',
-          unitOfMeasurement: 'person'
-        }
-      }
+          unitOfMeasurement: 'person',
+        },
+      },
     ];
     return this.entitiesService.add(
       new Sensor('d6t_occupancy_count', 'D6T Occupancy Count'),

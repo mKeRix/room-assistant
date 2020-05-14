@@ -16,7 +16,7 @@ export const WINSTON_LOGGER = WinstonModule.createLogger({
             info.level
           } - ${info.context}: ${info.message}`;
         })
-      )
-    })
-  ]
+      ),
+    }),
+  ],
 });

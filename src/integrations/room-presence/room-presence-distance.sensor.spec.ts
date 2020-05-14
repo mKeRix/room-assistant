@@ -1,6 +1,6 @@
 import {
   RoomPresenceDistanceSensor,
-  STATE_NOT_HOME
+  STATE_NOT_HOME,
 } from './room-presence-distance.sensor';
 
 describe('RoomPresenceDistanceSensor', () => {

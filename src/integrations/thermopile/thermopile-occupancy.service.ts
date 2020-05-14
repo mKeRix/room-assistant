@@ -24,7 +24,7 @@ export abstract class ThermopileOccupancyService {
     );
     const clusters = this.clusterPixels(relevantPixels);
 
-    return clusters.map(cluster => [cluster.center.x, cluster.center.y]);
+    return clusters.map((cluster) => [cluster.center.x, cluster.center.y]);
   }
 
   /**
@@ -58,8 +58,10 @@ export abstract class ThermopileOccupancyService {
    */
   clusterPixels(pixels: Pixel[]): Cluster[] {
     const clusters: Cluster[] = [];
-    pixels.forEach(pixel => {
-      const neighbor = clusters.find(cluster => cluster.isNeighboredTo(pixel));
+    pixels.forEach((pixel) => {
+      const neighbor = clusters.find((cluster) =>
+        cluster.isNeighboredTo(pixel)
+      );
       if (neighbor === undefined) {
         clusters.push(new Cluster([pixel]));
       } else {

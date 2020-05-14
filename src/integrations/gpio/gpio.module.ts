@@ -9,7 +9,7 @@ export default class GpioModule {
     return {
       module: GpioModule,
       imports: [ConfigModule, EntitiesModule],
-      providers: [GpioService]
+      providers: [GpioService],
     };
   }
 }

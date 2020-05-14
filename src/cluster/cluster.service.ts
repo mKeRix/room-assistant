@@ -3,7 +3,7 @@ import {
   Logger,
   OnApplicationBootstrap,
   OnApplicationShutdown,
-  OnModuleInit
+  OnModuleInit,
 } from '@nestjs/common';
 import Democracy, { Node } from 'democracy';
 import { Advertisement, Browser, Service } from 'mdns';
@@ -44,14 +44,14 @@ export class ClusterService extends Democracy
         : os.networkInterfaces()
     );
     const ip = networkInterfaces.find(
-      address => address.internal === false && address.family === 'IPv4'
+      (address) => address.internal === false && address.family === 'IPv4'
     ).address;
     super({
       id: makeId(globalConfig.instanceName),
       source: `${ip}:${config.port}`,
       peers: Array.from(config.peerAddresses),
       timeout: config.timeout * 1000,
-      weight: config.weight
+      weight: config.weight,
     });
 
     this.networkInterfaces = networkInterfaces;
@@ -118,7 +118,7 @@ export class ClusterService extends Democracy
    */
   quorumReached(): boolean {
     const activeNodes = Object.values(this.nodes()).filter(
-      node => node.state !== 'removed'
+      (node) => node.state !== 'removed'
     );
     return !this.config.quorum || activeNodes.length >= this.config.quorum;
   }
@@ -138,9 +138,9 @@ export class ClusterService extends Democracy
    * @param peers - Array of endpoints in the format [[ip, port], ...]
    */
   protected addMissingPeers(peers: string[][]): void {
-    peers.forEach(peer => {
+    peers.forEach((peer) => {
       const index = this.options.peers.findIndex(
-        p => p[0] === peer[0] && p[1] === peer[1]
+        (p) => p[0] === peer[0] && p[1] === peer[1]
       );
 
       if (index < 0) {
@@ -179,7 +179,7 @@ export class ClusterService extends Democracy
       mdns.udp('room-assistant'),
       this.config.port,
       {
-        networkInterface: this.config.networkInterface
+        networkInterface: this.config.networkInterface,
       }
     );
     const defaultGetAddr =
@@ -189,13 +189,13 @@ export class ClusterService extends Democracy
     const sequence = [
       mdns.rst.DNSServiceResolve(),
       process.env.NODE_DIG_RESOLVER ? getAddrInfoDig : defaultGetAddr,
-      mdns.rst.makeAddressesUnique()
+      mdns.rst.makeAddressesUnique(),
     ];
     this.browser = mdns.createBrowser(mdns.udp('room-assistant'), {
-      resolverSequence: sequence
+      resolverSequence: sequence,
     });
     this.browser.on('serviceUp', this.handleNodeDiscovery.bind(this));
-    this.browser.on('error', e => {
+    this.browser.on('error', (e) => {
       this.logger.error(e.message, e.trace);
     });
 
@@ -210,12 +210,13 @@ export class ClusterService extends Democracy
    * @param service - Discovered MDNS service
    */
   private handleNodeDiscovery(service: Service): void {
-    const ownIps = this.networkInterfaces.map(info => info.address);
+    const ownIps = this.networkInterfaces.map((info) => info.address);
     if (
-      _.some(service.addresses, address => ownIps.includes(address)) ||
-      _.some(this.options.peers, peer =>
+      _.some(service.addresses, (address) => ownIps.includes(address)) ||
+      _.some(this.options.peers, (peer) =>
         service.addresses.some(
-          address => peer[0] === address && peer[1] === service.port.toString()
+          (address) =>
+            peer[0] === address && peer[1] === service.port.toString()
         )
       )
     ) {

@@ -33,5 +33,5 @@ export enum BinarySensorDeviceClass {
   SMOKE = 'smoke',
   SOUND = 'sound',
   VIBRATION = 'vibration',
-  WINDOW = 'window'
+  WINDOW = 'window',
 }

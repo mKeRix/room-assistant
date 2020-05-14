@@ -5,6 +5,6 @@ import { ConfigModule } from '../config/config.module';
 @Module({
   imports: [ConfigModule],
   providers: [ClusterService],
-  exports: [ClusterService]
+  exports: [ClusterService],
 })
 export class ClusterModule {}

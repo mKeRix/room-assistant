@@ -8,7 +8,7 @@ export default class HomeAssistantModule {
     return {
       module: HomeAssistantModule,
       imports: [ConfigModule],
-      providers: [HomeAssistantService]
+      providers: [HomeAssistantService],
     };
   }
 }

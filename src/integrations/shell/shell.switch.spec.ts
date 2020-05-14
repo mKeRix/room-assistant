@@ -5,7 +5,7 @@ import { ShellSwitch } from './shell.switch';
 jest.mock('util', () => ({
   ...jest.requireActual('util'),
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  promisify: () => mockExec
+  promisify: () => mockExec,
 }));
 
 describe('ShellSwitch', () => {

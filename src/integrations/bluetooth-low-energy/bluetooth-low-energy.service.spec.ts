@@ -1,5 +1,5 @@
 const mockNoble = {
-  on: jest.fn()
+  on: jest.fn(),
 };
 jest.mock(
   '@abandonware/noble',
@@ -11,7 +11,7 @@ jest.mock(
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {
     return {
-      filter: (z: number): number => z
+      filter: (z: number): number => z,
     };
   });
 });
@@ -21,7 +21,7 @@ import { ConfigService } from '../../config/config.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   BluetoothLowEnergyService,
-  NEW_DISTANCE_CHANNEL
+  NEW_DISTANCE_CHANNEL,
 } from './bluetooth-low-energy.service';
 import { EntitiesModule } from '../../entities/entities.module';
 import { ConfigModule } from '../../config/config.module';
@@ -45,25 +45,25 @@ describe('BluetoothLowEnergyService', () => {
   const clusterService = {
     on: jest.fn(),
     subscribe: jest.fn(),
-    publish: jest.fn()
+    publish: jest.fn(),
   };
   const entitiesService = {
     has: jest.fn(),
     get: jest.fn(),
-    add: jest.fn()
+    add: jest.fn(),
   };
   let mockConfig: Partial<BluetoothLowEnergyConfig> = {
-    tagOverrides: {}
+    tagOverrides: {},
   };
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
       return key === 'bluetoothLowEnergy' ? mockConfig : c.get(key);
-    })
+    }),
   };
   const loggerService = {
     log: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
+    warn: jest.fn(),
   };
 
   const iBeaconData = Buffer.from([
@@ -91,7 +91,7 @@ describe('BluetoothLowEnergyService', () => {
     1,
     0,
     2,
-    204
+    204,
   ]);
 
   beforeEach(async () => {
@@ -103,9 +103,9 @@ describe('BluetoothLowEnergyService', () => {
         ConfigModule,
         ClusterModule,
         EntitiesModule,
-        ScheduleModule.forRoot()
+        ScheduleModule.forRoot(),
       ],
-      providers: [BluetoothLowEnergyService]
+      providers: [BluetoothLowEnergyService],
     })
       .overrideProvider(ClusterService)
       .useValue(clusterService)
@@ -158,8 +158,8 @@ describe('BluetoothLowEnergyService', () => {
 
     service.handleDiscovery({
       advertisement: {
-        manufacturerData: Buffer.from([1, 2, 3])
-      }
+        manufacturerData: Buffer.from([1, 2, 3]),
+      },
     } as Peripheral);
     expect(clusterService.publish).not.toHaveBeenCalled();
   });
@@ -180,8 +180,8 @@ describe('BluetoothLowEnergyService', () => {
       advertisement: {
         localName: 'Test Beacon',
         txPowerLevel: -72,
-        manufacturerData: iBeaconData
-      }
+        manufacturerData: iBeaconData,
+      },
     } as Peripheral);
 
     const expectedEvent = new NewDistanceEvent(
@@ -211,8 +211,8 @@ describe('BluetoothLowEnergyService', () => {
       advertisement: {
         localName: 'Test Beacon',
         txPowerLevel: -59,
-        manufacturerData: iBeaconData
-      }
+        manufacturerData: iBeaconData,
+      },
     } as Peripheral);
 
     const expectedEvent = new NewDistanceEvent(
@@ -239,8 +239,8 @@ describe('BluetoothLowEnergyService', () => {
       id: '123-123',
       rssi: -81,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
 
     const expectedEvent = new NewDistanceEvent(
@@ -265,7 +265,7 @@ describe('BluetoothLowEnergyService', () => {
     service.handleDiscovery({
       id: '123-1-2',
       rssi: -82,
-      advertisement: {}
+      advertisement: {},
     } as Peripheral);
     expect(handleDistanceSpy).not.toHaveBeenCalled();
     expect(clusterService.publish).not.toHaveBeenCalled();
@@ -281,7 +281,7 @@ describe('BluetoothLowEnergyService', () => {
     service.handleDiscovery({
       id: '89:47:65',
       rssi: -82,
-      advertisement: {}
+      advertisement: {},
     } as Peripheral);
     expect(handleDistanceSpy).not.toHaveBeenCalled();
     expect(clusterService.publish).not.toHaveBeenCalled();
@@ -297,7 +297,7 @@ describe('BluetoothLowEnergyService', () => {
     service.handleDiscovery({
       id: '89:47:65',
       rssi: -82,
-      advertisement: {}
+      advertisement: {},
     } as Peripheral);
     expect(handleDistanceSpy).not.toHaveBeenCalled();
     expect(clusterService.publish).not.toHaveBeenCalled();
@@ -313,7 +313,7 @@ describe('BluetoothLowEnergyService', () => {
     service.handleDiscovery({
       id: 'abcd',
       rssi: -82,
-      advertisement: {}
+      advertisement: {},
     } as Peripheral);
     expect(handleDistanceSpy).toHaveBeenCalled();
     expect(clusterService.publish).toHaveBeenCalled();
@@ -329,7 +329,7 @@ describe('BluetoothLowEnergyService', () => {
     service.handleDiscovery({
       id: '89:47:65',
       rssi: -82,
-      advertisement: {}
+      advertisement: {},
     } as Peripheral);
     expect(handleDistanceSpy).not.toHaveBeenCalled();
     expect(clusterService.publish).not.toHaveBeenCalled();
@@ -343,16 +343,16 @@ describe('BluetoothLowEnergyService', () => {
     jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
     mockConfig.tagOverrides = {
       abcd: {
-        measuredPower: -80
-      }
+        measuredPower: -80,
+      },
     };
 
     service.handleDiscovery({
       id: 'abcd',
       rssi: -81,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
 
     const expectedEvent = new NewDistanceEvent(
@@ -371,8 +371,8 @@ describe('BluetoothLowEnergyService', () => {
       id: 'defg',
       rssi: -81,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
 
     expectedEvent.tagId = 'defg';
@@ -392,21 +392,21 @@ describe('BluetoothLowEnergyService', () => {
     jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
     mockConfig.tagOverrides = {
       abcd: {
-        name: 'better name'
-      }
+        name: 'better name',
+      },
     };
 
     service.handleDiscovery({
       id: 'abcd',
       rssi: -12,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
 
     expect(handleDistanceSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        tagName: 'better name'
+        tagName: 'better name',
       })
     );
   });
@@ -417,7 +417,7 @@ describe('BluetoothLowEnergyService', () => {
     service.handleDiscovery({
       id: 'abcd',
       rssi: -30,
-      advertisement: {}
+      advertisement: {},
     } as Peripheral);
 
     expect(entitiesService.has).not.toHaveBeenCalled();
@@ -472,14 +472,14 @@ describe('BluetoothLowEnergyService', () => {
       id: '12:ab:cd:12:cd',
       rssi: -45,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
 
     expect(filterSpy).toHaveBeenCalledWith('12:ab:cd:12:cd', -45);
     expect(handleDistanceSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        distance: 0.2
+        distance: 0.2,
       })
     );
   });
@@ -496,18 +496,18 @@ describe('BluetoothLowEnergyService', () => {
       id: '12:ab:cd:12:cd',
       rssi: -45,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
     expect(handleDistanceSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        outOfRange: false
+        outOfRange: false,
       })
     );
     expect(clusterService.publish).toHaveBeenCalledWith(
       NEW_DISTANCE_CHANNEL,
       expect.objectContaining({
-        outOfRange: false
+        outOfRange: false,
       })
     );
   });
@@ -524,18 +524,18 @@ describe('BluetoothLowEnergyService', () => {
       id: '12:ab:cd:12:cd',
       rssi: -89,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
     expect(handleDistanceSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        outOfRange: true
+        outOfRange: true,
       })
     );
     expect(clusterService.publish).toHaveBeenCalledWith(
       NEW_DISTANCE_CHANNEL,
       expect.objectContaining({
-        outOfRange: true
+        outOfRange: true,
       })
     );
   });
@@ -553,28 +553,28 @@ describe('BluetoothLowEnergyService', () => {
       id: '12:ab:cd:12:cd',
       rssi: -89,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
     service.handleDiscovery({
       id: 'ab:ab:cd:cd:cd',
       rssi: -90,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
     service.handleDiscovery({
       id: '12:ab:cd:12:cd',
       rssi: -91,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
 
     expect(handleDistanceSpy).toHaveBeenCalledTimes(2);
     expect(handleDistanceSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        distance: 21.5
+        distance: 21.5,
       })
     );
 
@@ -585,13 +585,13 @@ describe('BluetoothLowEnergyService', () => {
       id: '12:ab:cd:12:cd',
       rssi: -100,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
     expect(handleDistanceSpy).toHaveBeenCalledTimes(3);
     expect(handleDistanceSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        distance: 52.7
+        distance: 52.7,
       })
     );
   });
@@ -607,22 +607,22 @@ describe('BluetoothLowEnergyService', () => {
       id: '12:ab:cd:12:cd',
       rssi: -89,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
     service.handleDiscovery({
       id: 'ab:ab:cd:cd:cd',
       rssi: -90,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
     service.handleDiscovery({
       id: '12:ab:cd:12:cd',
       rssi: -91,
       advertisement: {
-        localName: 'Test BLE Device'
-      }
+        localName: 'Test BLE Device',
+      },
     } as Peripheral);
 
     expect(handleDistanceSpy).toHaveBeenCalledTimes(3);
@@ -641,17 +641,17 @@ describe('BluetoothLowEnergyService', () => {
     service.handleDiscovery({
       id: 'id1',
       rssi: -45,
-      advertisement: {}
+      advertisement: {},
     } as Peripheral);
     service.handleDiscovery({
       id: 'id2',
       rssi: -67,
-      advertisement: {}
+      advertisement: {},
     } as Peripheral);
     service.handleDiscovery({
       id: 'id1',
       rssi: -56,
-      advertisement: {}
+      advertisement: {},
     } as Peripheral);
 
     expect(KalmanFilter).toHaveBeenCalledTimes(2);
@@ -685,7 +685,7 @@ describe('BluetoothLowEnergyService', () => {
       expect.objectContaining({
         id: 'ble-new',
         name: 'New Tag Room Presence',
-        timeout: 20
+        timeout: 20,
       }),
       expect.any(Array)
     );
@@ -708,21 +708,21 @@ describe('BluetoothLowEnergyService', () => {
       rssi: -50,
       advertisement: {
         localName: 'Test Beacon',
-        manufacturerData: iBeaconData
-      }
+        manufacturerData: iBeaconData,
+      },
     } as Peripheral);
     service.handleDiscovery({
       id: 'test-peripheral-456',
       rssi: -78,
-      advertisement: {}
+      advertisement: {},
     } as Peripheral);
     service.handleDiscovery({
       id: 'test-ibeacon-123',
       rssi: -54,
       advertisement: {
         localName: 'Test Beacon',
-        manufacturerData: iBeaconData
-      }
+        manufacturerData: iBeaconData,
+      },
     } as Peripheral);
 
     expect(loggerService.log).toHaveBeenCalledTimes(2);
