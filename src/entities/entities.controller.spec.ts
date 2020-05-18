@@ -8,6 +8,7 @@ import { NestEmitterModule } from 'nest-emitter';
 import { ClusterModule } from '../cluster/cluster.module';
 import { EventEmitter } from 'events';
 import { ClusterService } from '../cluster/cluster.service';
+import { ConfigModule } from '../config/config.module';
 
 describe('Entities Controller', () => {
   let controller: EntitiesController;
@@ -17,7 +18,11 @@ describe('Entities Controller', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [NestEmitterModule.forRoot(emitter), ClusterModule],
+      imports: [
+        NestEmitterModule.forRoot(emitter),
+        ClusterModule,
+        ConfigModule,
+      ],
       controllers: [EntitiesController],
       providers: [EntitiesService],
     })

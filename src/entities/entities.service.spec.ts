@@ -9,6 +9,7 @@ import { EntityCustomization } from './entity-customization.interface';
 import { SensorConfig } from '../integrations/home-assistant/sensor-config';
 import { ClusterModule } from '../cluster/cluster.module';
 import { Switch } from './switch';
+import { ConfigModule } from '../config/config.module';
 
 describe('EntitiesService', () => {
   let service: EntitiesService;
@@ -19,8 +20,15 @@ describe('EntitiesService', () => {
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+    jest.useRealTimers();
+
     const module: TestingModule = await Test.createTestingModule({
-      imports: [NestEmitterModule.forRoot(emitter), ClusterModule],
+      imports: [
+        NestEmitterModule.forRoot(emitter),
+        ClusterModule,
+        ConfigModule,
+      ],
       providers: [EntitiesService],
     })
       .overrideProvider(ClusterService)
@@ -28,7 +36,6 @@ describe('EntitiesService', () => {
       .compile();
 
     service = module.get<EntitiesService>(EntitiesService);
-    jest.resetAllMocks();
   });
 
   it('should register a callback to leader election on bootstrap', () => {
@@ -124,6 +131,28 @@ describe('EntitiesService', () => {
     const entityProxy = service.add(entity);
     entityProxy.state = 1337;
     expect(spy).toHaveBeenCalledWith('stateUpdate', 'test_sensor', 1337, false);
+  });
+
+  it('should debounce state updates if configured', () => {
+    jest.useFakeTimers('modern');
+    const spy = jest.spyOn(emitter, 'emit');
+
+    const entityProxy = service.add(
+      new Sensor('debounced_entity', 'Debounce Test')
+    );
+    spy.mockClear();
+
+    entityProxy.state = 42;
+    entityProxy.state = 1337;
+    jest.runAllTimers();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(
+      'stateUpdate',
+      'debounced_entity',
+      1337,
+      false
+    );
   });
 
   it('should send attribute updates to publishers', () => {

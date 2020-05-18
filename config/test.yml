@@ -2,6 +2,12 @@ global:
   instanceName: test-instance
   integrations:
     - bluetoothLowEnergy
+entities:
+  behaviors:
+    debounced_entity:
+      debounce:
+        wait: 0.75
+        maxWait: 2
 gpio:
   binarySensors:
     - name: PIR Sensor

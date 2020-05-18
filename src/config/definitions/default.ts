@@ -8,10 +8,12 @@ import { BluetoothClassicConfig } from '../../integrations/bluetooth-classic/blu
 import { GpioConfig } from '../../integrations/gpio/gpio.config';
 import { ShellConfig } from '../../integrations/shell/shell.config';
 import { XiaomiMiConfig } from '../../integrations/xiaomi-mi/xiaomi-mi.config';
+import { EntitiesConfig } from '../../entities/entities.config';
 
 export class AppConfig {
   global: GlobalConfig = new GlobalConfig();
   cluster: ClusterConfig = new ClusterConfig();
+  entities: EntitiesConfig = new EntitiesConfig();
   bluetoothLowEnergy: BluetoothLowEnergyConfig = new BluetoothLowEnergyConfig();
   bluetoothClassic: BluetoothClassicConfig = new BluetoothClassicConfig();
   omronD6t: OmronD6tConfig = new OmronD6tConfig();

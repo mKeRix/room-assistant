@@ -56,6 +56,7 @@ module.exports = {
             '/guide/upgrading',
             '/guide/configuration',
             '/guide/cluster',
+            '/guide/entities',
             '/guide/cli'
           ]
         },

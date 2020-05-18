@@ -5,16 +5,21 @@ import { InjectEventEmitter } from 'nest-emitter';
 import { EntitiesEventEmitter } from './entities.events';
 import { EntityCustomization } from './entity-customization.interface';
 import { ClusterService } from '../cluster/cluster.service';
+import { ConfigService } from '../config/config.service';
+import { EntitiesConfig } from './entities.config';
 
 @Injectable()
 export class EntitiesService implements OnApplicationBootstrap {
+  private readonly config: EntitiesConfig;
   private readonly entities: Map<string, Entity> = new Map<string, Entity>();
   private readonly logger: Logger;
 
   constructor(
     private readonly clusterService: ClusterService,
+    private readonly configService: ConfigService,
     @InjectEventEmitter() private readonly emitter: EntitiesEventEmitter
   ) {
+    this.config = configService.get('entities');
     this.logger = new Logger(EntitiesService.name);
   }
 
@@ -76,7 +81,8 @@ export class EntitiesService implements OnApplicationBootstrap {
       entity,
       new EntityProxyHandler(
         this.emitter,
-        this.clusterService.isMajorityLeader.bind(this.clusterService)
+        this.clusterService.isMajorityLeader.bind(this.clusterService),
+        this.config.behaviors[entity.id]
       )
     );
     this.entities.set(entity.id, proxy);
