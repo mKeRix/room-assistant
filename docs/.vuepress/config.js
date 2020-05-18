@@ -80,11 +80,11 @@ module.exports = {
             '/integrations/home-assistant',
             '/integrations/bluetooth-low-energy',
             '/integrations/bluetooth-classic',
+            '/integrations/xiaomi-mi',
             '/integrations/omron-d6t',
             '/integrations/grid-eye',
             '/integrations/gpio',
-            '/integrations/shell',
-            '/integrations/xiaomi-mi'
+            '/integrations/shell'
           ]
         }
       ]
