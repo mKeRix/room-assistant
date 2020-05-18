@@ -15,6 +15,7 @@
   ],
   "homepage": "https://www.room-assistant.io",
   "bugs": "https://github.com/mKeRix/room-assistant/issues",
+  "funding": "https://github.com/mKeRix/room-assistant?sponsor=1",
   "bin": "./bin/room-assistant.js",
   "main": "dist/src/main.js",
   "types": "dist/src/main.d.ts",
@@ -104,6 +105,15 @@
     "vuepress-plugin-seo": "^0.1.2",
     "vuepress-plugin-sitemap": "^2.3.1"
   },
+  "optionalDependencies": {
+    "@abandonware/noble": "^1.9.2-5",
+    "i2c-bus": "^5.1.0",
+    "mdns": "^2.5.1",
+    "onoff": "^5.0.1"
+  },
+  "engines": {
+    "node": ">= 10 < 13"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "pretty-quick --staged --pattern \"src/**/*.ts\" --pattern \"bin/*.js\"",
@@ -139,14 +149,5 @@
       "@semantic-release/github",
       "@semantic-release/git"
     ]
-  },
-  "optionalDependencies": {
-    "@abandonware/noble": "^1.9.2-5",
-    "i2c-bus": "^5.1.0",
-    "mdns": "^2.5.1",
-    "onoff": "^5.0.1"
-  },
-  "engines": {
-    "node": ">= 10 < 13"
   }
 }
