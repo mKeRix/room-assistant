@@ -15,6 +15,11 @@ export async function getAddrInfoDig(
   service: Service,
   next: (e?: Error) => void
 ): Promise<void> {
+  if (service.host === 'localhost' || service.host === 'localhost.') {
+    service.addresses = (service.addresses || []).concat(['127.0.0.1']);
+    next();
+  }
+
   try {
     const digOutput = await execPromise(
       `dig +short @224.0.0.251 -p 5353 -4 ${service.host}`

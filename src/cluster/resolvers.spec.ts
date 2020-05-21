@@ -11,7 +11,7 @@ jest.mock('util', () => ({
 
 describe('resolvers', () => {
   beforeEach(async () => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   it('should return a single address correctly', (done) => {
@@ -58,6 +58,29 @@ describe('resolvers', () => {
           '192.168.1.20',
           '192.168.1.21',
         ]);
+        done();
+      } catch (e) {
+        done(e);
+      }
+    });
+  });
+
+  it('should return localhost correctly', (done) => {
+    const service: Service = {
+      addresses: undefined,
+      flags: undefined,
+      fullname: undefined,
+      host: 'localhost.',
+      interfaceIndex: undefined,
+      networkInterface: undefined,
+      port: undefined,
+      replyDomain: undefined,
+      type: undefined,
+    };
+
+    getAddrInfoDig(service, () => {
+      try {
+        expect(service.addresses).toStrictEqual(['127.0.0.1']);
         done();
       } catch (e) {
         done(e);
