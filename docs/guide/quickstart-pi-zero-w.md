@@ -7,7 +7,7 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 ### Hardware
 
 - Raspberry Pi Zero W + Power Supply
-- Micro SD Card (ideally Application Class 2 or better)
+- Micro SD Card (ideally Application Class 1)
 - SD Card reader
 
 ### Software

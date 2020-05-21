@@ -7,7 +7,7 @@ This page will guide you through setting up a Raspberry Pi 3 or 4 to run room-as
 ### Hardware
 
 - Raspberry Pi 3 or 4 + Power Supply
-- Micro SD Card (ideally Application Class 2 or better)
+- Micro SD Card (ideally Application Class 1)
 - SD Card reader
 
 ### Software
