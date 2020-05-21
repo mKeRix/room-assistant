@@ -29,6 +29,10 @@ export class StatusService implements OnApplicationBootstrap {
 
     this.clusterService.on('added', this.updateClusterSizeSensor.bind(this));
     this.clusterService.on('removed', this.updateClusterSizeSensor.bind(this));
+    this.clusterService.on(
+      'elected',
+      this.updateClusterLeaderSensor.bind(this)
+    );
     this.clusterService.on('leader', this.updateClusterLeaderSensor.bind(this));
   }
 

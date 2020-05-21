@@ -66,6 +66,7 @@ export class ClusterService extends Democracy
   onModuleInit(): void {
     this.on('added', this.handleNodeAdded);
     this.on('removed', this.handleNodeRemoved);
+    this.on('elected', this.handleNodeElected);
     this.on('leader', this.handleNodeElected);
     this.on('peers', this.addMissingPeers);
   }
