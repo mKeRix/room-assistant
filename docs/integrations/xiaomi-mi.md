@@ -25,6 +25,10 @@ This integration has been tested with these devices:
 
   (rectangular body, E-Ink, broadcasts temperature and humidity, about 20 readings per minute, no battery info)
 
+- LYWSDCGQ
+
+  (circular body, segment LCD, broadcasts temperature and humidity when it changes (and possibly periodically) and battery level once in an hour)
+ 
 - LYWSD03MMC
 
   (small square body, segment LCD, broadcasts temperature and humidity once in about 10 minutes and battery level once in an hour, advertisements are encrypted, therefore you need to set the key in your configuration, see for instructions the [bindKey](#sensor-options) option)
