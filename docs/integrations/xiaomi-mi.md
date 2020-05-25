@@ -27,7 +27,7 @@ This integration has been tested with these devices:
 
 - LYWSDCGQ
 
-  (circular body, segment LCD, broadcasts temperature and humidity when it changes (and possibly periodically) and battery level once in an hour)
+  (circular body, segment LCD, broadcasts temperature and humidity when it changes and battery level periodically)
  
 - LYWSD03MMC
 
