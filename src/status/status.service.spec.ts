@@ -80,7 +80,7 @@ describe('StatusService', () => {
 
     service.onApplicationBootstrap();
 
-    expect(clusterService.on).toHaveBeenCalledTimes(3);
+    expect(clusterService.on).toHaveBeenCalledTimes(4);
   });
 
   it('should update the cluster size sensor', () => {

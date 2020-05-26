@@ -17,6 +17,7 @@ import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-dista
 import KalmanFilter from 'kalmanjs';
 import { Switch } from '../../entities/switch';
 import { BluetoothClassicConfig } from './bluetooth-classic.config';
+import { BluetoothClassicHealthIndicator } from './bluetooth-classic.health';
 import c from 'config';
 import { ConfigService } from '../../config/config.service';
 import { Device } from './device';
@@ -58,6 +59,10 @@ describe('BluetoothClassicService', () => {
     error: jest.fn(),
     warn: jest.fn(),
   };
+  const healthIndicator = {
+    reportError: jest.fn(),
+    reportSuccess: jest.fn(),
+  };
   const config: Partial<BluetoothClassicConfig> = {
     addresses: ['8d:ad:e3:e2:7a:01', 'f7:6c:e3:10:55:b5'],
     hciDeviceId: 0,
@@ -80,7 +85,7 @@ describe('BluetoothClassicService', () => {
         ClusterModule,
         ScheduleModule.forRoot(),
       ],
-      providers: [BluetoothClassicService],
+      providers: [BluetoothClassicService, BluetoothClassicHealthIndicator],
     })
       .overrideProvider(EntitiesService)
       .useValue(entitiesService)
@@ -88,6 +93,8 @@ describe('BluetoothClassicService', () => {
       .useValue(clusterService)
       .overrideProvider(ConfigService)
       .useValue(configService)
+      .overrideProvider(BluetoothClassicHealthIndicator)
+      .useValue(healthIndicator)
       .compile();
     module.useLogger(loggerService);
 
@@ -164,7 +171,7 @@ describe('BluetoothClassicService', () => {
     expect(service.inquireRssi('08:05:90:ed:3b:60')).resolves.toBeUndefined();
   });
 
-  it('should return reset the HCI device if the query took too long', async () => {
+  it('should reset the HCI device if the query took too long', async () => {
     mockExec.mockRejectedValue({ signal: 'SIGKILL' });
 
     const result = await service.inquireRssi('08:05:90:ed:3b:60');
@@ -664,5 +671,29 @@ Requesting information ...
     mockSwitch.state = true;
 
     expect(service.shouldInquire()).toBeTruthy();
+  });
+
+  it('should report success to the health indicator when queries are successful', async () => {
+    mockExec.mockResolvedValue({ stdout: 'RSSI return value: -4' });
+    await service.inquireRssi('');
+
+    expect(healthIndicator.reportSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('should report an error to the health indicator when queries are unsuccessful', async () => {
+    mockExec.mockRejectedValue({ message: 'critical error' });
+    await service.inquireRssi('');
+
+    expect(healthIndicator.reportError).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not report anything to the health indicator if the device was not reachable', async () => {
+    mockExec.mockRejectedValue({
+      message: 'Could not connect: Input/output error',
+    });
+    await service.inquireRssi('');
+
+    expect(healthIndicator.reportSuccess).not.toHaveBeenCalled();
+    expect(healthIndicator.reportError).not.toHaveBeenCalled();
   });
 });

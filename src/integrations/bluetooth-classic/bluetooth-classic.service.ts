@@ -29,6 +29,7 @@ import { Switch } from '../../entities/switch';
 import { SwitchConfig } from '../home-assistant/switch-config';
 import { DeviceTracker } from '../../entities/device-tracker';
 import { RoomPresenceDeviceTrackerProxyHandler } from '../room-presence/room-presence-device-tracker.proxy';
+import { BluetoothClassicHealthIndicator } from './bluetooth-classic.health';
 
 const execPromise = util.promisify(exec);
 
@@ -45,7 +46,8 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
     private readonly configService: ConfigService,
     private readonly entitiesService: EntitiesService,
     private readonly clusterService: ClusterService,
-    private readonly schedulerRegistry: SchedulerRegistry
+    private readonly schedulerRegistry: SchedulerRegistry,
+    private readonly healthIndicator: BluetoothClassicHealthIndicator
   ) {
     super();
     this.config = this.configService.get('bluetoothClassic');
@@ -215,15 +217,21 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
       );
       const matches = output.stdout.match(regex);
 
+      this.healthIndicator.reportSuccess();
+
       return matches?.length > 0 ? parseInt(matches[0], 10) : undefined;
     } catch (e) {
       if (e.signal === 'SIGKILL') {
         this.logger.warn(
           `Query of ${address} took too long, resetting hci${this.config.hciDeviceId}`
         );
+        this.healthIndicator.reportError();
         this.resetHciDevice();
-      } else {
+      } else if (e.message?.includes('Input/output error')) {
         this.logger.debug(e.message);
+      } else {
+        this.logger.error(e.message);
+        this.healthIndicator.reportError();
       }
 
       return undefined;
