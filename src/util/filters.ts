@@ -1,8 +1,9 @@
 import KalmanFilter from 'kalmanjs';
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 type Constructable = new (...args: any[]) => object;
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type,@typescript-eslint/explicit-module-boundary-types
 export function KalmanFilterable<BC extends Constructable>(
   Base: BC,
   R = 1,

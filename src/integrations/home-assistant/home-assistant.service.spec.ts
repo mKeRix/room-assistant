@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/camelcase */
 const mockMqttClient = {
   on: jest.fn(),
   publish: jest.fn(),

@@ -37,6 +37,7 @@ export class EntityProxyHandler implements ProxyHandler<Entity> {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   set(target: Entity, p: string | number | symbol, value: any): boolean {
     const oldValue = target[p];
     target[p] = value;

@@ -10,6 +10,7 @@ export class AttributesProxyHandler
     private readonly isLeader: () => boolean
   ) {}
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   set(
     target: { [p: string]: string | number | boolean },
     p: string | number | symbol,

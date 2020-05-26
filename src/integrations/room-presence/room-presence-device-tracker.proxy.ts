@@ -8,6 +8,7 @@ export class RoomPresenceDeviceTrackerProxyHandler
   implements ProxyHandler<RoomPresenceDistanceSensor> {
   constructor(private readonly deviceTracker: DeviceTracker) {}
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   set(target: RoomPresenceDistanceSensor, p: PropertyKey, value: any): boolean {
     target[p] = value;
 
