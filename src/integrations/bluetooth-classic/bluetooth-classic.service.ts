@@ -227,7 +227,10 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
         );
         this.healthIndicator.reportError();
         this.resetHciDevice();
-      } else if (e.message?.includes('Input/output error')) {
+      } else if (
+        e.message?.includes('Input/output') ||
+        e.message?.includes('I/O')
+      ) {
         this.logger.debug(e.message);
       } else {
         this.logger.error(e.message);
