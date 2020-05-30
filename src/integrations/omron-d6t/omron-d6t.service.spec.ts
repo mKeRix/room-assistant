@@ -23,6 +23,7 @@ jest.mock(
   },
   { virtual: true }
 );
+jest.mock('canvas', () => undefined, { virtual: true });
 
 const VALID_RESPONSE = Buffer.from([
   0xe5,
@@ -110,6 +111,18 @@ describe('OmronD6tService', () => {
     );
   });
 
+  it('should register a new camera on bootstrap if available', async () => {
+    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(true);
+    await service.onApplicationBootstrap();
+
+    expect(entitiesService.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'd6t_heatmap',
+        name: 'D6T Heatmap',
+      })
+    );
+  });
+
   it('should close the i2c bus on shutdown', async () => {
     await service.onApplicationBootstrap();
     await service.onApplicationShutdown();
@@ -120,6 +133,7 @@ describe('OmronD6tService', () => {
   it('should update its state based on the calculated coordinates', async () => {
     const mockSensor = new Sensor('d6t', 'Occupancy');
     entitiesService.add.mockReturnValue(mockSensor);
+    jest.spyOn(service, 'getPixelTemperatures').mockResolvedValue([]);
     jest.spyOn(service, 'getCoordinates').mockResolvedValue([
       [1, 0],
       [2, 3],
@@ -136,9 +150,26 @@ describe('OmronD6tService', () => {
     });
   });
 
+  it('should update the camera entity with the generated heatmap', async () => {
+    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(true);
+    entitiesService.add.mockImplementation((entity) => entity);
+    jest.spyOn(service, 'getPixelTemperatures').mockResolvedValue([]);
+    jest.spyOn(service, 'getCoordinates').mockResolvedValue([
+      [1, 0],
+      [2, 3],
+    ]);
+
+    const imageData = new Buffer('abc');
+    jest.spyOn(service, 'generateHeatmap').mockResolvedValue(imageData);
+
+    await service.onApplicationBootstrap();
+    await service.updateState();
+    expect(entitiesService.add.mock.calls[1][0].state).toBe(imageData);
+  });
+
   it('should log PEC check errors to debug', async () => {
     jest
-      .spyOn(service, 'getCoordinates')
+      .spyOn(service, 'getPixelTemperatures')
       .mockRejectedValue(new I2CError('PEC check failed'));
 
     await service.onApplicationBootstrap();
@@ -152,7 +183,7 @@ describe('OmronD6tService', () => {
 
   it('should log other errors in the error level', async () => {
     jest
-      .spyOn(service, 'getCoordinates')
+      .spyOn(service, 'getPixelTemperatures')
       .mockRejectedValue(new Error('bus unavailable'));
 
     await service.onApplicationBootstrap();

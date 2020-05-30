@@ -60,7 +60,11 @@ export class GridEyeService extends ThermopileOccupancyService
    */
   @Interval(1000)
   async updateState(): Promise<void> {
-    const coordinates = await this.getCoordinates(this.config.deltaThreshold);
+    const temperatures = await this.getPixelTemperatures();
+    const coordinates = await this.getCoordinates(
+      temperatures,
+      this.config.deltaThreshold
+    );
 
     this.sensor.state = coordinates.length;
     this.sensor.attributes.coordinates = coordinates;
