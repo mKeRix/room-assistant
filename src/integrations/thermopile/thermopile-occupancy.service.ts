@@ -109,8 +109,8 @@ export abstract class ThermopileOccupancyService {
   async generateHeatmap(
     temperatures: number[][],
     options = new HeatmapOptions(),
-    width = 150,
-    height = 150
+    width = 280,
+    height = 280
   ): Promise<Buffer> {
     if (!this.isHeatmapAvailable()) {
       throw new Error(
@@ -125,7 +125,8 @@ export abstract class ThermopileOccupancyService {
       : nodeCanvas.createCanvas(width, height);
     const ctx = canvas.getContext('2d');
     ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((options.rotation * Math.PI) / 180);
+    const rotationRad = (options.rotation * Math.PI) / 180;
+    ctx.rotate(rotationRad);
 
     const normed = math.divide(
       math.subtract(temperatures, options.minTemperature),
@@ -134,19 +135,86 @@ export abstract class ThermopileOccupancyService {
 
     for (const [y, row] of normed.entries()) {
       for (const [x, value] of row.entries()) {
-        const h = (1 - _.clamp(value, 0, 1)) * 240;
-        ctx.fillStyle = `hsl(${h}, 100%, 50%)`;
-        ctx.fillRect(
-          -canvas.width / 2 + x * segmentWidth,
-          -canvas.height / 2 + y * segmentHeight,
+        const pixelXOrigin = -canvas.width / 2 + x * segmentWidth;
+        const pixelXCenter = pixelXOrigin + segmentWidth / 2;
+        const pixelYOrigin = -canvas.height / 2 + y * segmentHeight;
+        const pixelYCenter = pixelYOrigin + segmentHeight / 2;
+
+        ThermopileOccupancyService.drawPixel(
+          ctx,
+          pixelXOrigin,
+          pixelYOrigin,
           segmentWidth,
-          segmentHeight
+          segmentHeight,
+          value
         );
+        if (options.drawTemperatures) {
+          ThermopileOccupancyService.drawTemperature(
+            ctx,
+            pixelXCenter,
+            pixelYCenter,
+            segmentWidth,
+            rotationRad,
+            temperatures[x][y]
+          );
+        }
       }
     }
 
     return canvas.toBuffer('image/jpeg', {
       quality: 1,
     });
+  }
+
+  /**
+   * Draws a rectangle representing the pixel temperature with a color.
+   *
+   * @param ctx - 2d context of the canvas to draw on
+   * @param xOrigin - x coordinate of the pixel top-left origin
+   * @param yOrigin - y coordinate of the pixel top-left origin
+   * @param width - width of the pixel
+   * @param height - height of the pixel
+   * @param normedValue - value representing the temperature within a normed range (between 0 and 1)
+   */
+  private static drawPixel(
+    ctx: CanvasRenderingContext2D,
+    xOrigin: number,
+    yOrigin: number,
+    width: number,
+    height: number,
+    normedValue: number
+  ): void {
+    const h = (1 - _.clamp(normedValue, 0, 1)) * 240;
+    ctx.fillStyle = `hsl(${h}, 100%, 50%)`;
+    ctx.fillRect(xOrigin, yOrigin, width, height);
+  }
+
+  /**
+   * Draws a text representing the temperature onto a pixel.
+   *
+   * @param ctx - 2d context of the canvas to draw on
+   * @param xCenter - x coordinate of the pixel center
+   * @param yCenter - y coordinate of the pixel center
+   * @param width - width of the pixel
+   * @param rotationRad - rotation that is used for the context in rad
+   * @param temperature - temperature value to draw
+   */
+  private static drawTemperature(
+    ctx: CanvasRenderingContext2D,
+    xCenter: number,
+    yCenter: number,
+    width: number,
+    rotationRad: number,
+    temperature: number
+  ): void {
+    ctx.save();
+    ctx.font = `${Math.round(width / 2.7)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'black';
+    ctx.translate(xCenter, yCenter);
+    ctx.rotate(-rotationRad);
+    ctx.fillText(temperature.toFixed(1), 0, 0);
+    ctx.restore();
   }
 }
