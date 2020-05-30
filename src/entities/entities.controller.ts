@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { Entity } from './entity';
 import { EntitiesService } from './entities.service';
+import { Camera } from './camera';
 
 @Controller('entities')
 export class EntitiesController {
@@ -8,6 +9,8 @@ export class EntitiesController {
 
   @Get()
   getAll(): Entity[] {
-    return this.entitiesService.getAll();
+    return this.entitiesService
+      .getAll()
+      .filter((entity) => !(entity instanceof Camera));
   }
 }

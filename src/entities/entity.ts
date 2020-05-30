@@ -7,7 +7,7 @@ export abstract class Entity {
 
   readonly id: string;
   name: string;
-  state: string | number | boolean;
+  state: string | number | boolean | Buffer;
   attributes: { [key: string]: any } = {};
   readonly distributed: boolean;
 }

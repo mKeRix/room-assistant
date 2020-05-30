@@ -26,6 +26,8 @@ import { Switch } from '../../entities/switch';
 import { SwitchConfig } from './switch-config';
 import { DeviceTracker } from '../../entities/device-tracker';
 import { DeviceTrackerConfig } from './device-tracker-config';
+import { Camera } from '../../entities/camera';
+import { CameraConfig } from './camera-config';
 
 const PROPERTY_BLACKLIST = ['component', 'configTopic', 'commandStore'];
 
@@ -136,17 +138,18 @@ export class HomeAssistantService
         `Device tracker requires manual setup in Home Assistant with topic: ${config.stateTopic}`
       );
     } else {
+      // camera entities do not support stateTopic
+      const message = this.formatMessage(
+        config instanceof CameraConfig ? _.omit(config, ['stateTopic']) : config
+      );
+
       this.logger.debug(
         `Registering entity ${config.uniqueId} under ${config.configTopic}`
       );
-      this.mqttClient.publish(
-        config.configTopic,
-        JSON.stringify(this.formatMessage(config)),
-        {
-          qos: 0,
-          retain: true,
-        }
-      );
+      this.mqttClient.publish(config.configTopic, JSON.stringify(message), {
+        qos: 0,
+        retain: true,
+      });
     }
 
     this.mqttClient.publish(config.availabilityTopic, config.payloadAvailable, {
@@ -164,7 +167,7 @@ export class HomeAssistantService
    */
   handleNewState(
     id: string,
-    state: number | string | boolean,
+    state: number | string | boolean | Buffer,
     distributed = false
   ): void {
     const config = this.entityConfigs.get(this.getCombinedId(id, distributed));
@@ -173,10 +176,14 @@ export class HomeAssistantService
     }
 
     this.logger.debug(`Sending new state ${state} for ${config.uniqueId}`);
-    this.mqttClient.publish(config.stateTopic, String(state), {
-      qos: 0,
-      retain: true,
-    });
+    this.mqttClient.publish(
+      config.stateTopic,
+      state instanceof Buffer ? state : String(state),
+      {
+        qos: 0,
+        retain: true,
+      }
+    );
   }
 
   /**
@@ -301,6 +308,8 @@ export class HomeAssistantService
       );
       this.mqttClient.subscribe(config.commandTopic, { qos: 0 });
       return config;
+    } else if (entity instanceof Camera) {
+      return new CameraConfig(combinedId, entity.name);
     } else if (entity instanceof DeviceTracker) {
       return new DeviceTrackerConfig(combinedId, entity.name);
     } else {

@@ -11,7 +11,7 @@ interface EntitiesEvents {
 
   stateUpdate: (
     id: string,
-    state: boolean | string | number,
+    state: boolean | string | number | Buffer,
     distributed?: boolean
   ) => void;
 
