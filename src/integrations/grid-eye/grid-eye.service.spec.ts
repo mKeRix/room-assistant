@@ -24,6 +24,7 @@ jest.mock(
   },
   { virtual: true }
 );
+jest.mock('canvas', () => undefined, { virtual: true });
 
 describe('GridEyeService', () => {
   let service: GridEyeService;
@@ -73,6 +74,18 @@ describe('GridEyeService', () => {
     );
   });
 
+  it('should register a new camera on bootstrap if available', async () => {
+    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(true);
+    await service.onApplicationBootstrap();
+
+    expect(entitiesService.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'grideye_heatmap',
+        name: 'GridEYE Heatmap',
+      })
+    );
+  });
+
   it('should close the i2c bus on shutdown', async () => {
     await service.onApplicationBootstrap();
     await service.onApplicationShutdown();
@@ -97,6 +110,22 @@ describe('GridEyeService', () => {
         [8, 6],
       ],
     });
+  });
+
+  it('should update the camera entity with the generated heatmap', async () => {
+    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(true);
+    entitiesService.add.mockImplementation((entity) => entity);
+    jest.spyOn(service, 'getCoordinates').mockResolvedValue([
+      [1, 2],
+      [8, 6],
+    ]);
+
+    const imageData = new Buffer('abc');
+    jest.spyOn(service, 'generateHeatmap').mockResolvedValue(imageData);
+
+    await service.onApplicationBootstrap();
+    await service.updateState();
+    expect(entitiesService.add.mock.calls[1][0].state).toBe(imageData);
   });
 
   it('should get the temperatures of all 64 pixels', async () => {

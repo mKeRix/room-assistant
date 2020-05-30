@@ -65,11 +65,20 @@ When placing your sensor you need to consider a few factors to get reliable resu
 
 ## Settings
 
+| Name             | Type                | Default | Description                                                  |
+| ---------------- | ------------------- | ------- | ------------------------------------------------------------ |
+| `busNumber`      | Number              | `1`     | I<sup>2</sup>C bus number of your machine that the sensor is connected to. |
+| `address`        | Number              | `0x69`  | I<sup>2</sup>C address of the D6T sensor that you want to use. |
+| `deltaThreshold` | Number              | `2`     | Minimum temperature difference between average and single temperature pixel in &deg;C for it to be considered as human presence. Increase if you are seeing false positives, decrease if you are seeing false negatives. |
+| `heatmap`        | [Heatmap](#heatmap) |         | A number of options for configuring the heatmap output.      |
+
+### Heatmap
+
 | Name             | Type   | Default | Description                                                  |
 | ---------------- | ------ | ------- | ------------------------------------------------------------ |
-| `busNumber`      | Number | `1`     | I<sup>2</sup>C bus number of your machine that the sensor is connected to. |
-| `address`        | Number | `0x69`  | I<sup>2</sup>C address of the D6T sensor that you want to use. |
-| `deltaThreshold` | Number | `2`     | Minimum temperature difference between average and single temperature pixel in &deg;C for it to be considered as human presence. Increase if you are seeing false positives, decrease if you are seeing false negatives. |
+| `minTemperature` | Number | `16`    | Temperature that will be considered the lower bound for the color scale in &deg;C. |
+| `maxTemperature` | Number | `30`    | Temperature that will be considered the upper bound for the color scale in &deg;C. |
+| `rotation`       | Number | `0`     | The amount of degrees that the heatmap output image should be rotated. Only `0`, `90`, `180` or `270` are supported as values. |
 
 ::: details Example Config
 
@@ -79,6 +88,10 @@ global:
     - gridEye
 gridEye:
   deltaThreshold: 2
+  heatmap:
+    minTemperature: 16
+    maxTemperature: 30
+    rotation: 180
 ```
 
 :::
