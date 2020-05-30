@@ -15,6 +15,7 @@ import { GridEyeConfig } from './grid-eye.config';
 import { ConfigService } from '../../config/config.service';
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
+import { Camera } from '../../entities/camera';
 
 const TEMPERATURE_REGISTER_START = 0x80;
 const FRAMERATE_REGISTER = 0x02;
@@ -26,6 +27,7 @@ export class GridEyeService extends ThermopileOccupancyService
   private readonly logger: Logger;
   private i2cBus: PromisifiedBus;
   private sensor: Entity;
+  private camera: Camera;
 
   constructor(
     private readonly entitiesService: EntitiesService,
@@ -45,6 +47,14 @@ export class GridEyeService extends ThermopileOccupancyService
     this.setRegister(FRAMERATE_REGISTER, 1); // set framerate to 1 FPS -> less noise
 
     this.sensor = this.createSensor();
+
+    if (this.isHeatmapAvailable()) {
+      this.camera = this.createHeatmapCamera();
+    } else {
+      this.logger.warn(
+        'Heatmap is unavailable due to the canvas dependency not being installed'
+      );
+    }
   }
 
   /**
@@ -68,6 +78,13 @@ export class GridEyeService extends ThermopileOccupancyService
 
     this.sensor.state = coordinates.length;
     this.sensor.attributes.coordinates = coordinates;
+
+    if (this.camera != undefined) {
+      this.camera.state = await this.generateHeatmap(
+        temperatures,
+        this.config.heatmap
+      );
+    }
   }
 
   /**
@@ -164,5 +181,16 @@ export class GridEyeService extends ThermopileOccupancyService
       new Sensor('grideye_occupancy_count', 'GridEYE Occupancy Count'),
       customizations
     ) as Sensor;
+  }
+
+  /**
+   * Creates and registers a new heatmap camera entity.
+   *
+   * @returns Registered camera
+   */
+  protected createHeatmapCamera(): Camera {
+    return this.entitiesService.add(
+      new Camera('grideye_heatmap', 'GridEYE Heatmap')
+    ) as Camera;
   }
 }
