@@ -1,7 +1,7 @@
 FROM node:12-alpine as build
 WORKDIR /room-assistant
 
-RUN apk add --no-cache python make g++ libusb-dev eudev-dev avahi-dev
+RUN apk add --no-cache python make g++ libusb-dev eudev-dev avahi-dev cairo-dev jpeg-dev pango-dev giflib-dev
 COPY ./*.tgz /room-assistant/
 RUN npm install -g --unsafe-perm *.tgz
 

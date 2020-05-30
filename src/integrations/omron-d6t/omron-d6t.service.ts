@@ -15,6 +15,7 @@ import { Entity } from '../../entities/entity';
 import { I2CError } from './i2c.error';
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { ThermopileOccupancyService } from '../thermopile/thermopile-occupancy.service';
+import { Camera } from '../../entities/camera';
 
 const TEMPERATURE_COMMAND = 0x4c;
 
@@ -24,6 +25,7 @@ export class OmronD6tService extends ThermopileOccupancyService
   private readonly config: OmronD6tConfig;
   private i2cBus: PromisifiedBus;
   private sensor: Entity;
+  private camera: Camera;
   private readonly logger: Logger;
 
   constructor(
@@ -42,6 +44,14 @@ export class OmronD6tService extends ThermopileOccupancyService
     this.logger.log(`Opening i2c bus ${this.config.busNumber}`);
     this.i2cBus = await i2cBus.openPromisified(this.config.busNumber);
     this.sensor = this.createSensor();
+
+    if (this.isHeatmapAvailable()) {
+      this.camera = this.createHeatmapCamera();
+    } else {
+      this.logger.warn(
+        'Heatmap is unavailable due to the canvas dependency not being installed'
+      );
+    }
   }
 
   /**
@@ -53,15 +63,26 @@ export class OmronD6tService extends ThermopileOccupancyService
   }
 
   /**
-   * Updates the state of the sensor that this integration manages.
+   * Updates the state of the entities that this integration manages.
    */
   @Interval(250)
   async updateState(): Promise<void> {
     try {
-      const coordinates = await this.getCoordinates(this.config.deltaThreshold);
+      const temperatures = await this.getPixelTemperatures();
+      const coordinates = await this.getCoordinates(
+        temperatures,
+        this.config.deltaThreshold
+      );
 
       this.sensor.state = coordinates.length;
       this.sensor.attributes.coordinates = coordinates;
+
+      if (this.camera != undefined) {
+        this.camera.state = await this.generateHeatmap(
+          temperatures,
+          this.config.heatmap
+        );
+      }
     } catch (e) {
       if (e instanceof I2CError) {
         this.logger.debug(`Error during I2C communication: ${e.message}`);
@@ -163,5 +184,16 @@ export class OmronD6tService extends ThermopileOccupancyService
       new Sensor('d6t_occupancy_count', 'D6T Occupancy Count'),
       customizations
     ) as Sensor;
+  }
+
+  /**
+   * Creates and registers a new heatmap camera entity.
+   *
+   * @returns Registered camera
+   */
+  protected createHeatmapCamera(): Camera {
+    return this.entitiesService.add(
+      new Camera('d6t_heatmap', 'D6T Heatmap')
+    ) as Camera;
   }
 }

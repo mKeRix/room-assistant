@@ -18,6 +18,13 @@ This integration only supports the D6T-44L-06 sensor at the moment. You will nee
 
 ### Running with NodeJS
 
+To enable heatmap generation you may be required to install some [additional system packages](https://github.com/Automattic/node-canvas#compiling) for compilation:
+
+```shell
+sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+sudo npm i --global --unsafe-perm room-assistant
+```
+
 On Raspberry Pi devices the I<sup>2</sup>C interface also needs to be enabled using `sudo raspi-config` and then enabling the I<sup>2</sup>C option under Advanced Options.
 
 ### Running with Docker
@@ -71,11 +78,20 @@ When placing your sensor you need to consider a few factors to get reliable resu
 
 ## Settings
 
+| Name             | Type                | Default | Description                                                  |
+| ---------------- | ------------------- | ------- | ------------------------------------------------------------ |
+| `busNumber`      | Number              | `1`     | I<sup>2</sup>C bus number of your machine that the sensor is connected to. |
+| `address`        | Number              | `0x0a`  | I<sup>2</sup>C address of the D6T sensor that you want to use. |
+| `deltaThreshold` | Number              | `1.5`   | Minimum temperature difference between average and single temperature pixel in &deg;C for it to be considered as human presence. Increase if you are seeing false positives, decrease if you are seeing false negatives. |
+| `heatmap`        | [Heatmap](#heatmap) |         | A number of options for configuring the heatmap output.      |
+
+### Heatmap
+
 | Name             | Type   | Default | Description                                                  |
 | ---------------- | ------ | ------- | ------------------------------------------------------------ |
-| `busNumber`      | Number | `1`     | I<sup>2</sup>C bus number of your machine that the sensor is connected to. |
-| `address`        | Number | `0x0a`  | I<sup>2</sup>C address of the D6T sensor that you want to use. |
-| `deltaThreshold` | Number | `1.5`   | Minimum temperature difference between average and single temperature pixel in &deg;C for it to be considered as human presence. Increase if you are seeing false positives, decrease if you are seeing false negatives. |
+| `minTemperature` | Number | `16`    | Temperature that will be considered the lower bound for the color scale in &deg;C. |
+| `maxTemperature` | Number | `30`    | Temperature that will be considered the upper bound for the color scale in &deg;C. |
+| `rotation`       | Number | `0`     | The amount of degrees that the heatmap output image should be rotated. Only `0`, `90`, `180` or `270` are supported as values. |
 
 ::: details Example Config
 
@@ -85,6 +101,11 @@ global:
     - omronD6t
 omronD6t:
   deltaThreshold: 2
+  heatmap:
+    minTemperature: 16
+    maxTemperature: 30
+    rotation: 90
 ```
 
 :::
+
