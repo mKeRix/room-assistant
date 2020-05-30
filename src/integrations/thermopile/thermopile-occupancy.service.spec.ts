@@ -1,8 +1,14 @@
+import { HeatmapOptions } from './thermopile-occupancy.config';
+
 const mockContext = {
   rotate: jest.fn(),
   translate: jest.fn(),
   fillRect: jest.fn(),
+  fillText: jest.fn(),
+  save: jest.fn(),
+  restore: jest.fn(),
   fillStyle: '',
+  fontStyle: '',
 };
 const mockCanvas = {
   getContext: jest.fn().mockReturnValue(mockContext),
@@ -104,14 +110,32 @@ describe('ThermopileOccupancyService', () => {
     expect(mockCanvasModule.createCanvas).toHaveBeenCalledWith(250, 250);
   });
 
-  it('should create rectangles for each pixel', async () => {
-    await service.generateHeatmap(PRESENCE_TEMPERATURES);
+  it('should create rectangles with fonts for each pixel', async () => {
+    await service.generateHeatmap(PRESENCE_TEMPERATURES, undefined, 150, 150);
 
     expect(mockContext.translate).toHaveBeenCalledWith(75, 75);
     expect(mockContext.fillRect).toHaveBeenCalledTimes(16);
     expect(mockContext.fillRect).toHaveBeenCalledWith(-75, -75, 38, 38);
     expect(mockContext.fillRect).toHaveBeenCalledWith(39, 1, 38, 38);
-    expect(mockContext.fillStyle).toEqual('hsl(111.42857142857143, 100%, 50%)');
+    expect(mockContext.fillText).toHaveBeenCalledTimes(16);
+    expect(mockContext.fillText).toHaveBeenCalledWith(
+      PRESENCE_TEMPERATURES[0][0].toFixed(1),
+      0,
+      0
+    );
+  });
+
+  it('should not draw the temperature text if option is disabled', async () => {
+    const heatmapOptions = new HeatmapOptions();
+    heatmapOptions.drawTemperatures = false;
+    await service.generateHeatmap(
+      PRESENCE_TEMPERATURES,
+      heatmapOptions,
+      150,
+      150
+    );
+
+    expect(mockContext.fillText).not.toHaveBeenCalled();
   });
 
   it('should output a jpeg image buffer', async () => {
@@ -130,6 +154,7 @@ describe('ThermopileOccupancyService', () => {
         rotation: 90,
         minTemperature: 16,
         maxTemperature: 30,
+        drawTemperatures: true,
       },
       100,
       200
@@ -137,15 +162,5 @@ describe('ThermopileOccupancyService', () => {
 
     expect(mockCanvasModule.createCanvas).toHaveBeenCalledWith(200, 100);
     expect(mockContext.rotate).toHaveBeenCalledWith(1.5707963267948966);
-  });
-
-  it('should adapt the pixel coloring based on min and max temperatures', async () => {
-    await service.generateHeatmap(PRESENCE_TEMPERATURES, {
-      rotation: 0,
-      minTemperature: 10,
-      maxTemperature: 40,
-    });
-
-    expect(mockContext.fillStyle).toEqual('hsl(132, 100%, 50%)');
   });
 });
