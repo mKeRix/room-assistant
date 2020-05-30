@@ -20,6 +20,7 @@ import { Sensor } from '../../entities/sensor';
 import { BinarySensor } from '../../entities/binary-sensor';
 import { Switch } from '../../entities/switch';
 import { DeviceTracker } from '../../entities/device-tracker';
+import { Camera } from '../../entities/camera';
 import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
 
 jest.mock('async-mqtt', () => {
@@ -288,6 +289,37 @@ describe('HomeAssistantService', () => {
     expect(mockMqttClient.publish).toHaveBeenCalledTimes(1);
   });
 
+  it('should publish discovery information for a new camera', async () => {
+    await service.onModuleInit();
+    service.handleNewEntity(new Camera('test-camera', 'Test Camera'));
+
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'homeassistant/camera/room-assistant/test-instance-test-camera/config',
+      expect.any(String),
+      {
+        qos: 0,
+        retain: true,
+      }
+    );
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'room-assistant/camera/test-instance-test-camera/status',
+      'online',
+      {
+        qos: 0,
+        retain: true,
+      }
+    );
+    expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject({
+      unique_id: 'room-assistant-test-instance-test-camera',
+      name: 'Test Camera',
+      topic: 'room-assistant/camera/test-instance-test-camera/state',
+      json_attributes_topic:
+        'room-assistant/camera/test-instance-test-camera/attributes',
+      availability_topic:
+        'room-assistant/camera/test-instance-test-camera/status',
+    });
+  });
+
   it('should include device information in the discovery message', async () => {
     mockSystem.mockResolvedValue({
       serial: 'abcd',
@@ -382,6 +414,23 @@ describe('HomeAssistantService', () => {
     expect(mockMqttClient.publish).toHaveBeenCalledWith(
       'room-assistant/sensor/test-instance-test/state',
       '2',
+      {
+        qos: 0,
+        retain: true,
+      }
+    );
+  });
+
+  it('should publish Buffer states in binary form', async () => {
+    const imageData = new Buffer('abc');
+
+    await service.onModuleInit();
+    service.handleNewEntity(new Camera('test', 'Test'));
+    service.handleNewState('test', imageData);
+
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'room-assistant/camera/test-instance-test/state',
+      imageData,
       {
         qos: 0,
         retain: true,

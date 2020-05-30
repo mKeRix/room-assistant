@@ -9,6 +9,8 @@ import { ClusterModule } from '../cluster/cluster.module';
 import { EventEmitter } from 'events';
 import { ClusterService } from '../cluster/cluster.service';
 import { ConfigModule } from '../config/config.module';
+import { BinarySensor } from './binary-sensor';
+import { Camera } from './camera';
 
 describe('Entities Controller', () => {
   let controller: EntitiesController;
@@ -43,6 +45,21 @@ describe('Entities Controller', () => {
       return entities;
     });
 
-    expect(controller.getAll()).toBe(entities);
+    expect(controller.getAll()).toStrictEqual(entities);
+  });
+
+  it('should filter camera entities from the list', () => {
+    const entities: Entity[] = [
+      new BinarySensor('binary_sensor', 'Test Binary Sensor'),
+      new Camera('camera', 'Test Camera'),
+    ];
+    jest.spyOn(service, 'getAll').mockImplementation(() => {
+      return entities;
+    });
+
+    const result = controller.getAll();
+    expect(result).toHaveLength(1);
+    expect(result).toContain(entities[0]);
+    expect(result).not.toContain(entities[1]);
   });
 });
