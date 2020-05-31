@@ -51,8 +51,6 @@
     "@nestjs/terminus": "^7.0.1",
     "async-mqtt": "^2.6.0",
     "chalk": "^4.0.0",
-    "class-transformer": "^0.2.3",
-    "class-validator": "^0.12.2",
     "command-line-args": "^5.1.1",
     "command-line-usage": "^6.1.0",
     "config": "^3.3.1",
