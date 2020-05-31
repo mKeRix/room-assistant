@@ -29,13 +29,17 @@ import { ClusterModule } from '../../cluster/cluster.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ClusterService } from '../../cluster/cluster.service';
 import { EntitiesService } from '../../entities/entities.service';
-import { BluetoothLowEnergyConfig } from './bluetooth-low-energy.config';
+import {
+  BluetoothLowEnergyConfig,
+  ListItemType,
+} from './bluetooth-low-energy.config';
 import { Sensor } from '../../entities/sensor';
 import c from 'config';
 import { NewDistanceEvent } from './new-distance.event';
 import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presence.sensor';
 import KalmanFilter from 'kalmanjs';
 import { DeviceTracker } from '../../entities/device-tracker';
+import { Tag } from './tag';
 import * as util from 'util';
 
 jest.useFakeTimers();
@@ -169,7 +173,7 @@ describe('BluetoothLowEnergyService', () => {
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(ListItemType.ID);
 
     mockConfig.onlyIBeacon = true;
     mockConfig.processIBeacon = true;
@@ -204,7 +208,7 @@ describe('BluetoothLowEnergyService', () => {
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(ListItemType.ID);
 
     mockConfig.processIBeacon = false;
     service.handleDiscovery({
@@ -237,7 +241,7 @@ describe('BluetoothLowEnergyService', () => {
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(ListItemType.ID);
 
     service.handleDiscovery({
       id: '123-123',
@@ -251,6 +255,64 @@ describe('BluetoothLowEnergyService', () => {
       'test-instance',
       '123-123',
       'Test BLE Device',
+      -81,
+      -59,
+      10.5
+    );
+    expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
+    expect(clusterService.publish).toHaveBeenCalledWith(
+      NEW_DISTANCE_CHANNEL,
+      expectedEvent
+    );
+  });
+
+  it('should publish distance changes with the tag id if the whitelist entry is of ID type', () => {
+    const handleDistanceSpy = jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    mockConfig.whitelist = [{ type: ListItemType.ID, value: 'test-id' }];
+
+    service.handleDiscovery({
+      id: 'test-id',
+      rssi: -81,
+      advertisement: {
+        localName: 'TestBLE',
+      },
+    } as Peripheral);
+
+    const expectedEvent = new NewDistanceEvent(
+      'test-instance',
+      'test-id',
+      'TestBLE',
+      -81,
+      -59,
+      10.5
+    );
+    expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
+    expect(clusterService.publish).toHaveBeenCalledWith(
+      NEW_DISTANCE_CHANNEL,
+      expectedEvent
+    );
+  });
+
+  it('should publish distance changes with the tag name if the whitelist entry is of NAME type', () => {
+    const handleDistanceSpy = jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    mockConfig.whitelist = [{ type: ListItemType.NAME, value: 'TestBLE' }];
+
+    service.handleDiscovery({
+      id: 'test-id',
+      rssi: -81,
+      advertisement: {
+        localName: 'TestBLE',
+      },
+    } as Peripheral);
+
+    const expectedEvent = new NewDistanceEvent(
+      'test-instance',
+      'TestBLE',
+      'TestBLE',
       -81,
       -59,
       10.5
@@ -346,7 +408,7 @@ describe('BluetoothLowEnergyService', () => {
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(ListItemType.ID);
     mockConfig.tagOverrides = {
       abcd: {
         measuredPower: -80,
@@ -398,7 +460,7 @@ describe('BluetoothLowEnergyService', () => {
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(ListItemType.ID);
     mockConfig.tagOverrides = {
       abcd: {
         name: 'better name',
@@ -421,7 +483,7 @@ describe('BluetoothLowEnergyService', () => {
   });
 
   it('should not publish state changes for devices that are not on the whitelist', () => {
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(false);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(undefined);
 
     service.handleDiscovery({
       id: 'abcd',
@@ -436,37 +498,124 @@ describe('BluetoothLowEnergyService', () => {
   it('should match ids to a normal whitelist', () => {
     mockConfig.whitelist = ['vip-id', 'vip2-id'];
 
-    expect(service.isOnWhitelist('vip-id')).toBeTruthy();
-    expect(service.isOnWhitelist('random-id')).toBeFalsy();
+    expect(service.findWhitelistType({ id: 'vip-id' } as Tag)).toBeTruthy();
+    expect(service.findWhitelistType({ id: 'random-id' } as Tag)).toBeFalsy();
   });
 
   it('should match ids to a regex whitelist', () => {
     mockConfig.whitelist = ['vip-[a-z]+', '^[1-9]+$'];
     mockConfig.whitelistRegex = true;
 
-    expect(service.isOnWhitelist('vip-def')).toBeTruthy();
-    expect(service.isOnWhitelist('asvip-abcd')).toBeTruthy();
-    expect(service.isOnWhitelist('123')).toBeTruthy();
-    expect(service.isOnWhitelist('test')).toBeFalsy();
-    expect(service.isOnWhitelist('test123')).toBeFalsy();
+    expect(service.findWhitelistType({ id: 'vip-def' } as Tag)).toBeTruthy();
+    expect(service.findWhitelistType({ id: 'asvip-abcd' } as Tag)).toBeTruthy();
+    expect(service.findWhitelistType({ id: '123' } as Tag)).toBeTruthy();
+    expect(service.findWhitelistType({ id: 'test' } as Tag)).toBeFalsy();
+    expect(service.findWhitelistType({ id: 'test123' } as Tag)).toBeFalsy();
+  });
+
+  it('should find item type for ids in a mixed normal whitelist', () => {
+    mockConfig.whitelist = [
+      'vip-id',
+      { type: ListItemType.ID, value: 'vip2-id' },
+      { type: ListItemType.NAME, value: 'vip-name' },
+    ];
+
+    expect(service.findWhitelistType({ id: 'vip-id' } as Tag)).toBe(
+      ListItemType.ID
+    );
+    expect(service.findWhitelistType({ id: 'vip2-id' } as Tag)).toBe(
+      ListItemType.ID
+    );
+    expect(service.findWhitelistType({ name: 'vip-name' } as Tag)).toBe(
+      ListItemType.NAME
+    );
+    expect(
+      service.findWhitelistType({ id: 'random-id' } as Tag)
+    ).toBeUndefined();
+    expect(
+      service.findWhitelistType({ name: 'random-name' } as Tag)
+    ).toBeUndefined();
+  });
+
+  it('should find item type for ids in a mixed regex whitelist', () => {
+    mockConfig.whitelist = [
+      'vip-[a-z]+',
+      { type: ListItemType.NAME, value: '^[1-9]+$' },
+    ];
+    mockConfig.whitelistRegex = true;
+
+    expect(
+      service.findWhitelistType({ id: 'vip-def', name: 'test' } as Tag)
+    ).toBe(ListItemType.ID);
+    expect(
+      service.findWhitelistType({ id: '123', name: 'something' } as Tag)
+    ).toBeUndefined();
+    expect(service.findWhitelistType({ id: '123', name: '123' } as Tag)).toBe(
+      ListItemType.NAME
+    );
+    expect(
+      service.findWhitelistType({ id: 'test', name: 'test' } as Tag)
+    ).toBeUndefined();
   });
 
   it('should match ids to a normal blacklist', () => {
     mockConfig.blacklist = ['vip-id', 'vip2-id'];
 
-    expect(service.isOnBlacklist('vip-id')).toBeTruthy();
-    expect(service.isOnBlacklist('random-id')).toBeFalsy();
+    expect(service.isOnBlacklist({ id: 'vip-id' } as Tag)).toBeTruthy();
+    expect(service.isOnBlacklist({ id: 'random-id' } as Tag)).toBeFalsy();
   });
 
   it('should match ids to a regex blacklist', () => {
     mockConfig.blacklist = ['vip-[a-z]+', '^[1-9]+$'];
     mockConfig.blacklistRegex = true;
 
-    expect(service.isOnBlacklist('vip-def')).toBeTruthy();
-    expect(service.isOnBlacklist('asvip-abcd')).toBeTruthy();
-    expect(service.isOnBlacklist('123')).toBeTruthy();
-    expect(service.isOnBlacklist('test')).toBeFalsy();
-    expect(service.isOnBlacklist('test123')).toBeFalsy();
+    expect(service.isOnBlacklist({ id: 'vip-def' } as Tag)).toBeTruthy();
+    expect(service.isOnBlacklist({ id: 'asvip-abcd' } as Tag)).toBeTruthy();
+    expect(service.isOnBlacklist({ id: '123' } as Tag)).toBeTruthy();
+    expect(service.isOnBlacklist({ id: 'test' } as Tag)).toBeFalsy();
+    expect(service.isOnBlacklist({ id: 'test123' } as Tag)).toBeFalsy();
+  });
+
+  it('should match ids to a mixed normal blacklist', () => {
+    mockConfig.blacklist = [
+      'vip-id',
+      { type: ListItemType.ID, value: 'vip2-id' },
+      { type: ListItemType.NAME, value: 'vip-name' },
+    ];
+
+    expect(
+      service.isOnBlacklist({ id: 'vip-id', name: 'test' } as Tag)
+    ).toBeTruthy();
+    expect(
+      service.isOnBlacklist({ id: 'vip2-id', name: 'noname' } as Tag)
+    ).toBeTruthy();
+    expect(
+      service.isOnBlacklist({ id: 'noid', name: 'vip-name' } as Tag)
+    ).toBeTruthy();
+    expect(
+      service.isOnBlacklist({ id: 'random-id', name: 'test' } as Tag)
+    ).toBeFalsy();
+  });
+
+  it('should match ids to a mixed regex blacklist', () => {
+    mockConfig.blacklist = [
+      'vip-[a-z]+',
+      { type: ListItemType.NAME, value: '^[1-9]+$' },
+    ];
+    mockConfig.blacklistRegex = true;
+
+    expect(
+      service.isOnBlacklist({ id: 'vip-def', name: 'test' } as Tag)
+    ).toBeTruthy();
+    expect(
+      service.isOnBlacklist({ id: '123', name: 'something' } as Tag)
+    ).toBeFalsy();
+    expect(
+      service.isOnBlacklist({ id: '123', name: '123' } as Tag)
+    ).toBeTruthy();
+    expect(
+      service.isOnBlacklist({ id: 'test', name: 'test' } as Tag)
+    ).toBeFalsy();
   });
 
   it('should filter the measured RSSI of the peripherals', () => {
@@ -475,7 +624,7 @@ describe('BluetoothLowEnergyService', () => {
       .mockImplementation(() => undefined);
     const filterSpy = jest.spyOn(service, 'filterRssi').mockReturnValue(-50);
     jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(ListItemType.ID);
 
     service.handleDiscovery({
       id: '12:ab:cd:12:cd',
@@ -498,7 +647,7 @@ describe('BluetoothLowEnergyService', () => {
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(ListItemType.ID);
     mockConfig.maxDistance = 5;
 
     service.handleDiscovery({
@@ -526,7 +675,7 @@ describe('BluetoothLowEnergyService', () => {
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(ListItemType.ID);
     mockConfig.maxDistance = 5;
 
     service.handleDiscovery({
@@ -554,7 +703,7 @@ describe('BluetoothLowEnergyService', () => {
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(ListItemType.ID);
     mockConfig.updateFrequency = 10;
     const now = new Date();
 
@@ -610,7 +759,7 @@ describe('BluetoothLowEnergyService', () => {
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(ListItemType.ID);
 
     service.handleDiscovery({
       id: '12:ab:cd:12:cd',
@@ -645,7 +794,7 @@ describe('BluetoothLowEnergyService', () => {
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(ListItemType.ID);
 
     service.handleDiscovery({
       id: 'id1',
@@ -735,7 +884,7 @@ describe('BluetoothLowEnergyService', () => {
 
   it('should log the id of new peripherals that are found', () => {
     mockConfig.processIBeacon = true;
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(false);
+    jest.spyOn(service, 'findWhitelistType').mockReturnValue(undefined);
 
     service.handleDiscovery({
       id: 'test-ibeacon-123',

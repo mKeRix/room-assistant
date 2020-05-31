@@ -9,7 +9,12 @@ import { EntitiesService } from '../../entities/entities.service';
 import { IBeacon } from './i-beacon';
 import { Tag } from './tag';
 import { ConfigService } from '../../config/config.service';
-import { BluetoothLowEnergyConfig } from './bluetooth-low-energy.config';
+import {
+  BluetoothLowEnergyConfig,
+  isListItem,
+  ListItem,
+  ListItemType,
+} from './bluetooth-low-energy.config';
 import { ClusterService } from '../../cluster/cluster.service';
 import { NewDistanceEvent } from './new-distance.event';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
@@ -93,18 +98,20 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
       this.seenIds.add(tag.id);
     }
 
+    const whitelistType = this.findWhitelistType(tag);
     if (
-      (this.isOnWhitelist(tag.id) ||
+      (whitelistType ||
         (!this.isWhitelistEnabled() && this.isBlacklistEnabled())) &&
-      !this.isOnBlacklist(tag.id)
+      !this.isOnBlacklist(tag)
     ) {
+      const tagId = tag[whitelistType || ListItemType.ID];
       tag = this.applyOverrides(tag);
-      tag.rssi = this.filterRssi(tag.id, tag.rssi);
+      tag.rssi = this.filterRssi(tagId, tag.rssi);
 
       const globalSettings = this.configService.get('global');
       const event = new NewDistanceEvent(
         globalSettings.instanceName,
-        tag.id,
+        tagId,
         tag.name,
         tag.rssi,
         tag.measuredPower,
@@ -112,14 +119,14 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
         tag.distance > this.config.maxDistance
       );
 
-      if (!this.tagUpdaters.hasOwnProperty(tag.id)) {
-        this.tagUpdaters[tag.id] = _.throttle((event: NewDistanceEvent) => {
+      if (!this.tagUpdaters.hasOwnProperty(tagId)) {
+        this.tagUpdaters[tagId] = _.throttle((event: NewDistanceEvent) => {
           this.handleNewDistance(event);
           this.clusterService.publish(NEW_DISTANCE_CHANNEL, event);
         }, this.config.updateFrequency * 1000);
       }
 
-      this.tagUpdaters[tag.id](event);
+      this.tagUpdaters[tagId](event);
     }
   }
 
@@ -192,15 +199,23 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
    * @param id - Device id
    * @return Whether the id is on the whitelist or not
    */
-  isOnWhitelist(id: string): boolean {
+  findWhitelistType(tag: Tag): ListItemType | undefined {
     const whitelist = this.config.whitelist;
     if (whitelist === undefined || whitelist.length === 0) {
-      return false;
+      return undefined;
     }
 
-    return this.config.whitelistRegex
-      ? whitelist.some((regex) => id.match(regex))
-      : whitelist.includes(id);
+    const matchedItem = whitelist.find((item) => {
+      const checkValue = isListItem(item) ? tag[item.type] : tag.id;
+      const whitelistValue = isListItem(item) ? item.value : item;
+      return this.config.whitelistRegex
+        ? checkValue.match(whitelistValue)
+        : whitelistValue === checkValue;
+    });
+
+    if (matchedItem) {
+      return isListItem(matchedItem) ? matchedItem.type : ListItemType.ID;
+    }
   }
 
   /**
@@ -209,15 +224,19 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
    * @param id - Device id
    * @return Whether the id is on the blacklist or not
    */
-  isOnBlacklist(id: string): boolean {
+  isOnBlacklist(tag: Tag): boolean {
     const blacklist = this.config.blacklist;
     if (blacklist === undefined || blacklist.length === 0) {
       return false;
     }
 
-    return this.config.blacklistRegex
-      ? blacklist.some((regex) => id.match(regex))
-      : blacklist.includes(id);
+    return blacklist.some((item) => {
+      const checkValue = isListItem(item) ? tag[item.type] : tag.id;
+      const blacklistValue = isListItem(item) ? item.value : item;
+      return this.config.blacklistRegex
+        ? checkValue.match(blacklistValue)
+        : blacklistValue === checkValue;
+    });
   }
 
   /**
