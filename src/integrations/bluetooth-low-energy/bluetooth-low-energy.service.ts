@@ -22,6 +22,7 @@ import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
 import * as _ from 'lodash';
 import { DeviceTracker } from '../../entities/device-tracker';
 import { RoomPresenceDeviceTrackerProxyHandler } from '../room-presence/room-presence-device-tracker.proxy';
+import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presence.sensor';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 
@@ -105,6 +106,8 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
         globalSettings.instanceName,
         tag.id,
         tag.name,
+        tag.rssi,
+        tag.measuredPower,
         tag.distance,
         tag.distance > this.config.maxDistance
       );
@@ -127,9 +130,11 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
    */
   handleNewDistance(event: NewDistanceEvent): void {
     const sensorId = makeId(`ble ${event.tagId}`);
-    let sensor: RoomPresenceDistanceSensor;
+    let sensor: BluetoothLowEnergyPresenceSensor;
     if (this.entitiesService.has(sensorId)) {
-      sensor = this.entitiesService.get(sensorId) as RoomPresenceDistanceSensor;
+      sensor = this.entitiesService.get(
+        sensorId
+      ) as BluetoothLowEnergyPresenceSensor;
     } else {
       sensor = this.createRoomPresenceSensor(
         sensorId,
@@ -138,8 +143,10 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
       );
     }
 
-    sensor.handleNewDistance(
+    sensor.handleNewMeasurement(
       event.instanceName,
+      event.rssi,
+      event.measuredPower,
       event.distance,
       event.outOfRange
     );
@@ -236,7 +243,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
     sensorId: string,
     deviceId: string,
     deviceName: string
-  ): RoomPresenceDistanceSensor {
+  ): BluetoothLowEnergyPresenceSensor {
     const deviceTracker = this.createDeviceTracker(
       makeId(`${sensorId}-tracker`),
       deviceName
@@ -256,7 +263,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
         },
       },
     ];
-    const rawSensor = new RoomPresenceDistanceSensor(
+    const rawSensor = new BluetoothLowEnergyPresenceSensor(
       sensorId,
       sensorName,
       this.config.timeout
@@ -268,7 +275,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
     const sensor = this.entitiesService.add(
       proxiedSensor,
       customizations
-    ) as RoomPresenceDistanceSensor;
+    ) as BluetoothLowEnergyPresenceSensor;
 
     const interval = setInterval(
       sensor.updateState.bind(sensor),
