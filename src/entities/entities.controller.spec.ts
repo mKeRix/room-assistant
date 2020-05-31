@@ -3,7 +3,7 @@ import { EntitiesController } from './entities.controller';
 import { EntitiesService } from './entities.service';
 import { Sensor } from './sensor';
 import { Switch } from './switch';
-import { Entity } from './entity';
+import { Entity } from './entity.dto';
 import { NestEmitterModule } from 'nest-emitter';
 import { ClusterModule } from '../cluster/cluster.module';
 import { EventEmitter } from 'events';
