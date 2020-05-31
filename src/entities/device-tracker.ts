@@ -1,4 +1,4 @@
-import { Entity } from './entity';
+import { Entity } from './entity.dto';
 
 export class DeviceTracker extends Entity {
   state: boolean;

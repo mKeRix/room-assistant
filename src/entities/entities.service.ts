@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { Entity } from './entity';
+import { Entity } from './entity.dto';
 import { EntityProxyHandler } from './entity.proxy';
 import { InjectEventEmitter } from 'nest-emitter';
 import { EntitiesEventEmitter } from './entities.events';

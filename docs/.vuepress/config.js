@@ -57,7 +57,8 @@ module.exports = {
             '/guide/configuration',
             '/guide/cluster',
             '/guide/entities',
-            '/guide/cli'
+            '/guide/cli',
+            '/guide/api'
           ]
         },
         {

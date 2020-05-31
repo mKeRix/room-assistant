@@ -1,4 +1,4 @@
-import { Entity } from './entity';
+import { Entity } from './entity.dto';
 
 export class Switch extends Entity {
   state: boolean;

@@ -1,4 +1,4 @@
-import { Entity } from './entity';
+import { Entity } from './entity.dto';
 import { AttributesProxyHandler } from './attributes.proxy';
 import { EntitiesEventEmitter } from './entities.events';
 import { EntityBehavior } from './entities.config';

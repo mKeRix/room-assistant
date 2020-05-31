@@ -15,7 +15,7 @@ import * as mqtt from 'async-mqtt';
 import { system, Systeminformation } from 'systeminformation';
 import SystemData = Systeminformation.SystemData;
 import { SensorConfig } from './sensor-config';
-import { Entity } from '../../entities/entity';
+import { Entity } from '../../entities/entity.dto';
 import { Sensor } from '../../entities/sensor';
 import { BinarySensor } from '../../entities/binary-sensor';
 import { Switch } from '../../entities/switch';

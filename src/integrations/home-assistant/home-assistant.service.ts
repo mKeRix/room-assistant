@@ -5,7 +5,7 @@ import {
   OnApplicationShutdown,
   OnModuleInit,
 } from '@nestjs/common';
-import { Entity } from '../../entities/entity';
+import { Entity } from '../../entities/entity.dto';
 import { Sensor } from '../../entities/sensor';
 import { EntityConfig } from './entity-config';
 import { SensorConfig } from './sensor-config';

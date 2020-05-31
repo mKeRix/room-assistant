@@ -5,7 +5,7 @@ import {
   OnApplicationShutdown,
 } from '@nestjs/common';
 import i2cBus, { PromisifiedBus } from 'i2c-bus';
-import { Entity } from '../../entities/entity';
+import { Entity } from '../../entities/entity.dto';
 import { EntitiesService } from '../../entities/entities.service';
 import { Sensor } from '../../entities/sensor';
 import * as math from 'mathjs';

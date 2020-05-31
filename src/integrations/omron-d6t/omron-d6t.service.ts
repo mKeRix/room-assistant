@@ -11,7 +11,7 @@ import i2cBus, { PromisifiedBus } from 'i2c-bus';
 import { Interval } from '@nestjs/schedule';
 import * as math from 'mathjs';
 import { Sensor } from '../../entities/sensor';
-import { Entity } from '../../entities/entity';
+import { Entity } from '../../entities/entity.dto';
 import { I2CError } from './i2c.error';
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { ThermopileOccupancyService } from '../thermopile/thermopile-occupancy.service';
