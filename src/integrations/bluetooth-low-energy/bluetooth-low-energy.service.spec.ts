@@ -33,7 +33,7 @@ import { BluetoothLowEnergyConfig } from './bluetooth-low-energy.config';
 import { Sensor } from '../../entities/sensor';
 import c from 'config';
 import { NewDistanceEvent } from './new-distance.event';
-import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
+import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presence.sensor';
 import KalmanFilter from 'kalmanjs';
 import { DeviceTracker } from '../../entities/device-tracker';
 import * as util from 'util';
@@ -188,6 +188,8 @@ describe('BluetoothLowEnergyService', () => {
       'test-instance',
       '2f234454cf6d4a0fadf2f4911ba9ffa6-1-2',
       'Test Beacon',
+      -50,
+      -52,
       0.7
     );
     expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
@@ -219,6 +221,8 @@ describe('BluetoothLowEnergyService', () => {
       'test-instance',
       'abcd1234',
       'Test Beacon',
+      -59,
+      -59,
       1
     );
     expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
@@ -247,6 +251,8 @@ describe('BluetoothLowEnergyService', () => {
       'test-instance',
       '123-123',
       'Test BLE Device',
+      -81,
+      -59,
       10.5
     );
     expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
@@ -359,6 +365,8 @@ describe('BluetoothLowEnergyService', () => {
       'test-instance',
       'abcd',
       'Test BLE Device',
+      -81,
+      -80,
       1.1
     );
     expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
@@ -377,6 +385,7 @@ describe('BluetoothLowEnergyService', () => {
 
     expectedEvent.tagId = 'defg';
     expectedEvent.distance = 10.5;
+    expectedEvent.measuredPower = -59;
     expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
     expect(clusterService.publish).toHaveBeenCalledWith(
       NEW_DISTANCE_CHANNEL,
@@ -658,27 +667,27 @@ describe('BluetoothLowEnergyService', () => {
   });
 
   it('should pass distance information to existing room presence sensors', () => {
-    const sensor = new RoomPresenceDistanceSensor('test', 'Test', 0);
+    const sensor = new BluetoothLowEnergyPresenceSensor('test', 'Test', 0);
     entitiesService.has.mockReturnValue(true);
     entitiesService.get.mockReturnValue(sensor);
     const sensorHandleSpy = jest.spyOn(sensor, 'handleNewDistance');
 
     service.handleNewDistance(
-      new NewDistanceEvent('test-instance', 'test', 'Test', 2)
+      new NewDistanceEvent('test-instance', 'test', 'Test', -80, -50, 2)
     );
 
     expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 2, false);
   });
 
   it('should add new room presence sensor if no matching ones exist yet', () => {
-    const sensor = new RoomPresenceDistanceSensor('test', 'Test', 0);
+    const sensor = new BluetoothLowEnergyPresenceSensor('test', 'Test', 0);
     entitiesService.has.mockReturnValue(false);
     entitiesService.add.mockReturnValue(sensor);
     mockConfig.timeout = 20;
     const sensorHandleSpy = jest.spyOn(sensor, 'handleNewDistance');
 
     service.handleNewDistance(
-      new NewDistanceEvent('test-instance', 'new', 'New Tag', 1.3)
+      new NewDistanceEvent('test-instance', 'new', 'New Tag', -80, -50, 1.3)
     );
 
     expect(entitiesService.add).toHaveBeenCalledWith(
@@ -697,6 +706,31 @@ describe('BluetoothLowEnergyService', () => {
     ).toBeTruthy();
     expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 20 * 1000);
     expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 1.3, false);
+  });
+
+  it('should update the sensor RSSI and measuredPower information', () => {
+    const sensor = new BluetoothLowEnergyPresenceSensor('test', 'Test', 0);
+    entitiesService.has.mockReturnValue(true);
+    entitiesService.get.mockReturnValue(sensor);
+
+    service.handleNewDistance(
+      new NewDistanceEvent('test-instance', 'test', 'Test', -80, -50, 2)
+    );
+
+    expect(sensor.measuredValues['test-instance'].rssi).toBe(-80);
+    expect(sensor.measuredValues['test-instance'].measuredPower).toBe(-50);
+
+    service.handleNewDistance(
+      new NewDistanceEvent('test-instance-2', 'test', 'Test', -40, -45, 2)
+    );
+    service.handleNewDistance(
+      new NewDistanceEvent('test-instance', 'test', 'Test', -70, -50, 2)
+    );
+
+    expect(sensor.measuredValues['test-instance-2'].rssi).toBe(-40);
+    expect(sensor.measuredValues['test-instance-2'].measuredPower).toBe(-45);
+    expect(sensor.measuredValues['test-instance'].rssi).toBe(-70);
+    expect(sensor.measuredValues['test-instance'].measuredPower).toBe(-50);
   });
 
   it('should log the id of new peripherals that are found', () => {
