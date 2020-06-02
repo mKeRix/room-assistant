@@ -32,6 +32,14 @@ sudo npm i --global --unsafe-perm room-assistant
 npm will link the binary for running the software, usually into `/usr/bin/room-assistant`.
 If the directory is already in your `PATH` you can start it directly by typing `room-assistant`. Otherwise you can start it by typing the full path name of where it was installed.
 
+::: tip
+
+During installation you may see a lot of messages like the one in the image below scroll by. Don't worry - these are not errors! This is just the output of dependencies being compiled. As long as npm does not say that the installation ran into an error at the end you are good.
+
+![compilation messages](./compilation-msgs.png)
+
+:::
+
 ### Making it a service
 
 To make sure room-assistant always runs on your machine you can create a system service for it. Create the file `/etc/systemd/system/room-assistant.service` similar to the following example:
