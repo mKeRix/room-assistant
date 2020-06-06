@@ -2,7 +2,7 @@
 
 **Integration Key:** `gridEye`
 
-The Grid-EYE sensor by Panasonic is a thermopile sensor that can be used to measure a 64x64 matrix of temperatures in front of its lense. This data can be used to detect human presence in the room, even if the person is stationary. This is done by analyzing the temperature readings for localized peaks, i.e. certain spots have a notably higher temperature than the rest. SparkFun sells a [version of the sensor](https://www.sparkfun.com/products/14607) that can be easily connected to Linux boards and will also work with this component.
+The Grid-EYE sensor by Panasonic is a thermopile sensor that can be used to measure a 8x8 matrix of temperatures in front of its lense. This data can be used to detect human presence in the room, even if the person is stationary. This is done by analyzing the temperature readings for localized peaks, i.e. certain spots have a notably higher temperature than the rest. SparkFun sells a [version of the sensor](https://www.sparkfun.com/products/14607) that can be easily connected to Linux boards and will also work with this component.
 
 This integration will provide a sensor that contains a count of people in the room. It also includes their coordinates (relative to the sensor view) in the sensor attributes.
 
