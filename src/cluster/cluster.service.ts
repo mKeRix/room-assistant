@@ -151,6 +151,32 @@ export class ClusterService extends Democracy
   }
 
   /**
+   * Process events that are received over the network.
+   *
+   * @param msg - Received message
+   * @returns this
+   */
+  protected processEvent(msg: Buffer): this {
+    super.processEvent(msg);
+    const data = this.decodeMsg(msg);
+
+    if (!data.chunk && data.state === 'leader') {
+      const leaders = Object.entries(this._nodes).filter(
+        (node) => node[1].state === 'leader'
+      );
+
+      if (leaders.length > 1) {
+        leaders.forEach((leader) => {
+          this._nodes[leader[0]].state = 'citizen';
+        });
+        this.holdElections();
+      }
+    }
+
+    return this;
+  }
+
+  /**
    * Check if a node should be removed from the cluster.
    *
    * @param candidate - Node ID of the removal candidate

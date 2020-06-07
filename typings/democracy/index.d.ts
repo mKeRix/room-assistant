@@ -13,11 +13,14 @@ declare module 'democracy' {
     constructor(opts?: Options);
     protected addNodeToList(node: Node): void;
     protected checkBallots(candidate: string): this;
+    protected processEvent(msg: Buffer): this;
+    protected decodeMsg(msg: Buffer): Record<string, unknown>;
     hello(): this;
     nodes(): { [key: string]: Node };
     leader(): Node | undefined;
     resign(): this;
     isLeader(): boolean;
+    holdElections(): this;
     send(customEvent: string, extraData?: any, id?: string): this;
     subscribe(channel: string): this;
     publish(channel: string, msg: any): this;

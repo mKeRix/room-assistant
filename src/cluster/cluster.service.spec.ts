@@ -19,9 +19,14 @@ const mockMdns = {
   },
   dns_sd: [],
 };
+const mockSocket = {
+  bind: jest.fn(),
+  on: jest.fn(),
+  send: jest.fn(),
+};
 
 import { networkInterfaces } from 'os';
-import Democracy, { Node } from 'democracy';
+import { Node } from 'democracy';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClusterService } from './cluster.service';
 import { ConfigModule } from '../config/config.module';
@@ -30,12 +35,17 @@ import { ConfigService } from '../config/config.service';
 import c from 'config';
 
 jest.mock('os');
-jest.mock('democracy');
+jest.mock('dgram', () => {
+  return {
+    createSocket: jest.fn().mockReturnValue(mockSocket),
+  };
+});
 jest.mock('mdns', () => mockMdns, { virtual: true });
+jest.useFakeTimers();
 
 describe('ClusterService', () => {
   let service: ClusterService;
-  const mockConfig = new ClusterConfig();
+  const mockConfig = { ...new ClusterConfig(), weight: 50 };
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
       return key === 'cluster' ? mockConfig : c.get(key);
@@ -81,13 +91,11 @@ describe('ClusterService', () => {
   });
 
   it('should determine the local IP', () => {
-    expect(Democracy).toHaveBeenCalledWith({
-      id: 'test-instance',
-      source: '192.168.1.108:6425',
-      peers: [],
-      timeout: 60000,
-      weight: undefined,
-    });
+    expect(mockSocket.bind).toHaveBeenCalledWith(
+      '6425',
+      '192.168.1.108',
+      expect.any(Function)
+    );
   });
 
   it('should start advertising room-assistant via Bonjour', () => {
@@ -176,5 +184,43 @@ describe('ClusterService', () => {
     jest.spyOn(service, 'isLeader').mockReturnValue(true);
 
     expect(service.isMajorityLeader()).toBeFalsy();
+  });
+
+  it('should handle cluster leader conflicts', () => {
+    mockSocket.bind.mock.calls[0][2]();
+    const socketCallback = mockSocket.on.mock.calls[0][1];
+
+    const msg1 = Buffer.from(
+      JSON.stringify({
+        event: 'hello',
+        id: 'node1',
+        weight: 60,
+        state: 'leader',
+        channels: [],
+        source: '127.0.0.1:6425',
+      }),
+      'utf8'
+    );
+    const msg2 = Buffer.from(
+      JSON.stringify({
+        event: 'hello',
+        id: 'node2',
+        weight: 55,
+        state: 'leader',
+        channels: [],
+        source: '127.0.0.1:6426',
+      }),
+      'utf8'
+    );
+
+    socketCallback(msg1);
+    socketCallback(msg2);
+
+    const leaders = Object.entries(service.nodes()).filter(
+      (node) => node[1].state === 'leader'
+    );
+
+    expect(service.leader().id).toBe('node1');
+    expect(leaders).toHaveLength(1);
   });
 });
