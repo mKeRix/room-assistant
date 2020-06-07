@@ -11,6 +11,7 @@ import { EventEmitter } from 'events';
 import { WINSTON_LOGGER } from './logger';
 import { StatusModule } from './status/status.module';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const VERSION = require('../package.json').version;
 export const CONFIGURED_INTEGRATIONS = c
   .get<string[]>('global.integrations')
