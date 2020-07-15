@@ -3,9 +3,19 @@ name: "CodeQL"
 on:
   push:
     branches: [master, ]
+    paths-ignore:
+      - 'docs/**'
+      - '.github/**'
+      - 'package.json'
+      - 'package-lock.json'
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [master]
+    paths-ignore:
+      - 'docs/**'
+      - '.github/**'
+      - 'package.json'
+      - 'package-lock.json'
   schedule:
     - cron: '0 4 * * 4'
 
