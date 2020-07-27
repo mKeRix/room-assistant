@@ -65,7 +65,7 @@ jobs:
         run: npm run test:cov
         env:
           CI: true
-      - uses: codecov/codecov-action@v1.0.10
+      - uses: codecov/codecov-action@v1.0.12
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           name: Node.js ${{ matrix.node-version }}
