@@ -115,7 +115,7 @@ jobs:
         run: docker buildx build --build-arg ROOM_ASSISTANT_VERSION=${{steps.semantic.outputs.new_release_version}} --platform linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64 -t mkerix/room-assistant:${{steps.semantic.outputs.new_release_version}} -t mkerix/room-assistant:$([[ "${{steps.semantic.outputs.new_release_version}}" == *"beta"* ]] && echo "beta" || echo "latest") --push .
       - name: Update description on DockerHub
         if: steps.semantic.outputs.new_release_published == 'true'
-        uses: peter-evans/dockerhub-description@v2.2.0
+        uses: peter-evans/dockerhub-description@v2.3.0
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
