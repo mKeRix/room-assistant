@@ -32,7 +32,7 @@ jobs:
             ${{ runner.OS }}-node-12.x
             ${{ runner.OS }}-
       - name: Install dependencies
-        run: npm ci --no-optional
+        run: npm ci
       - name: Lint the code
         run: npm run lint --if-present
   test:
@@ -58,7 +58,7 @@ jobs:
             ${{ runner.OS }}-node-${{ matrix.node-version }}
             ${{ runner.OS }}-
       - name: Install dependencies
-        run: npm ci --no-optional
+        run: npm ci
       - name: Build the project
         run: npm run build --if-present
       - name: Run tests
@@ -94,7 +94,7 @@ jobs:
             ${{ runner.OS }}-node-12.x
             ${{ runner.OS }}-
       - name: Install dependencies
-        run: npm ci --no-optional
+        run: npm ci
       - name: Create new release
         uses: cycjimmy/semantic-release-action@v2
         id: semantic
