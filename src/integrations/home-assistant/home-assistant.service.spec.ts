@@ -22,6 +22,9 @@ import { Switch } from '../../entities/switch';
 import { DeviceTracker } from '../../entities/device-tracker';
 import { Camera } from '../../entities/camera';
 import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
+import { EntitiesModule } from '../../entities/entities.module';
+import { EntitiesService } from '../../entities/entities.service';
+import { ClusterService } from '../../cluster/cluster.service';
 
 jest.mock('async-mqtt', () => {
   return {
@@ -44,13 +47,26 @@ describe('HomeAssistantService', () => {
     error: jest.fn(),
     warn: jest.fn(),
   };
+  const entitiesService = {
+    refreshStates: jest.fn(),
+  };
+  const clusterService = {};
 
   beforeEach(async () => {
     emitter = new EventEmitter();
     const module: TestingModule = await Test.createTestingModule({
-      imports: [NestEmitterModule.forRoot(emitter), ConfigModule],
+      imports: [
+        NestEmitterModule.forRoot(emitter),
+        ConfigModule,
+        EntitiesModule,
+      ],
       providers: [HomeAssistantService],
-    }).compile();
+    })
+      .overrideProvider(EntitiesService)
+      .useValue(entitiesService)
+      .overrideProvider(ClusterService)
+      .useValue(clusterService)
+      .compile();
     module.useLogger(loggerService);
 
     jest.clearAllMocks();
@@ -92,6 +108,18 @@ describe('HomeAssistantService', () => {
   it('should get the device info on init', async () => {
     await service.onModuleInit();
     expect(mockSystem).toHaveBeenCalled();
+  });
+
+  it('should request an entity state refresh on broker reconnect', async () => {
+    const mqttEmitter = new EventEmitter();
+    mockMqttClient.on.mockImplementation((event, callback) => {
+      mqttEmitter.on(event, callback);
+    });
+    await service.onModuleInit();
+
+    mqttEmitter.emit('connect');
+
+    expect(entitiesService.refreshStates).toHaveBeenCalledTimes(1);
   });
 
   it('should send offline messages for local entities on shutdown', async () => {

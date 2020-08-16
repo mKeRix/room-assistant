@@ -28,6 +28,7 @@ import { DeviceTracker } from '../../entities/device-tracker';
 import { DeviceTrackerConfig } from './device-tracker-config';
 import { Camera } from '../../entities/camera';
 import { CameraConfig } from './camera-config';
+import { EntitiesService } from '../../entities/entities.service';
 
 const PROPERTY_BLACKLIST = ['component', 'configTopic', 'commandStore'];
 
@@ -49,6 +50,7 @@ export class HomeAssistantService
 
   constructor(
     private readonly configService: ConfigService,
+    private readonly entitiesService: EntitiesService,
     @InjectEventEmitter() private readonly emitter: EntitiesEventEmitter
   ) {
     this.config = this.configService.get('homeAssistant');
@@ -67,6 +69,7 @@ export class HomeAssistantService
         false
       );
       this.mqttClient.on('message', this.handleIncomingMessage.bind(this));
+      this.mqttClient.on('connect', this.handleReconnect.bind(this));
       this.logger.log(
         `Successfully connected to MQTT broker at ${this.config.mqttUrl}`
       );
@@ -248,6 +251,14 @@ export class HomeAssistantService
         config.commandStore[command]();
       }
     }
+  }
+
+  /**
+   * Handles broker re-connection events.
+   */
+  protected handleReconnect(): void {
+    this.logger.log('Re-connected to broker');
+    this.entitiesService.refreshStates();
   }
 
   /**
