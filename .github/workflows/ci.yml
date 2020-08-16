@@ -65,7 +65,9 @@ jobs:
         run: npm run test:cov
         env:
           CI: true
-      - uses: codecov/codecov-action@v1.0.12
+      - name: Upload code coverage
+        uses: codecov/codecov-action@v1.0.12
+        if: matrix.node-version == '12.x'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           name: Node.js ${{ matrix.node-version }}
