@@ -83,6 +83,7 @@ If you don't have anything else running on the Pis this shouldn't be much of an 
 | `minRssi`       | Number _or_ [detailed config](#minimum-rssi) |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
 | `hciDeviceId`   | Number                                       | `0`     | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
 | `interval`      | Number                                       | `6`     | The interval at which the Bluetooth devices are queried in seconds. |
+| `scanTimeLimit` | Number                                       | `2`     | The maximum time allowed for completing a device query in seconds. This should be set lower than the interval. |
 | `timeoutCycles` | Number                                       | `2`     | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
 
 ### Minimum RSSI

@@ -3,5 +3,6 @@ export class BluetoothClassicConfig {
   minRssi?: number | { [address: string]: number };
   hciDeviceId = 0;
   interval = 6;
+  scanTimeLimit = 2;
   timeoutCycles = 2;
 }

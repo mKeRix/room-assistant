@@ -211,7 +211,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
       const output = await execPromise(
         `hcitool -i hci${this.config.hciDeviceId} cc "${address}" && hcitool -i hci${this.config.hciDeviceId} rssi "${address}"`,
         {
-          timeout: (this.config.interval - 0.5) * 1000,
+          timeout: this.config.scanTimeLimit * 1000,
           killSignal: 'SIGKILL',
         }
       );
@@ -222,8 +222,8 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
       return matches?.length > 0 ? parseInt(matches[0], 10) : undefined;
     } catch (e) {
       if (e.signal === 'SIGKILL') {
-        this.logger.warn(
-          `Query of ${address} took too long, resetting hci${this.config.hciDeviceId}`
+        this.logger.debug(
+          `Query of ${address} reached scan time limit, resetting hci${this.config.hciDeviceId}`
         );
         this.healthIndicator.reportError();
         this.resetHciDevice();
