@@ -68,6 +68,7 @@ describe('BluetoothClassicService', () => {
     hciDeviceId: 0,
     interval: 6,
     timeoutCycles: 2,
+    preserveState: false,
   };
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
@@ -482,6 +483,67 @@ Requesting information ...
       false
     );
     expect(sensorInstance.timeout).toBe(24);
+  });
+
+  it('should trigger regular sensor state updates if the inquiries switch is on', () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    config.preserveState = false;
+    const sensor = new RoomPresenceDistanceSensor('test', 'Test', 5);
+    const device = { address: 'test', name: 'Test' };
+
+    service.updateSensorState(sensor, device);
+
+    expect(sensor.updateState).toHaveBeenCalled();
+  });
+
+  it('should trigger regular sensor state updates if preserve state is not enabled', () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(false);
+    config.preserveState = false;
+    const sensor = new RoomPresenceDistanceSensor('test', 'Test', 5);
+    const device = { address: 'test', name: 'Test' };
+
+    service.updateSensorState(sensor, device);
+
+    expect(sensor.updateState).toHaveBeenCalled();
+  });
+
+  it('should send pseudo state updates if the inquiries switch is off and preserve state is enabled', () => {
+    const updateSpy = jest.spyOn(service, 'handleNewRssi').mockResolvedValue();
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(false);
+    config.preserveState = true;
+
+    const sensor = new RoomPresenceDistanceSensor('bt-test', 'Test', 5);
+    sensor.distances = {};
+    sensor.distances['test-instance'] = {
+      distance: 10,
+      outOfRange: false,
+      lastUpdatedAt: new Date(),
+    };
+    const device = { address: 'test', name: 'Test' };
+
+    service.updateSensorState(sensor, device);
+
+    const expectedEvent = new NewRssiEvent('test-instance', device, -10, false);
+    expect(updateSpy).toHaveBeenCalledWith(expectedEvent);
+    expect(clusterService.publish).toHaveBeenCalledWith(
+      NEW_RSSI_CHANNEL,
+      expectedEvent
+    );
+  });
+
+  it('should send no pseudo state update if no distance was recorded previously', () => {
+    const updateSpy = jest.spyOn(service, 'handleNewRssi').mockResolvedValue();
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(false);
+    config.preserveState = true;
+
+    const sensor = new RoomPresenceDistanceSensor('bt-test', 'Test', 5);
+    sensor.distances = {};
+    const device = { address: 'test', name: 'Test' };
+
+    service.updateSensorState(sensor, device);
+
+    expect(updateSpy).not.toHaveBeenCalled();
+    expect(clusterService.publish).not.toHaveBeenCalled();
   });
 
   it('should not distribute inquiries if not the leader', () => {

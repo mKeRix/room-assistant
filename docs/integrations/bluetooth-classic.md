@@ -55,6 +55,8 @@ Each instance running this integration will also create a switch for enabling or
 
 You could use this to reduce the resources used by room-assistant when you are certain nobody is home. Another example would be disabling the inquiries when you are asleep to save the batteries of your Bluetooth devices at night.
 
+You can also use this feature to only trigger scans when you are certain that some change has happened, e.g. whenever a motion sensor was triggered. In that case you would need to enable the `preserveState` setting to still get accurate results after turning the switch off again. Note that room-assistant internally sends out pseudo updates in that case, so the timestamps will update in the API even though no scans are happening.
+
 ## Troubleshooting
 
 ### Random incorrect not_home states
@@ -85,6 +87,7 @@ If you don't have anything else running on the Pis this shouldn't be much of an 
 | `interval`      | Number                                       | `6`     | The interval at which the Bluetooth devices are queried in seconds. |
 | `scanTimeLimit` | Number                                       | `2`     | The maximum time allowed for completing a device query in seconds. This should be set lower than the interval. |
 | `timeoutCycles` | Number                                       | `2`     | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
+| `preserveState` | Boolean                                      | `false` | Whether the last recorded distance should be preserved when the inquiries switch is turned off or not. |
 
 ### Minimum RSSI
 

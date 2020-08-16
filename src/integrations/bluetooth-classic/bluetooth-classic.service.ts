@@ -284,6 +284,36 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
   }
 
   /**
+   * Updates the underlying room presence sensor state.
+   * Called regularly.
+   * May emit pseudo update events to keep state correct.
+   *
+   * @param sensor - Room presence sensor that should be update
+   * @param device - Data of device corresponding to the sensor
+   */
+  updateSensorState(sensor: RoomPresenceDistanceSensor, device: Device): void {
+    if (!this.shouldInquire() && this.config.preserveState) {
+      const instanceName = this.configService.get('global').instanceName;
+      const previousReading = sensor.distances[instanceName];
+
+      if (previousReading) {
+        // emit pseudo update to keep local state alive
+        const event = new NewRssiEvent(
+          instanceName,
+          device,
+          previousReading.distance * -1, // "distance" needs to be converted back to the RSSI value
+          previousReading.outOfRange
+        );
+
+        this.clusterService.publish(NEW_RSSI_CHANNEL, event);
+        this.handleNewRssi(event);
+      }
+    } else {
+      sensor.updateState();
+    }
+  }
+
+  /**
    * Filters the nodes in the cluster to those who have this integration loaded.
    *
    * @returns List of nodes with the Bluetooth Classic integration enabled
@@ -390,7 +420,7 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
     ) as RoomPresenceDistanceSensor;
 
     const interval = setInterval(
-      sensor.updateState.bind(sensor),
+      () => this.updateSensorState(sensor, device),
       this.config.interval * 1000
     );
     this.schedulerRegistry.addInterval(`${sensorId}_timeout_check`, interval);
