@@ -546,6 +546,26 @@ Requesting information ...
     expect(clusterService.publish).not.toHaveBeenCalled();
   });
 
+  it('should send no pseudo state update if the last recorded distance is too old', () => {
+    const updateSpy = jest.spyOn(service, 'handleNewRssi').mockResolvedValue();
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(false);
+    config.preserveState = true;
+
+    const sensor = new RoomPresenceDistanceSensor('bt-test', 'Test', 5);
+    sensor.distances = {};
+    sensor.distances['test-instance'] = {
+      distance: 10,
+      outOfRange: false,
+      lastUpdatedAt: new Date(Date.now() - 25 * 1000),
+    };
+    const device = { address: 'test', name: 'Test' };
+
+    service.updateSensorState(sensor, device);
+
+    expect(updateSpy).not.toHaveBeenCalled();
+    expect(clusterService.publish).not.toHaveBeenCalled();
+  });
+
   it('should not distribute inquiries if not the leader', () => {
     clusterService.isMajorityLeader.mockReturnValue(false);
     const inquireSpy = jest.spyOn(service, 'inquireRssi');

@@ -296,7 +296,12 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
       const instanceName = this.configService.get('global').instanceName;
       const previousReading = sensor.distances[instanceName];
 
-      if (previousReading) {
+      if (
+        previousReading &&
+        Date.now() <
+          previousReading.lastUpdatedAt.getTime() +
+            this.calculateCurrentTimeout() * 1000
+      ) {
         // emit pseudo update to keep local state alive
         const event = new NewRssiEvent(
           instanceName,
