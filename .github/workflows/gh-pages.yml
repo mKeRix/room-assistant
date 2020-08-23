@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'docs/**'
+      - 'package.json'
+      - 'package-lock.json'
     branches:
       - master
 
