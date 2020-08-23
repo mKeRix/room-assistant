@@ -6,6 +6,12 @@ For example, let's say you are launching room-assistant from the directory `/hom
 
 You can find the global configuration options below and the ones specific to some integrations on their [respective pages](/integrations/).
 
+::: tip
+
+Having trouble with your configuration? You can launch room-assistant with the `--verbose` flag to get more detailed debug logging, which might give you an idea what went wrong.
+
+:::
+
 ## Configuring with Docker
 
 The official [Docker image](https://hub.docker.com/r/mkerix/room-assistant/) can be configured in two different ways. You can either mount your local config folder into the container as `/room-assistant/config` or you can provide the configuration as JSON through an environment variable.
