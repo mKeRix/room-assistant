@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "docs:dev",
+			"problemMatcher": [],
+			"label": "Run docs locally",
+			"detail": "vuepress dev docs"
+		}
+	]
+}
