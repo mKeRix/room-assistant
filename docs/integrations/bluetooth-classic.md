@@ -77,6 +77,10 @@ If you don't have anything else running on the Pis this shouldn't be much of an 
 
 [See here for the original issue context where this was discussed.](https://github.com/mKeRix/room-assistant/issues/178)
 
+### Apple Watch not being detected
+
+Try to pair your Apple Watch to a bluetooth device suce as headphones/speakers first, then add it to room-assistant for detection
+
 ## Settings
 
 | Name            | Type                                         | Default | Description                                                  |
@@ -92,6 +96,10 @@ If you don't have anything else running on the Pis this shouldn't be much of an 
 ### Minimum RSSI
 
 `minRssi` can either be specified as a number that is applied to all devices like shown in the simple example config, or as a map of addresses and `minRssi` values as shown in the advanced example config. The latter allows you to configure different cutoffs for the devices you are using, as they may end up showing different RSSI levels even when placed at the same distance. The `minRssi.default` setting will be applied to all addresses that have not been configured specifically. If it is not set, all devices that don't have a specific value will always be considered to be in range.
+
+### Multiple Bluetooth Adapters
+
+`hciDeviceId` is used to indicate multiple bluetooth adapters.  Use hciconfig from the command line to see all available Bluetooth adapters. 
 
 ::: details Simple Example Config
 
@@ -125,4 +133,34 @@ bluetoothClassic:
     - '77:50:fb:4d:ab:70'
 ```
 
+:::
+
+::: details Multiple Bluetooth Types Example Config
+
+```yaml
+global:
+  integrations:
+    - bluetoothClassic
+    - bluetoothLowEnergy
+bluetoothClassic:
+  hciDeviceId: 0
+  interval: 20
+  timeoutCycles: 2.5
+  minRssi:
+    '08:05:90:ed:3b:60': -10
+    default: -20
+  addresses:
+    - '08:05:90:ed:3b:60'
+    - '77:50:fb:4d:ab:70'
+bluetoothLowEnergy:
+  hciDeviceId: 1
+    whitelist:
+    - 7750fb4dab70
+    - 2f234454cf6d4a0fadf2f4911ba9ffa6-1-2
+  maxDistance: 7
+  tagOverrides:
+    7750fb4dab70:
+      name: Cool BLE Tag
+      measuredPower: -61
+```
 :::

@@ -84,3 +84,33 @@ bluetoothLowEnergy:
       measuredPower: -61
 ```
 :::
+
+::: details Multiple Bluetooth Types Example Config
+
+```yaml
+global:
+  integrations:
+    - bluetoothClassic
+    - bluetoothLowEnergy
+bluetoothClassic:
+  hciDeviceId: 0
+  interval: 20
+  timeoutCycles: 2.5
+  minRssi:
+    '08:05:90:ed:3b:60': -10
+    default: -20
+  addresses:
+    - '08:05:90:ed:3b:60'
+    - '77:50:fb:4d:ab:70'
+bluetoothLowEnergy:
+  hciDeviceId: 1
+    whitelist:
+    - 7750fb4dab70
+    - 2f234454cf6d4a0fadf2f4911ba9ffa6-1-2
+  maxDistance: 7
+  tagOverrides:
+    7750fb4dab70:
+      name: Cool BLE Tag
+      measuredPower: -61
+```
+:::
