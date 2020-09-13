@@ -85,7 +85,9 @@ bluetoothLowEnergy:
 ```
 :::
 
-::: details Multiple Bluetooth Types Example Config
+::: details Multiple Bluetooth Integrations Example Config
+
+`hciDeviceId` can be used to choose a different Bluetooth adapter than the default one. Use hciconfig from the command line to see all available Bluetooth adapters. When using Bluetooth Classic and Bluetooth Low Energy at the same time you need to specify different IDs for these integrations. 
 
 ```yaml
 global:
@@ -94,23 +96,13 @@ global:
     - bluetoothLowEnergy
 bluetoothClassic:
   hciDeviceId: 0
-  interval: 20
-  timeoutCycles: 2.5
-  minRssi:
-    '08:05:90:ed:3b:60': -10
-    default: -20
   addresses:
     - '08:05:90:ed:3b:60'
     - '77:50:fb:4d:ab:70'
 bluetoothLowEnergy:
   hciDeviceId: 1
-    whitelist:
+  whitelist:
     - 7750fb4dab70
     - 2f234454cf6d4a0fadf2f4911ba9ffa6-1-2
-  maxDistance: 7
-  tagOverrides:
-    7750fb4dab70:
-      name: Cool BLE Tag
-      measuredPower: -61
 ```
 :::
