@@ -56,6 +56,19 @@ The `address` field is a lowercase MAC address without `:`.  This is the same fo
 
 Some Xiaomi sensors encrypted their data (e.g. LYWSD03MMC). To be able to read the data from this sensor one needs to get a hold of the encryption key. For ways to get this key please read this [this FAQ entry](https://github.com/custom-components/sensor.mitemp_bt/blob/master/faq.md#my-sensors-ble-advertisements-are-encrypted-how-can-i-get-the-key) from the [custom-components/sensor.mitemp_bt](https://github.com/custom-components/sensor.mitemp_bt/) repository.  Once found, it can be set with the [bindKey](#sensor-options) option.
 
+::: details Retrieving keys from the Xiaomi Mijia LYWSD03MMC
+
+1. Keep the Xiaomi Mijia LYWSD03MMC sensor close to the mobile phone.
+2. Make sure that the Bluetooth connection is enabled on the mobile phone.
+3. Using the mobile phone's browser, navigate to [https://atc1441.github.io/TelinkFlasher.html](https://atc1441.github.io/TelinkFlasher.html).
+4. Enlarge the mobile phone's screen for better readability.
+5. Now, click the \[Connect\] button and wait until it shows "Connected." See the Log section at the bottom.
+6. Once connected, click the \[Do Activation\] button and wait until the "Mi Bind Key" shows the information.
+
+![TeLink Flasher interface for retrieving the bind key](./mijia-bind-key.png)
+
+:::
+
 ## See also
 
 There are many projects dedicated to these devices.  This integration has particularly benefited from these two:
