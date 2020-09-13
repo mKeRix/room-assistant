@@ -77,6 +77,10 @@ If you don't have anything else running on the Pis this shouldn't be much of an 
 
 [See here for the original issue context where this was discussed.](https://github.com/mKeRix/room-assistant/issues/178)
 
+### Apple Watch not being detected
+
+Try to pair your Apple Watch to a Bluetooth device such as headphones/speakers first, then add it to room-assistant for detection. You may unpair the peripheral after the watch has been detected by room-assistant.
+
 ## Settings
 
 | Name            | Type                                         | Default | Description                                                  |
@@ -125,4 +129,26 @@ bluetoothClassic:
     - '77:50:fb:4d:ab:70'
 ```
 
+:::
+
+::: details Multiple Bluetooth Integrations Example Config
+
+`hciDeviceId` can be used to choose a different Bluetooth adapter than the default one. Use hciconfig from the command line to see all available Bluetooth adapters. When using Bluetooth Classic and Bluetooth Low Energy at the same time you need to specify different IDs for these integrations. 
+
+```yaml
+global:
+  integrations:
+    - bluetoothClassic
+    - bluetoothLowEnergy
+bluetoothClassic:
+  hciDeviceId: 0
+  addresses:
+    - '08:05:90:ed:3b:60'
+    - '77:50:fb:4d:ab:70'
+bluetoothLowEnergy:
+  hciDeviceId: 1
+  whitelist:
+    - 7750fb4dab70
+    - 2f234454cf6d4a0fadf2f4911ba9ffa6-1-2
+```
 :::
