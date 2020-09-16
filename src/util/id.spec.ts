@@ -14,4 +14,8 @@ describe('makeId', () => {
   it('should convert underscores to dashes', () => {
     expect(makeId('bluetooth-classic_129-1-1')).toMatch(idRegex);
   });
+
+  it('should convert apostrophes to dashes', () => {
+    expect(makeId("parent's-room")).toMatch(idRegex);
+  });
 });
