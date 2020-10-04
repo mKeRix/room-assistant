@@ -7,6 +7,7 @@ import { EntityCustomization } from './entity-customization.interface';
 import { ClusterService } from '../cluster/cluster.service';
 import { ConfigService } from '../config/config.service';
 import { EntitiesConfig } from './entities.config';
+import { DebounceProxyHandler } from './debounce.proxy';
 
 @Injectable()
 export class EntitiesService implements OnApplicationBootstrap {
@@ -77,16 +78,35 @@ export class EntitiesService implements OnApplicationBootstrap {
     }
 
     this.logger.debug(`Adding new entity ${entity.id}`);
-    const proxy = new Proxy<Entity>(
+    let proxy = new Proxy<Entity>(
       entity,
       new EntityProxyHandler(
         this.emitter,
-        this.clusterService.isMajorityLeader.bind(this.clusterService),
-        this.config.behaviors[entity.id]
+        this.clusterService.isMajorityLeader.bind(this.clusterService)
       )
     );
+    proxy = this.applyEntityBehaviors(proxy);
+
     this.entities.set(entity.id, proxy);
     this.emitter.emit('newEntity', proxy, customizations);
+    return proxy;
+  }
+
+  /**
+   * Applies configured entity behavior proxies to a given entity.
+   *
+   * @param entity - Entity to customize
+   */
+  private applyEntityBehaviors(entity: Entity): Entity {
+    let proxy = entity;
+
+    if (this.config.behaviors[entity.id]?.debounce?.wait) {
+      proxy = new Proxy<Entity>(
+        entity,
+        new DebounceProxyHandler(this.config.behaviors[entity.id].debounce)
+      );
+    }
+
     return proxy;
   }
 

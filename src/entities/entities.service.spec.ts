@@ -144,8 +144,12 @@ describe('EntitiesService', () => {
 
     entityProxy.state = 42;
     entityProxy.state = 1337;
+
+    expect(entityProxy.state).toBeUndefined();
+
     jest.runAllTimers();
 
+    expect(entityProxy.state).toBe(1337);
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(
       'stateUpdate',

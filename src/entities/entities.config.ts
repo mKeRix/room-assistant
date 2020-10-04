@@ -6,7 +6,7 @@ export class EntityBehavior {
   debounce?: DebounceOptions;
 }
 
-class DebounceOptions {
+export class DebounceOptions {
   wait?: number;
   maxWait?: number;
 }

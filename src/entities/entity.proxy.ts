@@ -1,25 +1,12 @@
 import { Entity } from './entity.dto';
 import { AttributesProxyHandler } from './attributes.proxy';
 import { EntitiesEventEmitter } from './entities.events';
-import { EntityBehavior } from './entities.config';
-import * as _ from 'lodash';
 
 export class EntityProxyHandler implements ProxyHandler<Entity> {
-  private readonly stateUpdateFunction: (target: Entity, value: any) => void;
-
   constructor(
     private readonly emitter: EntitiesEventEmitter,
-    private readonly isLeader: () => boolean,
-    private readonly behavior?: EntityBehavior
-  ) {
-    this.stateUpdateFunction = this.behavior?.debounce?.wait
-      ? _.debounce(
-          this.emitStateUpdate.bind(this),
-          this.behavior.debounce.wait * 1000,
-          { maxWait: this.behavior.debounce.maxWait * 1000 }
-        )
-      : this.emitStateUpdate;
-  }
+    private readonly isLeader: () => boolean
+  ) {}
 
   get(target: Entity, p: string | number | symbol): any {
     if (p === 'attributes') {
@@ -47,13 +34,9 @@ export class EntityProxyHandler implements ProxyHandler<Entity> {
       oldValue !== value &&
       (!target.distributed || this.isLeader())
     ) {
-      this.stateUpdateFunction(target, value);
+      this.emitter.emit('stateUpdate', target.id, value, target.distributed);
     }
 
     return true;
-  }
-
-  private emitStateUpdate(target: Entity, value: any): void {
-    this.emitter.emit('stateUpdate', target.id, value, target.distributed);
   }
 }
