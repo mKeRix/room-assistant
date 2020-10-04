@@ -34,7 +34,8 @@ import { BluetoothClassicHealthIndicator } from './bluetooth-classic.health';
 const execPromise = util.promisify(exec);
 
 @Injectable()
-export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
+export class BluetoothClassicService
+  extends KalmanFilterable(Object, 1.4, 1)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothClassicConfig;
   private rotationOffset = 0;
@@ -225,8 +226,12 @@ export class BluetoothClassicService extends KalmanFilterable(Object, 1.4, 1)
         this.logger.debug(
           `Query of ${address} reached scan time limit, resetting hci${this.config.hciDeviceId}`
         );
-        this.healthIndicator.reportError();
         this.resetHciDevice();
+
+        // when not reachable a scan runs for 6s, so lower time limits might not be an error
+        if (this.config.scanTimeLimit >= 6) {
+          this.healthIndicator.reportError();
+        }
       } else if (
         e.message?.includes('Input/output') ||
         e.message?.includes('I/O')

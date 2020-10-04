@@ -778,4 +778,14 @@ Requesting information ...
     expect(healthIndicator.reportSuccess).not.toHaveBeenCalled();
     expect(healthIndicator.reportError).not.toHaveBeenCalled();
   });
+
+  it('should not report an error if the scan was stopped due to low time limits', async () => {
+    mockExec.mockRejectedValue({
+      message: 'killed',
+      signal: 'SIGKILL',
+    });
+    await service.inquireRssi('');
+
+    expect(healthIndicator.reportError).not.toHaveBeenCalled();
+  });
 });
