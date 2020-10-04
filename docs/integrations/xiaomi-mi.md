@@ -28,10 +28,14 @@ This integration has been tested with these devices:
 - LYWSDCGQ
 
   (circular body, segment LCD, broadcasts temperature and humidity when it changes and battery level periodically)
- 
+
 - LYWSD03MMC
 
   (small square body, segment LCD, broadcasts temperature and humidity once in about 10 minutes and battery level once in an hour, advertisements are encrypted, therefore you need to set the key in your configuration, see for instructions the [bindKey](#sensor-options) option)
+  
+- Mi Flora
+
+  (plant sensor, requires up-to-date firmware, tested with v3.2.2)
 
 ## Settings
 
