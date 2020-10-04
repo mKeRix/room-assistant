@@ -125,7 +125,7 @@ jobs:
       - name: Update description on DockerHub
         if: steps.semantic.outputs.new_release_published == 'true'
         uses: peter-evans/dockerhub-description@v2.4.0
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-          DOCKERHUB_REPOSITORY: mkerix/room-assistant
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: mkerix/room-assistant
