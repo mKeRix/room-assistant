@@ -182,6 +182,12 @@ export class BluetoothClassicService
         this.rotationOffset
       );
       nodeSubset.forEach((node, index) => {
+        if (addressSubset[index] == null) {
+          this.logger.error(
+            `Trying to request inquiry without MAC! Current index: ${index}. Addresses in this round: ${addressSubset}. Nodes in this round: ${nodeSubset}.`
+          );
+        }
+
         // only remote nodes have a timestamp of last contact attached
         if (node.last === undefined) {
           this.handleRssiRequest(addressSubset[index]);
