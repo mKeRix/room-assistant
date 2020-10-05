@@ -9,7 +9,8 @@ export class RollingAverageProxyHandler implements ProxyHandler<Entity> {
 
   constructor(private readonly config: RollingAverageOptions) {}
 
-  set(target: Entity, p: PropertyKey, value: any, receiver: any): boolean {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  set(target: Entity, p: PropertyKey, value: any): boolean {
     if (p == 'state') {
       this.values.push(new TimedValue<any>(value));
       this.updateTargetState(target);
