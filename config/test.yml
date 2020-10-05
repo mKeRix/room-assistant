@@ -8,6 +8,15 @@ entities:
       debounce:
         wait: 0.75
         maxWait: 2
+    rolling_average_entity:
+      rollingAverage:
+        window: 60
+    chained_entity:
+      debounce:
+        wait: 0.75
+        maxWait: 2
+      rollingAverage:
+        window: 60
 gpio:
   binarySensors:
     - name: PIR Sensor

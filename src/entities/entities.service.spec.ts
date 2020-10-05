@@ -159,6 +159,110 @@ describe('EntitiesService', () => {
     );
   });
 
+  it('should calculate rolling average for non-number states if configured', () => {
+    jest.useFakeTimers('modern');
+    const spy = jest.spyOn(emitter, 'emit');
+
+    const entityProxy = service.add(
+      new Sensor('rolling_average_entity', 'Rolling Test')
+    );
+    spy.mockClear();
+
+    entityProxy.state = 'test1';
+    expect(entityProxy.state).toBe('test1');
+    expect(spy).toHaveBeenCalledWith(
+      'stateUpdate',
+      'rolling_average_entity',
+      'test1',
+      false
+    );
+
+    jest.setSystemTime(Date.now() + 10 * 1000);
+    entityProxy.state = 'test2';
+    expect(entityProxy.state).toBe('test1');
+
+    jest.advanceTimersByTime(11 * 1000);
+    expect(entityProxy.state).toBe('test2');
+    expect(spy).toHaveBeenCalledWith(
+      'stateUpdate',
+      'rolling_average_entity',
+      'test2',
+      false
+    );
+    expect(spy).toHaveBeenCalledTimes(2);
+
+    jest.advanceTimersByTime(50 * 1000);
+    expect(entityProxy.state).toBe('test2');
+  });
+
+  it('should calculate rolling average for number states if configured', () => {
+    jest.useFakeTimers('modern');
+    const spy = jest.spyOn(emitter, 'emit');
+
+    const entityProxy = service.add(
+      new Sensor('rolling_average_entity', 'Rolling Test')
+    );
+    spy.mockClear();
+
+    entityProxy.state = 10;
+    jest.advanceTimersByTime(1000);
+    expect(entityProxy.state).toBe(10);
+    expect(spy).toHaveBeenCalledWith(
+      'stateUpdate',
+      'rolling_average_entity',
+      10,
+      false
+    );
+
+    jest.advanceTimersByTime(9 * 1000);
+    entityProxy.state = 20;
+    expect(entityProxy.state).toBe(10);
+
+    jest.advanceTimersByTime(6 * 1000);
+    expect(entityProxy.state).toBe(13.75);
+    expect(spy).toHaveBeenCalledWith(
+      'stateUpdate',
+      'rolling_average_entity',
+      13.75,
+      false
+    );
+
+    jest.advanceTimersByTime(55 * 1000);
+    expect(entityProxy.state).toBe(20);
+    expect(spy).toHaveBeenCalledWith(
+      'stateUpdate',
+      'rolling_average_entity',
+      20,
+      false
+    );
+  });
+
+  it('should chain entity behaviors together', () => {
+    jest.useFakeTimers('modern');
+    const spy = jest.spyOn(emitter, 'emit');
+
+    const entityProxy = service.add(
+      new Sensor('chained_entity', 'Chaining Test')
+    );
+    spy.mockClear();
+
+    entityProxy.state = 'test1';
+    jest.advanceTimersByTime(500);
+    expect(entityProxy.state).toBeUndefined();
+
+    entityProxy.state = 'test2';
+    jest.advanceTimersByTime(1000);
+    expect(entityProxy.state).toBe('test2');
+
+    jest.advanceTimersByTime(5000);
+    entityProxy.state = 'test3';
+    jest.advanceTimersByTime(1000);
+    expect(entityProxy.state).toBe('test2');
+
+    jest.advanceTimersByTime(7000);
+    expect(entityProxy.state).toBe('test3');
+  });
+
   it('should send attribute updates to publishers', () => {
     const entity = new Sensor('attributes_sensor', 'Sensor with attributes');
     const spy = jest.spyOn(emitter, 'emit');

@@ -8,6 +8,7 @@ import { ClusterService } from '../cluster/cluster.service';
 import { ConfigService } from '../config/config.service';
 import { EntitiesConfig } from './entities.config';
 import { DebounceProxyHandler } from './debounce.proxy';
+import { RollingAverageProxyHandler } from './rolling-average.proxy';
 
 @Injectable()
 export class EntitiesService implements OnApplicationBootstrap {
@@ -98,12 +99,20 @@ export class EntitiesService implements OnApplicationBootstrap {
    * @param entity - Entity to customize
    */
   private applyEntityBehaviors(entity: Entity): Entity {
+    const behaviorConfig = this.config.behaviors[entity.id];
     let proxy = entity;
 
-    if (this.config.behaviors[entity.id]?.debounce?.wait) {
+    if (behaviorConfig?.rollingAverage?.window) {
       proxy = new Proxy<Entity>(
-        entity,
-        new DebounceProxyHandler(this.config.behaviors[entity.id].debounce)
+        proxy,
+        new RollingAverageProxyHandler(behaviorConfig.rollingAverage)
+      );
+    }
+
+    if (behaviorConfig?.debounce?.wait) {
+      proxy = new Proxy<Entity>(
+        proxy,
+        new DebounceProxyHandler(behaviorConfig.debounce)
       );
     }
 
