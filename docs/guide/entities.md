@@ -53,3 +53,15 @@ The state itself is updated every second.
 | Name     | Type   | Default | Description                                                  |
 | -------- | ------ | ------- | ------------------------------------------------------------ |
 | `window` | Number |         | Number of seconds to look back for when calculating the average state. |
+
+::: details Example Config
+
+```yaml
+entities:
+  behaviors:
+    bluetooth-classic-xx-tracker:
+      rollingAverage:
+        window: 300
+```
+
+:::
