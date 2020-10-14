@@ -27,7 +27,7 @@ self.addEventListener('message', (event) => {
 self.__precacheManifest = [
   {
     "url": "404.html",
-    "revision": "89651c13c7ff0ff9bdc401be592d031b"
+    "revision": "9c85039a5b64806a52f3d06bcf7a2aea"
   },
   {
     "url": "android-chrome-192x192.png",
@@ -166,8 +166,8 @@ self.__precacheManifest = [
     "revision": "827f7442ed930ec2fd10acc2ade7fbc1"
   },
   {
-    "url": "assets/js/app.3e47ec7e.js",
-    "revision": "fe583bede19511c1297f3479da65b7fb"
+    "url": "assets/js/app.825648fd.js",
+    "revision": "037fa38ca8648289ea6ec5185d3a165c"
   },
   {
     "url": "assets/js/vendors~docsearch.33b3cf02.js",
@@ -183,91 +183,91 @@ self.__precacheManifest = [
   },
   {
     "url": "guide/api.html",
-    "revision": "76a724bbb03eff122b0275f96b971dfe"
+    "revision": "c41aff69ce78fae1e834c27ff1c246ec"
   },
   {
     "url": "guide/cli.html",
-    "revision": "899f53bb5dcbe2ff6d28361c0bb9bdcf"
+    "revision": "f8ecb96529caf95f2855276cd57e96d7"
   },
   {
     "url": "guide/cluster.html",
-    "revision": "f278c51a3f0bbbee8aa4b02767a2cc17"
+    "revision": "1e34dcf7868f32ad5c79a1094b2ce2df"
   },
   {
     "url": "guide/configuration.html",
-    "revision": "d3b64b848543de81c6519f4dc9ac2c8e"
+    "revision": "683de46cd250377639323c69222d5b3b"
   },
   {
     "url": "guide/entities.html",
-    "revision": "065def26aecbd6d454753f391062fc26"
+    "revision": "cf6a805c7d6ae01558f4ca4f9c08544f"
   },
   {
     "url": "guide/index.html",
-    "revision": "e6f93120960c78a2a1149c0f45a20df3"
+    "revision": "fe1c9c8c68c79b01f5595b4a00f97e85"
   },
   {
     "url": "guide/installation.html",
-    "revision": "a46a0c4422fa6d4af948523cf26aacc5"
+    "revision": "47ce077d3bf409dfd413aa8813a02630"
   },
   {
     "url": "guide/quickstart-ansible.html",
-    "revision": "381bfc976c1bf08318766759c9e8c8dc"
+    "revision": "e5c6e69471f14a778bf1ad6b0ad0fe20"
   },
   {
     "url": "guide/quickstart-docker.html",
-    "revision": "025d11c950fc219d4cfbc028be3d304d"
+    "revision": "21aaa1c278b9375dc522f0afbbe1a0bc"
   },
   {
     "url": "guide/quickstart-pi-zero-w.html",
-    "revision": "7169e2d456fa7a2c4e7dfad103c6d57c"
+    "revision": "bbd3ff918f09b3909b6bf7035daa0a69"
   },
   {
     "url": "guide/quickstart-pi.html",
-    "revision": "b0c372e796a6fb0c6d4756cc525210d7"
+    "revision": "f4642e58d1054fbbedafa3a00e14af84"
   },
   {
     "url": "guide/upgrading.html",
-    "revision": "02589b8df195d216b18c03387b339acb"
+    "revision": "4417d7f657d5145ef21f7390cc3d84b1"
   },
   {
     "url": "index.html",
-    "revision": "f2b52c8c8cd127ad31709062e26027c8"
+    "revision": "92a71edc48f8ba3241a982a891ce868c"
   },
   {
     "url": "integrations/bluetooth-classic.html",
-    "revision": "1218426b2dffdc640b85e4e3396dda76"
+    "revision": "16993250d59da931820b0c0e1f04b7b3"
   },
   {
     "url": "integrations/bluetooth-low-energy.html",
-    "revision": "165afe1035e2238497e87b6340740786"
+    "revision": "7468538c05f6b1dceed75027f278081a"
   },
   {
     "url": "integrations/gpio.html",
-    "revision": "20b60edb195c7ab991d8d4385a1df658"
+    "revision": "88a129937bcd1216791d0ab36058ae0c"
   },
   {
     "url": "integrations/grid-eye.html",
-    "revision": "5b77e48dc0eaa8f06ece361cd8fda10c"
+    "revision": "4db4797c7223e9112b814d779d74f55b"
   },
   {
     "url": "integrations/home-assistant.html",
-    "revision": "45fa2cef8bd9053b68bd0e64d11beed7"
+    "revision": "e0061b546b16f27e2341d8f416921a2a"
   },
   {
     "url": "integrations/index.html",
-    "revision": "cb3661b15da0b48f67405345cef9c3d8"
+    "revision": "a4255e38700b39f9a1cf138f9f3fc237"
   },
   {
     "url": "integrations/omron-d6t.html",
-    "revision": "6297e96ceb24e047a36bc068f36369bc"
+    "revision": "d68970bccd7237ffbf2a6604b4a92305"
   },
   {
     "url": "integrations/shell.html",
-    "revision": "4fb539cf34c4a38d394d077b37fae67c"
+    "revision": "c7a5dc930c1ffb948b616bb93562c7a9"
   },
   {
     "url": "integrations/xiaomi-mi.html",
-    "revision": "7b7347d81c96d1ed8bace696361ff740"
+    "revision": "b523c63c997acbc8524c2de8a3f60b77"
   },
   {
     "url": "mstile-150x150.png",
