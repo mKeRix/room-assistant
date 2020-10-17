@@ -7,7 +7,7 @@ import { Injectable, Optional } from '@nestjs/common';
 import { HealthIndicatorService } from '../../status/health-indicator.service';
 
 @Injectable()
-export class BluetoothClassicHealthIndicator extends HealthIndicator {
+export class BluetoothHealthIndicator extends HealthIndicator {
   private errorsOccurred = 0;
 
   constructor(@Optional() healthIndicatorService?: HealthIndicatorService) {

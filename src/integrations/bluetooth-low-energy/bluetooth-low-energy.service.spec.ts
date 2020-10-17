@@ -1,13 +1,3 @@
-const mockNoble = {
-  on: jest.fn(),
-};
-jest.mock(
-  '@abandonware/noble',
-  () => {
-    return mockNoble;
-  },
-  { virtual: true }
-);
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {
     return {
@@ -37,11 +27,16 @@ import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presenc
 import KalmanFilter from 'kalmanjs';
 import { DeviceTracker } from '../../entities/device-tracker';
 import * as util from 'util';
+import { BluetoothService } from '../bluetooth/bluetooth.service';
+import { BluetoothModule } from '../bluetooth/bluetooth.module';
 
 jest.useFakeTimers();
 
 describe('BluetoothLowEnergyService', () => {
   let service: BluetoothLowEnergyService;
+  const bluetoothService = {
+    onLowEnergyDiscovery: jest.fn(),
+  };
   const clusterService = {
     on: jest.fn(),
     subscribe: jest.fn(),
@@ -100,6 +95,7 @@ describe('BluetoothLowEnergyService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        BluetoothModule,
         ConfigModule,
         ClusterModule,
         EntitiesModule,
@@ -107,6 +103,8 @@ describe('BluetoothLowEnergyService', () => {
       ],
       providers: [BluetoothLowEnergyService],
     })
+      .overrideProvider(BluetoothService)
+      .useValue(bluetoothService)
       .overrideProvider(ClusterService)
       .useValue(clusterService)
       .overrideProvider(EntitiesService)
@@ -119,13 +117,11 @@ describe('BluetoothLowEnergyService', () => {
     service = module.get<BluetoothLowEnergyService>(BluetoothLowEnergyService);
   });
 
-  it('should setup noble listeners on bootstrap', () => {
+  it('should setup BLE listener on bootstrap', () => {
     service.onApplicationBootstrap();
-    expect(mockNoble.on).toHaveBeenCalledWith(
-      'stateChange',
+    expect(bluetoothService.onLowEnergyDiscovery).toHaveBeenCalledWith(
       expect.any(Function)
     );
-    expect(mockNoble.on).toHaveBeenCalledWith('discover', expect.any(Function));
   });
 
   it('should warn if no whitelist has been configured', () => {

@@ -4,7 +4,7 @@ import {
   OnApplicationBootstrap,
   OnModuleInit,
 } from '@nestjs/common';
-import noble, { Peripheral } from '@abandonware/noble';
+import { Peripheral } from '@abandonware/noble';
 import { EntitiesService } from '../../entities/entities.service';
 import { IBeacon } from './i-beacon';
 import { Tag } from './tag';
@@ -23,11 +23,13 @@ import * as _ from 'lodash';
 import { DeviceTracker } from '../../entities/device-tracker';
 import { RoomPresenceDeviceTrackerProxyHandler } from '../room-presence/room-presence-device-tracker.proxy';
 import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presence.sensor';
+import { BluetoothService } from '../bluetooth/bluetooth.service';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 
 @Injectable() // parameters determined experimentally
-export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
+export class BluetoothLowEnergyService
+  extends KalmanFilterable(Object, 0.8, 15)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothLowEnergyConfig;
   private readonly logger: Logger;
@@ -37,6 +39,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
   } = {};
 
   constructor(
+    private readonly bluetoothService: BluetoothService,
     private readonly entitiesService: EntitiesService,
     private readonly configService: ConfigService,
     private readonly clusterService: ClusterService,
@@ -62,12 +65,7 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
    * Lifecycle hook, called once the application has started.
    */
   onApplicationBootstrap(): void {
-    noble.on('stateChange', BluetoothLowEnergyService.handleStateChange);
-    noble.on('discover', this.handleDiscovery.bind(this));
-    noble.on('warning', (message) => {
-      this.logger.warn(message);
-    });
-
+    this.bluetoothService.onLowEnergyDiscovery(this.handleDiscovery.bind(this));
     this.clusterService.on(
       NEW_DISTANCE_CHANNEL,
       this.handleNewDistance.bind(this)
@@ -338,18 +336,5 @@ export class BluetoothLowEnergyService extends KalmanFilterable(Object, 0.8, 15)
     }
 
     return tag;
-  }
-
-  /**
-   * Stops or starts BLE scans based on the adapter state.
-   *
-   * @param state - Noble adapter state string
-   */
-  private static handleStateChange(state: string): void {
-    if (state === 'poweredOn') {
-      noble.startScanning([], true);
-    } else {
-      noble.stopScanning();
-    }
   }
 }

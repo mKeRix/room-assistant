@@ -1,11 +1,11 @@
-import { BluetoothClassicHealthIndicator } from './bluetooth-classic.health';
+import { BluetoothHealthIndicator } from './bluetooth.health';
 import { HealthCheckError } from '@nestjs/terminus';
 
-describe('BluetoothClassicHealthIndicator', () => {
-  let healthIndicator: BluetoothClassicHealthIndicator;
+describe('BluetoothHealthIndicator', () => {
+  let healthIndicator: BluetoothHealthIndicator;
 
   beforeEach(() => {
-    healthIndicator = new BluetoothClassicHealthIndicator();
+    healthIndicator = new BluetoothHealthIndicator();
   });
 
   it('should report healthy by default', () => {

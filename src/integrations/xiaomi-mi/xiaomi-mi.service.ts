@@ -4,7 +4,7 @@ import {
   OnApplicationBootstrap,
   OnModuleInit,
 } from '@nestjs/common';
-import noble, { Peripheral, Advertisement } from '@abandonware/noble';
+import { Peripheral, Advertisement } from '@abandonware/noble';
 import { EntitiesService } from '../../entities/entities.service';
 import { ConfigService } from '../../config/config.service';
 import { XiaomiMiSensorOptions } from './xiaomi-mi.config';
@@ -13,6 +13,7 @@ import { SERVICE_DATA_UUID, ServiceData, Parser, EventTypes } from './parser';
 import { Sensor } from '../../entities/sensor';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { SensorConfig } from '../home-assistant/sensor-config';
+import { BluetoothService } from '../bluetooth/bluetooth.service';
 
 @Injectable()
 export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
@@ -20,6 +21,7 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
   private readonly logger: Logger;
 
   constructor(
+    private readonly bluetoothService: BluetoothService,
     private readonly entitiesService: EntitiesService,
     private readonly configService: ConfigService
   ) {
@@ -46,16 +48,7 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
    * Lifecycle hook, called once the application has started.
    */
   onApplicationBootstrap(): void {
-    noble.on('stateChange', XiaomiMiService.handleStateChange);
-    noble.on('discover', this.handleDiscovery.bind(this));
-    noble.on('warning', this.onWarning.bind(this));
-  }
-
-  /**
-   * Log warnings from noble.
-   */
-  private onWarning(message: string): void {
-    this.logger.warn('Warning: ', message);
+    this.bluetoothService.onLowEnergyDiscovery(this.handleDiscovery.bind(this));
   }
 
   /**
@@ -232,18 +225,5 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
     bindKey: string | null
   ): ServiceData {
     return new Parser(buffer, bindKey).parse();
-  }
-
-  /**
-   * Stops or starts BLE scans based on the adapter state.
-   *
-   * @param state - Noble adapter state string
-   */
-  private static handleStateChange(state: string): void {
-    if (state === 'poweredOn') {
-      noble.startScanning([], true);
-    } else {
-      noble.stopScanning();
-    }
   }
 }

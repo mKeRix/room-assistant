@@ -1,14 +1,3 @@
-const mockNoble = {
-  on: jest.fn(),
-};
-jest.mock(
-  '@abandonware/noble',
-  () => {
-    return mockNoble;
-  },
-  { virtual: true }
-);
-
 import { Peripheral } from '@abandonware/noble';
 import { ConfigService } from '../../config/config.service';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -21,9 +10,14 @@ import { XiaomiMiConfig } from './xiaomi-mi.config';
 import { Sensor } from '../../entities/sensor';
 import { SensorConfig } from '../home-assistant/sensor-config';
 import c from 'config';
+import { BluetoothService } from '../bluetooth/bluetooth.service';
+import { BluetoothModule } from '../bluetooth/bluetooth.module';
 
 describe('XiaomiMiService', () => {
   let service: XiaomiMiService;
+  const bluetoothService = {
+    onLowEnergyDiscovery: jest.fn(),
+  };
   const entitiesService = {
     get: jest.fn(),
     add: jest.fn(),
@@ -74,9 +68,11 @@ describe('XiaomiMiService', () => {
     mockConfig.sensors = [{ name: 'test', address: testAddress }];
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [EntitiesModule, ConfigModule],
+      imports: [BluetoothModule, EntitiesModule, ConfigModule],
       providers: [XiaomiMiService],
     })
+      .overrideProvider(BluetoothService)
+      .useValue(bluetoothService)
       .overrideProvider(EntitiesService)
       .useValue(entitiesService)
       .overrideProvider(ConfigService)
@@ -90,14 +86,11 @@ describe('XiaomiMiService', () => {
     service.onModuleInit();
   });
 
-  it('should setup noble listeners on bootstrap', () => {
+  it('should setup BLE listener on bootstrap', () => {
     service.onApplicationBootstrap();
-    expect(mockNoble.on).toHaveBeenCalledWith(
-      'stateChange',
+    expect(bluetoothService.onLowEnergyDiscovery).toHaveBeenCalledWith(
       expect.any(Function)
     );
-    expect(mockNoble.on).toHaveBeenCalledWith('discover', expect.any(Function));
-    expect(mockNoble.on).toHaveBeenCalledWith('warning', expect.any(Function));
   });
 
   it('should warn if no sensors have been configured', () => {

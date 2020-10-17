@@ -2,12 +2,6 @@
 
 **Integration Key:** `bluetoothClassic`
 
-::: warning
-
-Using this together with [Bluetooth Low Energy](./bluetooth-low-energy) requires multiple Bluetooth adapters.
-
-:::
-
 The Bluetooth Classic integration can detect the location of any Bluetooth device within the home. It does this by sending out connection requests to the device addresses you configure on rotation and then checking the signal strength of the response. The configured Bluetooth devices do not need to be paired with your machines running room-assistant.
 
 The integration has been tested to work great with the Apple Watch. You may see a minor hit on the battery life of the Bluetooth devices when enabling this.
@@ -130,26 +124,4 @@ bluetoothClassic:
     - '77:50:fb:4d:ab:70'
 ```
 
-:::
-
-::: details Multiple Bluetooth Integrations Example Config
-
-`hciDeviceId` can be used to choose a different Bluetooth adapter than the default one. Use hciconfig from the command line to see all available Bluetooth adapters. When using Bluetooth Classic and Bluetooth Low Energy at the same time you need to specify different IDs for these integrations. 
-
-```yaml
-global:
-  integrations:
-    - bluetoothClassic
-    - bluetoothLowEnergy
-bluetoothClassic:
-  hciDeviceId: 0
-  addresses:
-    - '08:05:90:ed:3b:60'
-    - '77:50:fb:4d:ab:70'
-bluetoothLowEnergy:
-  hciDeviceId: 1
-  whitelist:
-    - 7750fb4dab70
-    - 2f234454cf6d4a0fadf2f4911ba9ffa6-1-2
-```
 :::
