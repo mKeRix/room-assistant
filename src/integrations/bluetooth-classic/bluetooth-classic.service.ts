@@ -384,7 +384,12 @@ export class BluetoothClassicService
       ),
       customizations
     ) as Switch;
-    inquiriesSwitch.turnOn();
+
+    if (this.config.inquireFromStart) {
+      inquiriesSwitch.turnOn();
+    } else {
+      inquiriesSwitch.turnOff();
+    }
 
     return inquiriesSwitch;
   }

@@ -69,6 +69,7 @@ describe('BluetoothClassicService', () => {
     interval: 6,
     timeoutCycles: 2,
     preserveState: false,
+    inquireFromStart: true,
   };
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
@@ -147,6 +148,19 @@ describe('BluetoothClassicService', () => {
       expect.any(Array)
     );
     expect(turnOnSpy).toHaveBeenCalled();
+  });
+
+  it('should turn off inquiries at start when configured as such', () => {
+    const mockSwitch = new Switch('inquiries-switch', 'Inquiries Switch');
+    entitiesService.add.mockReturnValue(mockSwitch);
+    const turnOffSpy = jest.spyOn(mockSwitch, 'turnOff');
+    config.inquireFromStart = false;
+
+    service.onApplicationBootstrap();
+
+    expect(turnOffSpy).toHaveBeenCalled();
+
+    config.inquireFromStart = true;
   });
 
   it('should return measured RSSI value from command output', () => {
