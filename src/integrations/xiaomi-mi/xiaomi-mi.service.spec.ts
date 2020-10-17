@@ -13,6 +13,14 @@ import c from 'config';
 import { BluetoothService } from '../bluetooth/bluetooth.service';
 import { BluetoothModule } from '../bluetooth/bluetooth.module';
 
+jest.mock(
+  '@abandonware/noble',
+  () => {
+    return {};
+  },
+  { virtual: true }
+);
+
 describe('XiaomiMiService', () => {
   let service: XiaomiMiService;
   const bluetoothService = {

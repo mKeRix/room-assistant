@@ -5,6 +5,13 @@ jest.mock('kalmanjs', () => {
     };
   });
 });
+jest.mock(
+  '@abandonware/noble',
+  () => {
+    return {};
+  },
+  { virtual: true }
+);
 
 import { Peripheral } from '@abandonware/noble';
 import { ConfigService } from '../../config/config.service';
