@@ -23,6 +23,7 @@ jest.mock('util', () => ({
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   promisify: () => mockExec,
 }));
+jest.useFakeTimers();
 
 describe('BluetoothService', () => {
   let service: BluetoothService;
@@ -84,7 +85,7 @@ describe('BluetoothService', () => {
       expect(mockExec).toHaveBeenCalledWith('hciconfig hci1 reset');
     });
 
-    it('should stop scanning on an adapter while performing an inquiry', async () => {
+    it('should stop scanning on an adapter while performing an inquiry', () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
       stateChangeHandler('poweredOn');
@@ -94,13 +95,15 @@ describe('BluetoothService', () => {
       let execResolve;
       const execPromise = new Promise((r) => (execResolve = r));
       mockExec.mockReturnValue(execPromise);
-      service.inquireClassicRssi(0, 'x');
+      const inquirePromise = service.inquireClassicRssi(0, 'x').then(() => {
+        expect(mockNoble.startScanning).toHaveBeenCalledTimes(2);
+      });
 
       expect(mockNoble.stopScanning).toHaveBeenCalledTimes(1);
 
-      await execResolve();
+      execResolve({ stdout: '-1' });
 
-      expect(mockNoble.startScanning).toHaveBeenCalledTimes(2);
+      return inquirePromise;
     });
 
     it('should start scanning again even after encountering an exception', async () => {
@@ -114,7 +117,7 @@ describe('BluetoothService', () => {
       expect(mockNoble.startScanning).toHaveBeenCalledTimes(2);
     });
 
-    it('should stop scanning on an adapter while getting Classic device info', async () => {
+    it('should stop scanning on an adapter while getting Classic device info', () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
       stateChangeHandler('poweredOn');
@@ -124,13 +127,17 @@ describe('BluetoothService', () => {
       let execResolve;
       const execPromise = new Promise((r) => (execResolve = r));
       mockExec.mockReturnValue(execPromise);
-      service.inquireClassicDeviceInfo(0, 'x');
+      const inquirePromise = service
+        .inquireClassicDeviceInfo(0, 'x')
+        .then(() => {
+          expect(mockNoble.startScanning).toHaveBeenCalledTimes(2);
+        });
 
       expect(mockNoble.stopScanning).toHaveBeenCalledTimes(1);
 
-      await execResolve({ stdout: '' });
+      execResolve({ stdout: '' });
 
-      expect(mockNoble.startScanning).toHaveBeenCalledTimes(2);
+      return inquirePromise;
     });
 
     it('should return device information based on parsed output', async () => {
@@ -243,21 +250,24 @@ Requesting information ...
       expect(mockNoble.startScanning).toHaveBeenCalledTimes(1);
     });
 
-    it('should not enable scanning when the adapter is performing a Classic inquiry', async () => {
+    it('should not enable scanning when the adapter is performing a Classic inquiry', () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
 
       let execResolve;
       const execPromise = new Promise((r) => (execResolve = r));
       mockExec.mockReturnValue(execPromise);
-      service.inquireClassicRssi(0, 'x');
+      const inquirePromise = service.inquireClassicRssi(0, 'x').then(() => {
+        expect(mockNoble.startScanning).toHaveBeenCalledTimes(1);
+      });
 
       stateChangeHandler('poweredOn');
 
       expect(mockNoble.startScanning).not.toHaveBeenCalled();
 
-      await execResolve({ stdout: '-1' });
-      expect(mockNoble.startScanning).toHaveBeenCalledTimes(1);
+      execResolve({ stdout: '-1' });
+
+      return inquirePromise;
     });
 
     it('should continue scanning if Classic inquiries are performed on another adapter', async () => {
