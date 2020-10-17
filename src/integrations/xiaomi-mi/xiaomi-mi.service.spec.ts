@@ -1,3 +1,11 @@
+jest.mock(
+  '@abandonware/noble',
+  () => {
+    return {};
+  },
+  { virtual: true }
+);
+
 import { Peripheral } from '@abandonware/noble';
 import { ConfigService } from '../../config/config.service';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -12,14 +20,6 @@ import { SensorConfig } from '../home-assistant/sensor-config';
 import c from 'config';
 import { BluetoothService } from '../bluetooth/bluetooth.service';
 import { BluetoothModule } from '../bluetooth/bluetooth.module';
-
-jest.mock(
-  '@abandonware/noble',
-  () => {
-    return {};
-  },
-  { virtual: true }
-);
 
 describe('XiaomiMiService', () => {
   let service: XiaomiMiService;
