@@ -177,7 +177,7 @@ export class BluetoothClassicService
   distributeInquiries(): void {
     if (this.clusterService.isMajorityLeader()) {
       const nodes = this.getParticipatingNodes();
-      const addresses = this.config.addresses;
+      const addresses = [...this.config.addresses];
       if (this.rotationOffset >= Math.max(nodes.length, addresses.length)) {
         this.rotationOffset = 0;
       }
@@ -190,7 +190,7 @@ export class BluetoothClassicService
       nodeSubset.forEach((node, index) => {
         if (addressSubset[index] == null) {
           this.logger.error(
-            `Trying to request inquiry without MAC! Current index: ${index}. Addresses in this round: ${addressSubset}. Nodes in this round: ${nodeSubset}.`
+            `Trying to request inquiry without MAC! Current index: ${this.rotationOffset}. Addresses in this round: ${addressSubset}. Addresses overall: ${addresses}.`
           );
         }
 
@@ -405,9 +405,7 @@ export class BluetoothClassicService
     const [small, large] = a1.length > a2.length ? [a2, a1] : [a1, a2];
     const largeSubset = large.slice(offset, offset + small.length);
     if (offset + small.length > large.length) {
-      largeSubset.push(
-        ...large.slice(0, small.length - this.rotationOffset + 1)
-      );
+      largeSubset.push(...large.slice(0, small.length - largeSubset.length));
     }
 
     return a1.length > a2.length ? [largeSubset, a2] : [a1, largeSubset];
