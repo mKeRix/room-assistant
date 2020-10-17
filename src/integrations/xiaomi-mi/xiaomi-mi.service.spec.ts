@@ -217,7 +217,7 @@ describe('XiaomiMiService', () => {
     expect(entitiesService.add.mock.calls[0][1]).toContainEqual({
       for: SensorConfig,
       overrides: {
-        deviceClass: 'moisture',
+        deviceClass: 'humidity',
         unitOfMeasurement: '%',
       },
     });
@@ -258,8 +258,8 @@ describe('XiaomiMiService', () => {
     expect(entitiesService.add.mock.calls[0][1]).toContainEqual({
       for: SensorConfig,
       overrides: {
-        deviceClass: 'fertility',
-        unitOfMeasurement: '',
+        deviceClass: null,
+        unitOfMeasurement: 'µS/cm',
       },
     });
   });
