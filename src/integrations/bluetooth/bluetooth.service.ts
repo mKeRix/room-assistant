@@ -72,7 +72,7 @@ export class BluetoothService {
         this.logger.debug(
           `Query of ${address} reached scan time limit, resetting hci${this.classicConfig.hciDeviceId}`
         );
-        this.resetHciDevice(adapterId);
+        await this.resetHciDevice(adapterId);
 
         // when not reachable a scan runs for 6s, so lower time limits might not be an error
         if (this.classicConfig.scanTimeLimit >= 6) {
