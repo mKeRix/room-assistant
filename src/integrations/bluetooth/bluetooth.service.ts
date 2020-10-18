@@ -178,6 +178,10 @@ export class BluetoothService {
 
     noble.on('stateChange', this.handleAdapterStateChange.bind(this));
     noble.on('warning', (message) => {
+      if (message == 'unknown peripheral undefined RSSI update!') {
+        return;
+      }
+
       this.logger.warn(message);
     });
   }
