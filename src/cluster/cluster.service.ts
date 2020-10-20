@@ -24,7 +24,8 @@ try {
 }
 
 @Injectable()
-export class ClusterService extends Democracy
+export class ClusterService
+  extends Democracy
   implements OnModuleInit, OnApplicationBootstrap, OnApplicationShutdown {
   private readonly configService: ConfigService;
   private readonly config: ClusterConfig;
@@ -119,7 +120,7 @@ export class ClusterService extends Democracy
    */
   quorumReached(): boolean {
     const activeNodes = Object.values(this.nodes()).filter(
-      (node) => node.state !== 'removed'
+      (node) => node?.state !== 'removed'
     );
     return !this.config.quorum || activeNodes.length >= this.config.quorum;
   }
@@ -162,7 +163,7 @@ export class ClusterService extends Democracy
 
     if (!data.chunk && data.state === 'leader') {
       const leaders = Object.entries(this._nodes).filter(
-        (node) => node[1].state === 'leader'
+        (node) => node[1]?.state === 'leader'
       );
 
       if (leaders.length > 1) {
