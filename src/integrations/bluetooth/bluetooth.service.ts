@@ -6,6 +6,7 @@ import { BluetoothHealthIndicator } from './bluetooth.health';
 import { BluetoothClassicConfig } from '../bluetooth-classic/bluetooth-classic.config';
 import { ConfigService } from '../../config/config.service';
 import { Device } from '../bluetooth-classic/device';
+import { promiseWithTimeout } from '../../util/promises';
 
 type BluetoothAdapterState = 'inquiry' | 'scan' | 'inactive';
 
@@ -38,6 +39,68 @@ export class BluetoothService {
     }
 
     noble.on('discover', callback);
+  }
+
+  /**
+   * Locks the adapter and establishes a connection the given BLE peripheral.
+   * Connection attempts time out after 10s.
+   *
+   * @param peripheral - BLE peripheral to connect to
+   */
+  async connectLowEnergyDevice(peripheral: Peripheral): Promise<Peripheral> {
+    if (!peripheral.connectable) {
+      throw new Error('Trying to connect to a non-connectable device');
+    }
+
+    this.logger.debug(
+      `Connecting to BLE device at address ${peripheral.address}`
+    );
+    this.lockAdapter(this.lowEnergyAdapterId);
+
+    peripheral.once('disconnect', (e) => {
+      if (e) {
+        this.logger.error(e);
+      } else {
+        this.logger.debug(
+          `Disconnected from BLE device at address ${peripheral.address}`
+        );
+      }
+
+      this.unlockAdapter(this.lowEnergyAdapterId);
+    });
+
+    try {
+      await promiseWithTimeout(peripheral.connectAsync(), 10000);
+      return peripheral;
+    } catch (e) {
+      this.logger.error(
+        `Failed to connect to ${peripheral.address}: ${e.message}`,
+        e.trace
+      );
+      peripheral.disconnectAsync();
+      peripheral.removeAllListeners();
+      this.unlockAdapter(this.lowEnergyAdapterId);
+      throw e;
+    }
+  }
+
+  /**
+   * Disconnect from the given BLE peripheral and unlock the adapter.
+   *
+   * @param peripheral - BLE peripheral to disconnect from
+   */
+  async disconnectLowEnergyDevice(peripheral: Peripheral): Promise<void> {
+    this.logger.debug(
+      `Disconnecting from BLE device at address ${peripheral.address}`
+    );
+    try {
+      await peripheral.disconnectAsync();
+    } catch (e) {
+      this.logger.error(
+        `Failed to disconnect from ${peripheral.address}: ${e.message}`,
+        e.trace
+      );
+    }
   }
 
   /**
@@ -150,8 +213,13 @@ export class BluetoothService {
    * @param adapterId - HCI Device ID of the adapter to lock
    */
   protected lockAdapter(adapterId: number): void {
-    if (this.adapterStates.get(adapterId) == 'scan') {
-      noble.stopScanning();
+    switch (this.adapterStates.get(adapterId)) {
+      case 'inquiry':
+        throw new Error(
+          `Trying to lock adapter ${adapterId} even though it is already locked`
+        );
+      case 'scan':
+        noble.stopScanning();
     }
 
     this.adapterStates.set(adapterId, 'inquiry');

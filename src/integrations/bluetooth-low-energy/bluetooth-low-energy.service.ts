@@ -26,6 +26,7 @@ import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presenc
 import { BluetoothService } from '../bluetooth/bluetooth.service';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
+const APPLE_ADVERTISEMENT_ID = Buffer.from([0x4c, 0x00, 0x10]);
 
 @Injectable() // parameters determined experimentally
 export class BluetoothLowEnergyService
@@ -34,6 +35,8 @@ export class BluetoothLowEnergyService
   private readonly config: BluetoothLowEnergyConfig;
   private readonly logger: Logger;
   private readonly seenIds = new Set<string>();
+  private readonly companionAppTags = new Map<string, string>();
+  private readonly companionAppBlacklist = new Set<string>();
   private tagUpdaters: {
     [tagId: string]: (event: NewDistanceEvent) => void;
   } = {};
@@ -78,11 +81,13 @@ export class BluetoothLowEnergyService
    *
    * @param peripheral - BLE peripheral
    */
-  handleDiscovery(peripheral: Peripheral): void {
+  async handleDiscovery(peripheral: Peripheral): Promise<void> {
     let tag = this.createTag(peripheral);
     if (this.config.onlyIBeacon && !(tag instanceof IBeacon)) {
       return;
     }
+
+    tag = await this.applyCompanionAppOverride(tag);
 
     if (!this.seenIds.has(tag.id)) {
       this.logger.log(
@@ -118,6 +123,46 @@ export class BluetoothLowEnergyService
       }
 
       this.tagUpdaters[tag.id](event);
+    }
+  }
+
+  /**
+   * Connects to the given peripheral and looks for the companion app.
+   * If the corresponding service and characteristic are found it will
+   * return the app ID value.
+   *
+   * @param tag - Peripheral to connect to
+   */
+  async discoverCompanionAppId(tag: Tag): Promise<string | null> {
+    const peripheral = await this.bluetoothService.connectLowEnergyDevice(
+      tag.peripheral
+    );
+
+    try {
+      const services = await peripheral.discoverServicesAsync([
+        '5403c8a75c9647e99ab859e373d875a7',
+      ]);
+
+      if (services.length > 0) {
+        const characteristics = await services[0].discoverCharacteristicsAsync([
+          '21c46f33e813440786012ad281030052',
+        ]);
+
+        if (characteristics.length > 0) {
+          const data = await characteristics[0].readAsync();
+          return data.toString('utf-8');
+        }
+      }
+
+      return null;
+    } catch (e) {
+      this.logger.error(
+        `Failed to search for companion app at tag ${tag.id}: ${e.message}`,
+        e.trace
+      );
+      return null;
+    } finally {
+      this.bluetoothService.disconnectLowEnergyDevice(tag.peripheral);
     }
   }
 
@@ -332,6 +377,68 @@ export class BluetoothLowEnergyService
       }
       if (overrides.measuredPower !== undefined) {
         tag.measuredPower = overrides.measuredPower;
+      }
+    }
+
+    return tag;
+  }
+
+  /**
+   * Overrides tag data with a companion app ID if found.
+   * Only performs discovery process for relevant devices.
+   *
+   * @param tag - Tag that should be overridden
+   */
+  protected async applyCompanionAppOverride(tag: Tag): Promise<Tag> {
+    // only Apple devices are supported for the companion app
+    // a more sophisticated detection could be possible by looking at the overflow area
+    // more info: http://www.davidgyoungtech.com/2020/05/07/hacking-the-overflow-area
+    // manufacturer data seems broken in noble though
+    if (
+      tag.peripheral.connectable &&
+      tag.peripheral?.advertisement?.manufacturerData
+        ?.slice(0, 3)
+        .equals(APPLE_ADVERTISEMENT_ID) &&
+      tag.peripheral.advertisement.manufacturerData.length > 10
+    ) {
+      if (
+        !this.companionAppTags.has(tag.id) &&
+        !this.companionAppBlacklist.has(tag.id)
+      ) {
+        this.companionAppTags.set(tag.id, null);
+
+        try {
+          const appId = await this.discoverCompanionAppId(tag);
+          this.companionAppTags.set(tag.id, appId);
+
+          if (appId) {
+            this.logger.log(
+              `Discovered companion app with ID ${appId} for tag ${tag.id}`
+            );
+          }
+        } catch (e) {
+          if (e.message === 'timed out') {
+            this.logger.debug(
+              `Temporarily blacklisting ${tag.id} from app discovery due to timeout`
+            );
+            this.companionAppBlacklist.add(tag.id);
+            setTimeout(
+              () => this.companionAppBlacklist.delete(tag.id),
+              3 * 60 * 1000
+            );
+          } else {
+            this.logger.debug(
+              `Unable to retrieve companion ID, retrying on next advertisement: ${e.message}`
+            );
+          }
+
+          this.companionAppTags.delete(tag.id);
+        }
+      }
+
+      const appId = this.companionAppTags.get(tag.id);
+      if (appId != null) {
+        tag.id = appId;
       }
     }
 

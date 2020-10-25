@@ -83,7 +83,6 @@
     "@types/lodash": "^4.14.162",
     "@types/mathjs": "^6.0.5",
     "@types/mdns": "0.0.33",
-    "@types/noble": "0.0.40",
     "@types/node": "^12.12.68",
     "@types/supertest": "^2.0.10",
     "@typescript-eslint/eslint-plugin": "^4.4.1",

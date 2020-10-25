@@ -1,3 +1,5 @@
+import { Peripheral } from '@abandonware/noble';
+
 const mockExec = jest.fn();
 const mockNoble = {
   state: 'poweredOn',
@@ -34,6 +36,7 @@ describe('BluetoothService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    jest.useRealTimers();
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule],
@@ -281,6 +284,129 @@ Requesting information ...
 
       expect(mockNoble.startScanning).toHaveBeenCalledTimes(1);
       expect(mockNoble.stopScanning).not.toHaveBeenCalled();
+    });
+
+    it('should throw an exception if trying to connect to a non-connectable peripheral', async () => {
+      const peripheral = {
+        connectable: false,
+      } as Peripheral;
+
+      await expect(async () => {
+        await service.connectLowEnergyDevice(peripheral);
+      }).rejects.toThrow();
+    });
+
+    it('should only allow a single connection on an adapter', async () => {
+      let connectResolve;
+      const connectPromise = new Promise((r) => (connectResolve = r));
+
+      const peripheral = {
+        connectable: true,
+        connectAsync: jest.fn().mockReturnValue(connectPromise),
+        once: jest.fn(),
+      };
+
+      service.connectLowEnergyDevice((peripheral as unknown) as Peripheral);
+
+      await expect(async () => {
+        await service.connectLowEnergyDevice(
+          (peripheral as unknown) as Peripheral
+        );
+      }).rejects.toThrow();
+
+      connectResolve();
+    });
+
+    it('should unlock the adapter on disconnect', async () => {
+      const peripheral = {
+        connectable: true,
+        connectAsync: jest.fn().mockResolvedValue(undefined),
+        once: jest.fn(),
+      };
+
+      await service.connectLowEnergyDevice(
+        (peripheral as unknown) as Peripheral
+      );
+
+      const disconnectListener = peripheral.once.mock.calls[0][1];
+      disconnectListener();
+
+      await expect(async () => {
+        await service.connectLowEnergyDevice(
+          (peripheral as unknown) as Peripheral
+        );
+      }).not.toThrow();
+    });
+
+    it('should clean up if an exception occurs while connecting', async () => {
+      const peripheral = {
+        connectable: true,
+        connectAsync: jest.fn().mockRejectedValue(new Error('expected')),
+        disconnectAsync: jest.fn(),
+        removeAllListeners: jest.fn(),
+        once: jest.fn(),
+      };
+
+      await expect(async () => {
+        await service.connectLowEnergyDevice(
+          (peripheral as unknown) as Peripheral
+        );
+      }).rejects.toThrow();
+
+      expect(peripheral.disconnectAsync).toHaveBeenCalled();
+      expect(peripheral.removeAllListeners).toHaveBeenCalled();
+    });
+
+    it('should limit the connection attempt time', () => {
+      expect.assertions(1);
+      jest.useFakeTimers('modern');
+
+      const peripheral = {
+        connectable: true,
+        connectAsync: jest
+          .fn()
+          .mockReturnValue(
+            new Promise((resolve) => setTimeout(resolve, 11 * 1000))
+          ),
+        disconnectAsync: jest.fn(),
+        removeAllListeners: jest.fn(),
+        once: jest.fn(),
+      };
+
+      const promise = service
+        .connectLowEnergyDevice((peripheral as unknown) as Peripheral)
+        .catch((e) => {
+          expect(e).toStrictEqual(new Error('timed out'));
+        });
+      jest.advanceTimersByTime(10.5 * 1000);
+
+      return promise;
+    });
+
+    it('should return the peripheral after connecting', async () => {
+      const peripheral = {
+        connectable: true,
+        connectAsync: jest.fn().mockResolvedValue(undefined),
+        once: jest.fn(),
+      };
+
+      const actual = await service.connectLowEnergyDevice(
+        (peripheral as unknown) as Peripheral
+      );
+
+      expect(actual).toBe(peripheral);
+    });
+
+    it('should disconnect from a peripheral', async () => {
+      const peripheral = {
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      };
+
+      await service.disconnectLowEnergyDevice(
+        (peripheral as unknown) as Peripheral
+      );
+
+      expect(peripheral.disconnectAsync).toHaveBeenCalled();
     });
   });
 });
