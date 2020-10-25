@@ -2,12 +2,6 @@
 
 **Integration Key:** `bluetoothClassic`
 
-::: warning
-
-Using this together with [Bluetooth Low Energy](./bluetooth-low-energy) requires multiple Bluetooth adapters.
-
-:::
-
 The Bluetooth Classic integration can detect the location of any Bluetooth device within the home. It does this by sending out connection requests to the device addresses you configure on rotation and then checking the signal strength of the response. The configured Bluetooth devices do not need to be paired with your machines running room-assistant.
 
 The integration has been tested to work great with the Apple Watch. You may see a minor hit on the battery life of the Bluetooth devices when enabling this.
@@ -83,15 +77,16 @@ Try to pair your Apple Watch to a Bluetooth device such as headphones/speakers f
 
 ## Settings
 
-| Name            | Type                                         | Default | Description                                                  |
-| --------------- | -------------------------------------------- | ------- | ------------------------------------------------------------ |
-| `addresses`     | Array                                        |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
-| `minRssi`       | Number _or_ [detailed config](#minimum-rssi) |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
-| `hciDeviceId`   | Number                                       | `0`     | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
-| `interval`      | Number                                       | `6`     | The interval at which the Bluetooth devices are queried in seconds. |
-| `scanTimeLimit` | Number                                       | `2`     | The maximum time allowed for completing a device query in seconds. This should be set lower than the interval. |
-| `timeoutCycles` | Number                                       | `2`     | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
-| `preserveState` | Boolean                                      | `false` | Whether the last recorded distance should be preserved when the inquiries switch is turned off or not. |
+| Name               | Type                                         | Default | Description                                                  |
+| ------------------ | -------------------------------------------- | ------- | ------------------------------------------------------------ |
+| `addresses`        | Array                                        |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
+| `minRssi`          | Number _or_ [detailed config](#minimum-rssi) |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
+| `hciDeviceId`      | Number                                       | `0`     | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
+| `interval`         | Number                                       | `6`     | The interval at which the Bluetooth devices are queried in seconds. |
+| `scanTimeLimit`    | Number                                       | `2`     | The maximum time allowed for completing a device query in seconds. This should be set lower than the interval. |
+| `timeoutCycles`    | Number                                       | `2`     | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
+| `preserveState`    | Boolean                                      | `false` | Whether the last recorded distance should be preserved when the inquiries switch is turned off or not. |
+| `inquireFromStart` | Boolean                                      | `true`  | Whether the [Inquiries Switch](#inquiries-switch) is turned on when room-assistant is started or not. |
 
 ### Minimum RSSI
 
@@ -129,26 +124,4 @@ bluetoothClassic:
     - '77:50:fb:4d:ab:70'
 ```
 
-:::
-
-::: details Multiple Bluetooth Integrations Example Config
-
-`hciDeviceId` can be used to choose a different Bluetooth adapter than the default one. Use hciconfig from the command line to see all available Bluetooth adapters. When using Bluetooth Classic and Bluetooth Low Energy at the same time you need to specify different IDs for these integrations. 
-
-```yaml
-global:
-  integrations:
-    - bluetoothClassic
-    - bluetoothLowEnergy
-bluetoothClassic:
-  hciDeviceId: 0
-  addresses:
-    - '08:05:90:ed:3b:60'
-    - '77:50:fb:4d:ab:70'
-bluetoothLowEnergy:
-  hciDeviceId: 1
-  whitelist:
-    - 7750fb4dab70
-    - 2f234454cf6d4a0fadf2f4911ba9ffa6-1-2
-```
 :::

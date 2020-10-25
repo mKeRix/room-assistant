@@ -4,9 +4,7 @@
 
 ::: warning
 
-Using this together with [Bluetooth Classic](./bluetooth-classic) requires multiple Bluetooth adapters.
-Using this together with [Bluetooth Low Energy](./bluetooth-low-energy)
-requires that the hciDeviceId settings of both integrations are the same value.
+Using this together with [Bluetooth Low Energy](./bluetooth-low-energy) requires that the hciDeviceId settings of both integrations are the same value.
 
 :::
 

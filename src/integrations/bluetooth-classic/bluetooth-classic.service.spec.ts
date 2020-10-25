@@ -1,4 +1,11 @@
 const mockExec = jest.fn();
+jest.mock(
+  '@abandonware/noble',
+  () => {
+    return {};
+  },
+  { virtual: true }
+);
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { BluetoothClassicService } from './bluetooth-classic.service';
@@ -17,7 +24,8 @@ import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-dista
 import KalmanFilter from 'kalmanjs';
 import { Switch } from '../../entities/switch';
 import { BluetoothClassicConfig } from './bluetooth-classic.config';
-import { BluetoothClassicHealthIndicator } from './bluetooth-classic.health';
+import { BluetoothModule } from '../bluetooth/bluetooth.module';
+import { BluetoothService } from '../bluetooth/bluetooth.service';
 import c from 'config';
 import { ConfigService } from '../../config/config.service';
 import { Device } from './device';
@@ -41,6 +49,10 @@ jest.useFakeTimers();
 
 describe('BluetoothClassicService', () => {
   let service: BluetoothClassicService;
+  const bluetoothService = {
+    inquireClassicRssi: jest.fn(),
+    inquireClassicDeviceInfo: jest.fn(),
+  };
   const entitiesService = {
     add: jest.fn(),
     get: jest.fn(),
@@ -59,16 +71,13 @@ describe('BluetoothClassicService', () => {
     error: jest.fn(),
     warn: jest.fn(),
   };
-  const healthIndicator = {
-    reportError: jest.fn(),
-    reportSuccess: jest.fn(),
-  };
   const config: Partial<BluetoothClassicConfig> = {
     addresses: ['8d:ad:e3:e2:7a:01', 'f7:6c:e3:10:55:b5'],
     hciDeviceId: 0,
     interval: 6,
     timeoutCycles: 2,
     preserveState: false,
+    inquireFromStart: true,
   };
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
@@ -81,21 +90,22 @@ describe('BluetoothClassicService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        BluetoothModule,
         ConfigModule,
         EntitiesModule,
         ClusterModule,
         ScheduleModule.forRoot(),
       ],
-      providers: [BluetoothClassicService, BluetoothClassicHealthIndicator],
+      providers: [BluetoothClassicService],
     })
+      .overrideProvider(BluetoothService)
+      .useValue(bluetoothService)
       .overrideProvider(EntitiesService)
       .useValue(entitiesService)
       .overrideProvider(ClusterService)
       .useValue(clusterService)
       .overrideProvider(ConfigService)
       .useValue(configService)
-      .overrideProvider(BluetoothClassicHealthIndicator)
-      .useValue(healthIndicator)
       .compile();
     module.useLogger(loggerService);
 
@@ -149,89 +159,28 @@ describe('BluetoothClassicService', () => {
     expect(turnOnSpy).toHaveBeenCalled();
   });
 
-  it('should return measured RSSI value from command output', () => {
-    mockExec.mockResolvedValue({ stdout: 'RSSI return value: -4' });
+  it('should turn off inquiries at start when configured as such', () => {
+    const mockSwitch = new Switch('inquiries-switch', 'Inquiries Switch');
+    entitiesService.add.mockReturnValue(mockSwitch);
+    const turnOffSpy = jest.spyOn(mockSwitch, 'turnOff');
+    config.inquireFromStart = false;
 
-    const address = '77:50:fb:4d:ab:70';
+    service.onApplicationBootstrap();
 
-    expect(service.inquireRssi(address)).resolves.toBe(-4);
-  });
+    expect(turnOffSpy).toHaveBeenCalled();
 
-  it('should return undefined if no RSSI could be determined', () => {
-    mockExec.mockResolvedValue({
-      stdout: "Can't create connection: Input/output error",
-      stderr: 'Not connected.',
-    });
-
-    expect(service.inquireRssi('08:05:90:ed:3b:60')).resolves.toBeUndefined();
-  });
-
-  it('should return undefined if the command failed', () => {
-    mockExec.mockRejectedValue({ message: 'Command failed' });
-
-    expect(service.inquireRssi('08:05:90:ed:3b:60')).resolves.toBeUndefined();
-  });
-
-  it('should reset the HCI device if the query took too long', async () => {
-    mockExec.mockRejectedValue({ signal: 'SIGKILL' });
-
-    const result = await service.inquireRssi('08:05:90:ed:3b:60');
-    expect(result).toBeUndefined();
-    expect(mockExec).toHaveBeenCalledWith('hciconfig hci0 reset');
-  });
-
-  it('should return device information based on parsed output', async () => {
-    mockExec.mockResolvedValue({
-      stdout: `
-Requesting information ...
-\tBD Address:  F0:99:B6:12:34:AB
-\tOUI Company: Apple, Inc. (F0-99-B6)
-\tDevice Name: Test iPhone
-\tLMP Version: 5.0 (0x9) LMP Subversion: 0x4307
-\tManufacturer: Broadcom Corporation (15)
-\tFeatures page 0:
-\tFeatures page 1:
-\tFeatures page 2:
-      `,
-    });
-
-    expect(await service.inquireDeviceInfo('F0:99:B6:12:34:AB')).toStrictEqual({
-      address: 'F0:99:B6:12:34:AB',
-      name: 'Test iPhone',
-      manufacturer: 'Apple, Inc.',
-    });
-  });
-
-  it('should return the address as device name if none was found', async () => {
-    mockExec.mockResolvedValue({
-      stdout: 'IO error',
-    });
-
-    expect(await service.inquireDeviceInfo('F0:99:B6:12:34:AB')).toStrictEqual({
-      address: 'F0:99:B6:12:34:AB',
-      name: 'F0:99:B6:12:34:AB',
-      manufacturer: undefined,
-    });
-  });
-
-  it('should return barebones information if request fails', async () => {
-    mockExec.mockRejectedValue({ stderr: 'I/O Error' });
-
-    expect(await service.inquireDeviceInfo('F0:99:B6:12:34:CD')).toStrictEqual({
-      address: 'F0:99:B6:12:34:CD',
-      name: 'F0:99:B6:12:34:CD',
-    });
+    config.inquireFromStart = true;
   });
 
   it('should publish the RSSI if found', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    jest.spyOn(service, 'inquireRssi').mockResolvedValue(0);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(0);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
     const address = '77:50:fb:4d:ab:70';
     const device = new Device(address, 'Test Device');
-    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+    bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(device);
 
     const expectedEvent = new NewRssiEvent('test-instance', device, 0);
 
@@ -245,7 +194,7 @@ Requesting information ...
 
   it('should not publish an RSSI value if none was found', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    jest.spyOn(service, 'inquireRssi').mockResolvedValue(undefined);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(undefined);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
@@ -258,7 +207,7 @@ Requesting information ...
 
   it('should publish RSSI values that are bigger than the min RSSI', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-9);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(-9);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
@@ -271,7 +220,7 @@ Requesting information ...
 
   it('should publish RSSI values that are the same as the min RSSI', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-10);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(-10);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
@@ -284,7 +233,7 @@ Requesting information ...
 
   it('should mark RSSI values that are smaller than the min RSSI as out of range', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-11);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(-11);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
@@ -292,7 +241,7 @@ Requesting information ...
 
     const address = '77:50:fb:4d:ab:70';
     const device = new Device(address, 'Test Device');
-    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+    bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(device);
 
     const expectedEvent = new NewRssiEvent('test-instance', device, -11, true);
 
@@ -306,7 +255,7 @@ Requesting information ...
 
   it('should handle minRssi per device', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-11);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(-11);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
@@ -317,7 +266,7 @@ Requesting information ...
 
     const address = '77:50:fb:4d:ab:70';
     const device = new Device(address, 'Test Device');
-    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+    bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(device);
 
     const expectedEvent = new NewRssiEvent('test-instance', device, -11, true);
 
@@ -331,7 +280,7 @@ Requesting information ...
 
   it('should pick the default minRssi if no device-specific one is configured', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-11);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(-11);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
@@ -342,7 +291,7 @@ Requesting information ...
 
     const address = '50:50:50:50:50:50';
     const device = new Device(address, 'Test Device');
-    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+    bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(device);
 
     const expectedEvent = new NewRssiEvent('test-instance', device, -11, false);
 
@@ -356,7 +305,7 @@ Requesting information ...
 
   it('should consider everything in range when no default minRssi is configured', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-25);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(-25);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
@@ -366,7 +315,7 @@ Requesting information ...
 
     const address = '50:50:50:50:50:50';
     const device = new Device(address, 'Test Device');
-    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+    bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(device);
 
     const expectedEvent = new NewRssiEvent('test-instance', device, -25, false);
 
@@ -380,32 +329,32 @@ Requesting information ...
 
   it('should gather the device info for previously unkown addresses', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    jest.spyOn(service, 'inquireRssi').mockResolvedValue(0);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(0);
     jest.spyOn(service, 'handleNewRssi').mockImplementation(() => undefined);
 
     const address = '77:50:fb:4d:ab:70';
     const device = new Device(address, 'Test Device');
-    const infoSpy = jest
-      .spyOn(service, 'inquireDeviceInfo')
-      .mockResolvedValue(device);
+    const infoSpy = bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(
+      device
+    );
 
     await service.handleRssiRequest(address);
 
-    expect(infoSpy).toHaveBeenCalledWith('77:50:fb:4d:ab:70');
+    expect(infoSpy).toHaveBeenCalledWith(0, '77:50:fb:4d:ab:70');
   });
 
   it('should re-use already gathered device information', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    jest.spyOn(service, 'inquireRssi').mockResolvedValue(0);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(0);
     const handleSpy = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
 
     const address = '77:50:fb:4d:ab:70';
     const device = new Device(address, 'Test Device');
-    const infoSpy = jest
-      .spyOn(service, 'inquireDeviceInfo')
-      .mockResolvedValue(device);
+    const infoSpy = bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(
+      device
+    );
 
     await service.handleRssiRequest(address);
     await service.handleRssiRequest(address);
@@ -416,7 +365,7 @@ Requesting information ...
 
   it('should not trigger Bluetooth commands for undefined addresses', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    const inquireSpy = jest.spyOn(service, 'inquireRssi');
+    const inquireSpy = bluetoothService.inquireClassicRssi;
 
     await service.handleRssiRequest(undefined);
     expect(inquireSpy).not.toHaveBeenCalled();
@@ -424,7 +373,7 @@ Requesting information ...
 
   it('should not trigger Bluetooth commands for empty addresses', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    const inquireSpy = jest.spyOn(service, 'inquireRssi');
+    const inquireSpy = bluetoothService.inquireClassicRssi;
 
     await service.handleRssiRequest('');
     expect(inquireSpy).not.toHaveBeenCalled();
@@ -446,7 +395,7 @@ Requesting information ...
     clusterService.nodes.mockReturnValue({
       abcd: { channels: [NEW_RSSI_CHANNEL] },
     });
-    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue({
+    bluetoothService.inquireClassicDeviceInfo.mockResolvedValue({
       address: '10:36:cf:ca:9a:18',
       name: 'Test iPhone',
     });
@@ -568,7 +517,7 @@ Requesting information ...
 
   it('should not distribute inquiries if not the leader', () => {
     clusterService.isMajorityLeader.mockReturnValue(false);
-    const inquireSpy = jest.spyOn(service, 'inquireRssi');
+    const inquireSpy = bluetoothService.inquireClassicRssi;
 
     service.distributeInquiries();
     expect(clusterService.send).not.toHaveBeenCalled();
@@ -704,7 +653,7 @@ Requesting information ...
 
   it('should filter the RSSI of inquired devices before publishing', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
-    jest.spyOn(service, 'inquireRssi').mockResolvedValue(-3);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(-3);
     const handleRssiMock = jest
       .spyOn(service, 'handleNewRssi')
       .mockImplementation(() => undefined);
@@ -714,7 +663,7 @@ Requesting information ...
 
     const address = 'ab:cd:01:23:00:70';
     const device = new Device(address, 'Test Device');
-    jest.spyOn(service, 'inquireDeviceInfo').mockResolvedValue(device);
+    bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(device);
 
     const expectedEvent = new NewRssiEvent('test-instance', device, -5.2);
 
@@ -753,39 +702,5 @@ Requesting information ...
     mockSwitch.state = true;
 
     expect(service.shouldInquire()).toBeTruthy();
-  });
-
-  it('should report success to the health indicator when queries are successful', async () => {
-    mockExec.mockResolvedValue({ stdout: 'RSSI return value: -4' });
-    await service.inquireRssi('');
-
-    expect(healthIndicator.reportSuccess).toHaveBeenCalledTimes(1);
-  });
-
-  it('should report an error to the health indicator when queries are unsuccessful', async () => {
-    mockExec.mockRejectedValue({ message: 'critical error' });
-    await service.inquireRssi('');
-
-    expect(healthIndicator.reportError).toHaveBeenCalledTimes(1);
-  });
-
-  it('should not report anything to the health indicator if the device was not reachable', async () => {
-    mockExec.mockRejectedValue({
-      message: 'Could not connect: Input/output error',
-    });
-    await service.inquireRssi('');
-
-    expect(healthIndicator.reportSuccess).not.toHaveBeenCalled();
-    expect(healthIndicator.reportError).not.toHaveBeenCalled();
-  });
-
-  it('should not report an error if the scan was stopped due to low time limits', async () => {
-    mockExec.mockRejectedValue({
-      message: 'killed',
-      signal: 'SIGKILL',
-    });
-    await service.inquireRssi('');
-
-    expect(healthIndicator.reportError).not.toHaveBeenCalled();
   });
 });

@@ -6,4 +6,5 @@ export class BluetoothClassicConfig {
   scanTimeLimit = 2;
   timeoutCycles = 2;
   preserveState = false;
+  inquireFromStart = true;
 }

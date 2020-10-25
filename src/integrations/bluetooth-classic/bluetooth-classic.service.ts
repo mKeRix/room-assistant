@@ -29,7 +29,7 @@ import { Switch } from '../../entities/switch';
 import { SwitchConfig } from '../home-assistant/switch-config';
 import { DeviceTracker } from '../../entities/device-tracker';
 import { RoomPresenceDeviceTrackerProxyHandler } from '../room-presence/room-presence-device-tracker.proxy';
-import { BluetoothClassicHealthIndicator } from './bluetooth-classic.health';
+import { BluetoothService } from '../bluetooth/bluetooth.service';
 
 const execPromise = util.promisify(exec);
 
@@ -44,11 +44,11 @@ export class BluetoothClassicService
   private logger: Logger;
 
   constructor(
+    private readonly bluetoothService: BluetoothService,
     private readonly configService: ConfigService,
     private readonly entitiesService: EntitiesService,
     private readonly clusterService: ClusterService,
-    private readonly schedulerRegistry: SchedulerRegistry,
-    private readonly healthIndicator: BluetoothClassicHealthIndicator
+    private readonly schedulerRegistry: SchedulerRegistry
   ) {
     super();
     this.config = this.configService.get('bluetoothClassic');
@@ -101,7 +101,10 @@ export class BluetoothClassicService
     }
 
     if (this.shouldInquire()) {
-      let rssi = await this.inquireRssi(address);
+      let rssi = await this.bluetoothService.inquireClassicRssi(
+        this.config.hciDeviceId,
+        address
+      );
 
       if (rssi !== undefined) {
         rssi = _.round(this.filterRssi(address, rssi), 1);
@@ -110,7 +113,10 @@ export class BluetoothClassicService
         if (this.deviceMap.has(address)) {
           device = this.deviceMap.get(address);
         } else {
-          device = await this.inquireDeviceInfo(address);
+          device = await this.bluetoothService.inquireClassicDeviceInfo(
+            this.config.hciDeviceId,
+            address
+          );
           this.deviceMap.set(address, device);
         }
 
@@ -171,7 +177,7 @@ export class BluetoothClassicService
   distributeInquiries(): void {
     if (this.clusterService.isMajorityLeader()) {
       const nodes = this.getParticipatingNodes();
-      const addresses = this.config.addresses;
+      const addresses = [...this.config.addresses];
       if (this.rotationOffset >= Math.max(nodes.length, addresses.length)) {
         this.rotationOffset = 0;
       }
@@ -184,7 +190,7 @@ export class BluetoothClassicService
       nodeSubset.forEach((node, index) => {
         if (addressSubset[index] == null) {
           this.logger.error(
-            `Trying to request inquiry without MAC! Current index: ${index}. Addresses in this round: ${addressSubset}. Nodes in this round: ${nodeSubset}.`
+            `Trying to request inquiry without MAC! Current index: ${this.rotationOffset}. Addresses in this round: ${addressSubset}. Addresses overall: ${addresses}.`
           );
         }
 
@@ -205,54 +211,6 @@ export class BluetoothClassicService
   }
 
   /**
-   * Queries for the RSSI of a Bluetooth device using the hcitool shell command.
-   *
-   * @param address - Bluetooth MAC address
-   * @returns RSSI value
-   */
-  async inquireRssi(address: string): Promise<number> {
-    const regex = new RegExp(/-?[0-9]+/);
-
-    this.logger.debug(`Querying for RSSI of ${address} using hcitool`);
-    try {
-      const output = await execPromise(
-        `hcitool -i hci${this.config.hciDeviceId} cc "${address}" && hcitool -i hci${this.config.hciDeviceId} rssi "${address}"`,
-        {
-          timeout: this.config.scanTimeLimit * 1000,
-          killSignal: 'SIGKILL',
-        }
-      );
-      const matches = output.stdout.match(regex);
-
-      this.healthIndicator.reportSuccess();
-
-      return matches?.length > 0 ? parseInt(matches[0], 10) : undefined;
-    } catch (e) {
-      if (e.signal === 'SIGKILL') {
-        this.logger.debug(
-          `Query of ${address} reached scan time limit, resetting hci${this.config.hciDeviceId}`
-        );
-        this.resetHciDevice();
-
-        // when not reachable a scan runs for 6s, so lower time limits might not be an error
-        if (this.config.scanTimeLimit >= 6) {
-          this.healthIndicator.reportError();
-        }
-      } else if (
-        e.message?.includes('Input/output') ||
-        e.message?.includes('I/O')
-      ) {
-        this.logger.debug(e.message);
-      } else {
-        this.logger.error(e.message);
-        this.healthIndicator.reportError();
-      }
-
-      return undefined;
-    }
-  }
-
-  /**
    * Applies the Kalman filter based on the historic values with the same address.
    *
    * @param address - Bluetooth MAC address
@@ -261,37 +219,6 @@ export class BluetoothClassicService
    */
   filterRssi(address: string, rssi: number): number {
     return this.kalmanFilter(rssi, address);
-  }
-
-  /**
-   * Inquires device information of a Bluetooth peripheral.
-   *
-   * @param address - Bluetooth MAC address
-   * @returns Device information
-   */
-  async inquireDeviceInfo(address: string): Promise<Device> {
-    try {
-      const output = await execPromise(
-        `hcitool -i hci${this.config.hciDeviceId} info "${address}"`
-      );
-
-      const nameMatches = /Device Name: (.+)/g.exec(output.stdout);
-      const manufacturerMatches = /OUI Company: (.+) \(.+\)/g.exec(
-        output.stdout
-      );
-
-      return {
-        address,
-        name: nameMatches ? nameMatches[1] : address,
-        manufacturer: manufacturerMatches ? manufacturerMatches[1] : undefined,
-      };
-    } catch (e) {
-      this.logger.error(e.message, e.stack);
-      return {
-        address,
-        name: address,
-      };
-    }
   }
 
   /**
@@ -352,17 +279,6 @@ export class BluetoothClassicService
   }
 
   /**
-   * Reset the hci (Bluetooth) device used for inquiries.
-   */
-  protected async resetHciDevice(): Promise<void> {
-    try {
-      await execPromise(`hciconfig hci${this.config.hciDeviceId} reset`);
-    } catch (e) {
-      this.logger.error(e.message);
-    }
-  }
-
-  /**
    * Creates and registers a new switch as a setting for whether Bluetooth queries should be made from this device or not.
    *
    * @returns Registered query switch
@@ -384,7 +300,12 @@ export class BluetoothClassicService
       ),
       customizations
     ) as Switch;
-    inquiriesSwitch.turnOn();
+
+    if (this.config.inquireFromStart) {
+      inquiriesSwitch.turnOn();
+    } else {
+      inquiriesSwitch.turnOff();
+    }
 
     return inquiriesSwitch;
   }
@@ -484,9 +405,7 @@ export class BluetoothClassicService
     const [small, large] = a1.length > a2.length ? [a2, a1] : [a1, a2];
     const largeSubset = large.slice(offset, offset + small.length);
     if (offset + small.length > large.length) {
-      largeSubset.push(
-        ...large.slice(0, small.length - this.rotationOffset + 1)
-      );
+      largeSubset.push(...large.slice(0, small.length - largeSubset.length));
     }
 
     return a1.length > a2.length ? [largeSubset, a2] : [a1, largeSubset];
