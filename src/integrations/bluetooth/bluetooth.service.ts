@@ -51,7 +51,7 @@ export class BluetoothService {
     adapterId: number,
     address: string
   ): Promise<number> {
-    this.lockAdapter(adapterId);
+    await this.lockAdapter(adapterId);
 
     this.logger.debug(`Querying for RSSI of ${address} using hcitool`);
     try {
@@ -105,7 +105,7 @@ export class BluetoothService {
     adapterId: number,
     address: string
   ): Promise<Device> {
-    this.lockAdapter(adapterId);
+    await this.lockAdapter(adapterId);
 
     try {
       const output = await execPromise(
@@ -149,9 +149,14 @@ export class BluetoothService {
    *
    * @param adapterId - HCI Device ID of the adapter to lock
    */
-  protected lockAdapter(adapterId: number): void {
-    if (this.adapterStates.get(adapterId) == 'scan') {
-      noble.stopScanning();
+  async lockAdapter(adapterId: number): Promise<void> {
+    switch (this.adapterStates.get(adapterId)) {
+      case 'inquiry':
+        throw new Error(
+          `Trying to lock adapter ${adapterId} even though it is already locked`
+        );
+      case 'scan':
+        noble.stopScanning();
     }
 
     this.adapterStates.set(adapterId, 'inquiry');
@@ -162,11 +167,11 @@ export class BluetoothService {
    *
    * @param adapterId - HCI Device ID of the adapter to unlock
    */
-  protected unlockAdapter(adapterId: number): void {
+  async unlockAdapter(adapterId: number): Promise<void> {
     this.adapterStates.set(adapterId, 'inactive');
 
     if (adapterId == this.lowEnergyAdapterId) {
-      this.handleAdapterStateChange(noble.state);
+      await this.handleAdapterStateChange(noble.state);
     }
   }
 
@@ -191,13 +196,13 @@ export class BluetoothService {
    *
    * @param state - State of the HCI adapter
    */
-  private handleAdapterStateChange(state: string): void {
+  private async handleAdapterStateChange(state: string): Promise<void> {
     if (this.adapterStates.get(this.lowEnergyAdapterId) != 'inquiry') {
       if (state === 'poweredOn') {
-        noble.startScanning([], true);
+        await noble.startScanningAsync([], true);
         this.adapterStates.set(this.lowEnergyAdapterId, 'scan');
       } else {
-        noble.stopScanning();
+        await noble.stopScanning();
         this.adapterStates.set(this.lowEnergyAdapterId, 'inactive');
       }
     }
