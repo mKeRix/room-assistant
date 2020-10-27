@@ -65,7 +65,7 @@ export class HomeAssistantService
     try {
       this.mqttClient = await mqtt.connectAsync(
         this.config.mqttUrl,
-        this.config.mqttOptions,
+        { ...this.config.mqttOptions },
         false
       );
       this.mqttClient.on('message', this.handleIncomingMessage.bind(this));
