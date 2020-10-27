@@ -308,13 +308,38 @@ describe('HomeAssistantService', () => {
     );
   });
 
-  it('should not publish discovery information for a new device tracker', async () => {
+  it('should publish discovery information for a new device tracker', async () => {
     await service.onModuleInit();
     service.handleNewEntity(
       new DeviceTracker('test-tracker', 'Test Tracker', true)
     );
 
-    expect(mockMqttClient.publish).toHaveBeenCalledTimes(1);
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'homeassistant/device_tracker/room-assistant/test-tracker/config',
+      expect.any(String),
+      {
+        qos: 0,
+        retain: true,
+      }
+    );
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'room-assistant/device_tracker/test-tracker/status',
+      'online',
+      {
+        qos: 0,
+        retain: true,
+      }
+    );
+    expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject({
+      unique_id: 'room-assistant-test-tracker',
+      name: 'Test Tracker',
+      state_topic: 'room-assistant/device_tracker/test-tracker/state',
+      json_attributes_topic:
+        'room-assistant/device_tracker/test-tracker/attributes',
+      availability_topic: 'room-assistant/device_tracker/test-tracker/status',
+      payload_home: 'home',
+      payload_not_home: 'not_home',
+    });
   });
 
   it('should publish discovery information for a new camera', async () => {

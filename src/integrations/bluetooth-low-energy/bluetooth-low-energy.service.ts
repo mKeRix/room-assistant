@@ -14,6 +14,7 @@ import { ClusterService } from '../../cluster/cluster.service';
 import { NewDistanceEvent } from './new-distance.event';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { SensorConfig } from '../home-assistant/sensor-config';
+import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import { Device } from '../home-assistant/device';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import { SchedulerRegistry } from '@nestjs/schedule';
@@ -237,7 +238,7 @@ export class BluetoothLowEnergyService
   }
 
   /**
-   * Creates and registers a new room presence sensor.
+   * Creates and registers a new room presence sensor and device tracker.
    *
    * @param sensorId - Id that the sensor should receive
    * @param deviceId - Id of the BLE peripheral
@@ -259,7 +260,8 @@ export class BluetoothLowEnergyService
 
     const deviceTracker = this.createDeviceTracker(
       makeId(`${sensorId}-tracker`),
-      `${deviceName} Tracker`
+      `${deviceName} Tracker`,
+      deviceInfo
     );
 
     let batterySensor: Sensor;
@@ -309,11 +311,25 @@ export class BluetoothLowEnergyService
    *
    * @param id - Entity ID for the new device tracker
    * @param name - Name for the new device tracker
+   * @param deviceInfo - Reference information about the BLE device
    * @returns Registered device tracker
    */
-  protected createDeviceTracker(id: string, name: string): DeviceTracker {
+  protected createDeviceTracker(
+    id: string,
+    name: string,
+    deviceInfo: Device
+  ): DeviceTracker {
+    const trackerCustomizations: Array<EntityCustomization<any>> = [
+      {
+        for: DeviceTrackerConfig,
+        overrides: {
+          device: deviceInfo,
+        },
+      },
+    ];
     return this.entitiesService.add(
-      new DeviceTracker(id, name, true)
+      new DeviceTracker(id, name, true),
+      trackerCustomizations
     ) as DeviceTracker;
   }
 

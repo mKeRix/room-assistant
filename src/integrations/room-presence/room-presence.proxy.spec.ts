@@ -29,7 +29,7 @@ describe('RoomPresenceProxyHandler', () => {
   it('should set the device tracker to false when not home', () => {
     proxy.updateState();
 
-    expect(deviceTracker.state).toBeFalsy();
+    expect(deviceTracker.state).toBe('not_home');
   });
 
   it('should set the battery level to value', () => {

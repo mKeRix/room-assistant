@@ -33,6 +33,7 @@ import { NewDistanceEvent } from './new-distance.event';
 import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presence.sensor';
 import KalmanFilter from 'kalmanjs';
 import { DeviceTracker } from '../../entities/device-tracker';
+import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import * as util from 'util';
 import { BluetoothService } from '../bluetooth/bluetooth.service';
 import { BluetoothModule } from '../bluetooth/bluetooth.module';
@@ -717,7 +718,7 @@ describe('BluetoothLowEnergyService', () => {
     expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 2, false);
   });
 
-  it('should add new room presence sensor if no matching ones exist yet', () => {
+  it('should add new room presence sensor and device tracker if no matching ones exist yet', () => {
     const sensor = new BluetoothLowEnergyPresenceSensor('test', 'Test', 0);
     entitiesService.has.mockReturnValue(false);
     entitiesService.add.mockReturnValue(sensor);
@@ -737,7 +738,19 @@ describe('BluetoothLowEnergyService', () => {
       expect.any(Array)
     );
     expect(entitiesService.add).toHaveBeenCalledWith(
-      new DeviceTracker('ble-new-tracker', 'New Tag Tracker', true)
+      new DeviceTracker('ble-new-tracker', 'New Tag Tracker', true),
+      [
+        {
+          for: DeviceTrackerConfig,
+          overrides: {
+            device: {
+              identifiers: 'new',
+              name: 'New Tag',
+              viaDevice: 'room-assistant-distributed',
+            },
+          },
+        },
+      ]
     );
     expect(
       util.types.isProxy(entitiesService.add.mock.calls[1][0])
@@ -772,7 +785,8 @@ describe('BluetoothLowEnergyService', () => {
       expect.any(Array)
     );
     expect(entitiesService.add).toHaveBeenCalledWith(
-      new DeviceTracker('ble-new-tracker', 'New Tag Tracker', true)
+      new DeviceTracker('ble-new-tracker', 'New Tag Tracker', true),
+      expect.any(Array)
     );
     expect(entitiesService.add).toHaveBeenCalledWith(
       new Sensor('ble-new-battery', 'New Tag Battery', true),

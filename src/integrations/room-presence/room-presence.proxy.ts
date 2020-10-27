@@ -1,5 +1,6 @@
 import {
   RoomPresenceDistanceSensor,
+  STATE_HOME,
   STATE_NOT_HOME,
 } from './room-presence-distance.sensor';
 import { DeviceTracker } from '../../entities/device-tracker';
@@ -18,7 +19,8 @@ export class RoomPresenceProxyHandler
 
     switch (p) {
       case 'state':
-        this.deviceTracker.state = value != STATE_NOT_HOME;
+        this.deviceTracker.state =
+          value == STATE_NOT_HOME ? STATE_NOT_HOME : STATE_HOME;
         break;
       case 'batteryLevel':
         this.batterySensor.state = value;

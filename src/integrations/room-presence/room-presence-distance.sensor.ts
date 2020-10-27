@@ -1,5 +1,6 @@
 import { Sensor } from '../../entities/sensor';
 
+export const STATE_HOME = 'home';
 export const STATE_NOT_HOME = 'not_home';
 
 class TimedDistance {
