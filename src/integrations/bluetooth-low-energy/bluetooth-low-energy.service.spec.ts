@@ -696,13 +696,14 @@ describe('BluetoothLowEnergyService', () => {
     expect(entitiesService.add).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'ble-new',
-        name: 'New Tag Room Presence',
+        name: 'New Tag Room',
         timeout: 20,
       }),
       expect.any(Array)
     );
     expect(entitiesService.add).toHaveBeenCalledWith(
-      new DeviceTracker('ble-new-tracker', 'New Tag', true)
+      new DeviceTracker('ble-new-tracker', 'New Tag Tracker', true),
+      expect.any(Array)
     );
     expect(
       util.types.isProxy(entitiesService.add.mock.calls[1][0])

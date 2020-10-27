@@ -28,7 +28,7 @@ import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
 import { Switch } from '../../entities/switch';
 import { SwitchConfig } from '../home-assistant/switch-config';
 import { DeviceTracker } from '../../entities/device-tracker';
-import { RoomPresenceDeviceTrackerProxyHandler } from '../room-presence/room-presence-device-tracker.proxy';
+import { RoomPresenceProxyHandler } from '../room-presence/room-presence.proxy';
 import { BluetoothService } from '../bluetooth/bluetooth.service';
 
 const execPromise = util.promisify(exec);
@@ -355,7 +355,7 @@ export class BluetoothClassicService
     );
     const sensorProxy = new Proxy<RoomPresenceDistanceSensor>(
       rawSensor,
-      new RoomPresenceDeviceTrackerProxyHandler(deviceTracker)
+      new RoomPresenceProxyHandler(deviceTracker)
     );
 
     const sensor = this.entitiesService.add(

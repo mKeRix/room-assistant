@@ -1,8 +1,8 @@
 import { RoomPresenceDistanceSensor } from './room-presence-distance.sensor';
 import { DeviceTracker } from '../../entities/device-tracker';
-import { RoomPresenceDeviceTrackerProxyHandler } from './room-presence-device-tracker.proxy';
+import { RoomPresenceProxyHandler } from './room-presence.proxy';
 
-describe('RoomPresenceDeviceTrackerProxyHandler', () => {
+describe('RoomPresenceProxyHandler', () => {
   let proxy: RoomPresenceDistanceSensor;
   let deviceTracker: DeviceTracker;
 
@@ -16,7 +16,7 @@ describe('RoomPresenceDeviceTrackerProxyHandler', () => {
     );
     proxy = new Proxy<RoomPresenceDistanceSensor>(
       sensor,
-      new RoomPresenceDeviceTrackerProxyHandler(deviceTracker)
+      new RoomPresenceProxyHandler(deviceTracker)
     );
   });
 

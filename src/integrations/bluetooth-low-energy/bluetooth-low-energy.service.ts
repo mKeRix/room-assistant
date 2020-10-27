@@ -14,6 +14,7 @@ import { ClusterService } from '../../cluster/cluster.service';
 import { NewDistanceEvent } from './new-distance.event';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { SensorConfig } from '../home-assistant/sensor-config';
+import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { KalmanFilterable } from '../../util/filters';
@@ -21,11 +22,18 @@ import { makeId } from '../../util/id';
 import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
 import * as _ from 'lodash';
 import { DeviceTracker } from '../../entities/device-tracker';
-import { RoomPresenceDeviceTrackerProxyHandler } from '../room-presence/room-presence-device-tracker.proxy';
+import { Sensor } from '../../entities/sensor';
+import { RoomPresenceProxyHandler } from '../room-presence/room-presence.proxy';
 import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presence.sensor';
 import { BluetoothService } from '../bluetooth/bluetooth.service';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
+
+class deviceCustomizations {
+  identifiers: string;
+  name: string;
+  viaDevice: string;
+}
 
 @Injectable() // parameters determined experimentally
 export class BluetoothLowEnergyService
@@ -107,7 +115,8 @@ export class BluetoothLowEnergyService
         tag.rssi,
         tag.measuredPower,
         tag.distance,
-        tag.distance > this.config.maxDistance
+        tag.distance > this.config.maxDistance,
+        tag instanceof IBeacon ? tag.batteryLevel : undefined
       );
 
       if (!this.tagUpdaters.hasOwnProperty(tag.id)) {
@@ -122,9 +131,9 @@ export class BluetoothLowEnergyService
   }
 
   /**
-   * Passes newly found distance information to aggregated room presence sensors.
+   * Passes newly found discovery information to aggregated room presence sensors.
    *
-   * @param event - Event with new distance data
+   * @param event - Event with new distance/battery data
    */
   handleNewDistance(event: NewDistanceEvent): void {
     const sensorId = makeId(`ble ${event.tagId}`);
@@ -137,7 +146,8 @@ export class BluetoothLowEnergyService
       sensor = this.createRoomPresenceSensor(
         sensorId,
         event.tagId,
-        event.tagName
+        event.tagName,
+        event.batteryLevel !== undefined
       );
     }
 
@@ -146,7 +156,8 @@ export class BluetoothLowEnergyService
       event.rssi,
       event.measuredPower,
       event.distance,
-      event.outOfRange
+      event.outOfRange,
+      event.batteryLevel
     );
   }
 
@@ -235,29 +246,43 @@ export class BluetoothLowEnergyService
    * @param sensorId - Id that the sensor should receive
    * @param deviceId - Id of the BLE peripheral
    * @param deviceName - Name of the BLE peripheral
+   * @param hasBattery - Ability to report battery
    * @returns Registered room presence sensor
    */
   protected createRoomPresenceSensor(
     sensorId: string,
     deviceId: string,
-    deviceName: string
+    deviceName: string,
+    hasBattery: boolean
   ): BluetoothLowEnergyPresenceSensor {
+    const deviceCustomizations: deviceCustomizations = {
+      identifiers: deviceId,
+      name: deviceName,
+      viaDevice: DISTRIBUTED_DEVICE_ID,
+    };
+
     const deviceTracker = this.createDeviceTracker(
       makeId(`${sensorId}-tracker`),
-      deviceName
+      `${deviceName} Tracker`,
+      deviceCustomizations
     );
 
-    const sensorName = `${deviceName} Room Presence`;
+    let batterySensor: Sensor;
+    if (hasBattery) {
+      batterySensor = this.createBatterySensor(
+        makeId(`${sensorId}-battery`),
+        `${deviceName} Battery`,
+        deviceCustomizations
+      );
+    }
+
+    const sensorName = `${deviceName} Room`;
     const customizations: Array<EntityCustomization<any>> = [
       {
         for: SensorConfig,
         overrides: {
           icon: 'mdi:bluetooth',
-          device: {
-            identifiers: deviceId,
-            name: deviceName,
-            viaDevice: DISTRIBUTED_DEVICE_ID,
-          },
+          device: deviceCustomizations,
         },
       },
     ];
@@ -268,7 +293,7 @@ export class BluetoothLowEnergyService
     );
     const proxiedSensor = new Proxy<RoomPresenceDistanceSensor>(
       rawSensor,
-      new RoomPresenceDeviceTrackerProxyHandler(deviceTracker)
+      new RoomPresenceProxyHandler(deviceTracker, batterySensor)
     );
     const sensor = this.entitiesService.add(
       proxiedSensor,
@@ -291,10 +316,51 @@ export class BluetoothLowEnergyService
    * @param name - Name for the new device tracker
    * @returns Registered device tracker
    */
-  protected createDeviceTracker(id: string, name: string): DeviceTracker {
+  protected createDeviceTracker(
+    id: string,
+    name: string,
+    deviceCustomizations: deviceCustomizations
+  ): DeviceTracker {
+    const trackerCustomizations: Array<EntityCustomization<any>> = [
+      {
+        for: DeviceTrackerConfig,
+        overrides: {
+          device: deviceCustomizations,
+        },
+      },
+    ];
     return this.entitiesService.add(
-      new DeviceTracker(id, name, true)
+      new DeviceTracker(id, name, true),
+      trackerCustomizations
     ) as DeviceTracker;
+  }
+
+  /**
+   * Creates and registers a new battery sensor.
+   *
+   * @param id - Entity ID for the new battery sensor
+   * @param name - Name for the new battery sensor
+   * @returns Registered battery sensor
+   */
+  protected createBatterySensor(
+    id: string,
+    name: string,
+    deviceCustomizations: deviceCustomizations
+  ): Sensor {
+    const batteryCustomizations: Array<EntityCustomization<any>> = [
+      {
+        for: SensorConfig,
+        overrides: {
+          deviceClass: 'battery',
+          unitOfMeasurement: '%',
+          device: deviceCustomizations,
+        },
+      },
+    ];
+    return this.entitiesService.add(
+      new Sensor(id, name, true),
+      batteryCustomizations
+    ) as Sensor;
   }
 
   /**
@@ -311,7 +377,8 @@ export class BluetoothLowEnergyService
       return new IBeacon(
         peripheral,
         this.config.majorMask,
-        this.config.minorMask
+        this.config.minorMask,
+        this.config.batteryMask
       );
     } else {
       return new Tag(peripheral);
@@ -332,6 +399,9 @@ export class BluetoothLowEnergyService
       }
       if (overrides.measuredPower !== undefined) {
         tag.measuredPower = overrides.measuredPower;
+      }
+      if (overrides.batteryMask !== undefined && tag instanceof IBeacon) {
+        tag.batteryMask = overrides.batteryMask;
       }
     }
 
