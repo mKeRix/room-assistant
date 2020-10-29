@@ -36,7 +36,6 @@ describe('BluetoothService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    jest.useRealTimers();
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule],
