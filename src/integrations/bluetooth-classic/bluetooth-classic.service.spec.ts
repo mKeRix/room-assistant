@@ -205,6 +205,23 @@ describe('BluetoothClassicService', () => {
     expect(handleRssiMock).not.toHaveBeenCalled();
   });
 
+  it('should not publish an RSSI value if an error occured', async () => {
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    bluetoothService.inquireClassicRssi.mockRejectedValue(
+      new Error('expected for this test')
+    );
+    const handleRssiMock = jest
+      .spyOn(service, 'handleNewRssi')
+      .mockImplementation(() => undefined);
+
+    await expect(
+      service.handleRssiRequest('77:50:fb:4d:ab:70')
+    ).resolves.not.toThrow();
+
+    expect(clusterService.publish).not.toHaveBeenCalled();
+    expect(handleRssiMock).not.toHaveBeenCalled();
+  });
+
   it('should publish RSSI values that are bigger than the min RSSI', async () => {
     jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
     bluetoothService.inquireClassicRssi.mockResolvedValue(-9);

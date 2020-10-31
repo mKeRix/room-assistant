@@ -101,10 +101,17 @@ export class BluetoothClassicService
     }
 
     if (this.shouldInquire()) {
-      let rssi = await this.bluetoothService.inquireClassicRssi(
-        this.config.hciDeviceId,
-        address
-      );
+      let rssi;
+      try {
+        rssi = await this.bluetoothService.inquireClassicRssi(
+          this.config.hciDeviceId,
+          address
+        );
+      } catch (e) {
+        this.logger.error(
+          `Failed to retrieve RSSI for ${address}: ${e.message}`
+        );
+      }
 
       if (rssi !== undefined) {
         rssi = _.round(this.filterRssi(address, rssi), 1);
