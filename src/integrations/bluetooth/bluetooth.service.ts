@@ -77,7 +77,7 @@ export class BluetoothService {
         `Failed to connect to ${peripheral.address}: ${e.message}`,
         e.trace
       );
-      peripheral.disconnectAsync();
+      peripheral.disconnect();
       peripheral.removeAllListeners();
       this.unlockAdapter(this.lowEnergyAdapterId);
       throw e;
@@ -212,7 +212,7 @@ export class BluetoothService {
    *
    * @param adapterId - HCI Device ID of the adapter to lock
    */
-  protected lockAdapter(adapterId: number): void {
+  lockAdapter(adapterId: number): void {
     switch (this.adapterStates.get(adapterId)) {
       case 'inquiry':
         throw new Error(
@@ -230,11 +230,11 @@ export class BluetoothService {
    *
    * @param adapterId - HCI Device ID of the adapter to unlock
    */
-  protected unlockAdapter(adapterId: number): void {
+  async unlockAdapter(adapterId: number): Promise<void> {
     this.adapterStates.set(adapterId, 'inactive');
 
     if (adapterId == this.lowEnergyAdapterId) {
-      this.handleAdapterStateChange(noble.state);
+      await this.handleAdapterStateChange(noble.state);
     }
   }
 
@@ -259,13 +259,13 @@ export class BluetoothService {
    *
    * @param state - State of the HCI adapter
    */
-  private handleAdapterStateChange(state: string): void {
+  private async handleAdapterStateChange(state: string): Promise<void> {
     if (this.adapterStates.get(this.lowEnergyAdapterId) != 'inquiry') {
       if (state === 'poweredOn') {
-        noble.startScanning([], true);
+        await noble.startScanningAsync([], true);
         this.adapterStates.set(this.lowEnergyAdapterId, 'scan');
       } else {
-        noble.stopScanning();
+        await noble.stopScanning();
         this.adapterStates.set(this.lowEnergyAdapterId, 'inactive');
       }
     }
