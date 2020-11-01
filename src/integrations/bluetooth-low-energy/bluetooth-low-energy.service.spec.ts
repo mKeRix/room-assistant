@@ -19,6 +19,7 @@ import { Peripheral } from '@abandonware/noble';
 import { ConfigService } from '../../config/config.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
+  APP_DISCOVERY_CHANNEL,
   BluetoothLowEnergyService,
   NEW_DISTANCE_CHANNEL,
 } from './bluetooth-low-energy.service';
@@ -152,6 +153,14 @@ describe('BluetoothLowEnergyService', () => {
       expect.any(Function)
     );
     expect(clusterService.subscribe).toHaveBeenCalledWith(NEW_DISTANCE_CHANNEL);
+
+    expect(clusterService.on).toHaveBeenCalledWith(
+      APP_DISCOVERY_CHANNEL,
+      expect.any(Function)
+    );
+    expect(clusterService.subscribe).toHaveBeenCalledWith(
+      APP_DISCOVERY_CHANNEL
+    );
   });
 
   it('should detect iBeacons based on their manufacturer data', () => {
@@ -949,6 +958,34 @@ describe('BluetoothLowEnergyService', () => {
       await service.handleDiscovery(peripheral);
 
       expect(discoverSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should publish discovered companion app IDs to the cluster', async () => {
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+      jest.spyOn(service, 'discoverCompanionAppId').mockResolvedValue('app-id');
+
+      await service.handleDiscovery({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+      } as Peripheral);
+
+      expect(clusterService.publish).toHaveBeenCalledWith(
+        APP_DISCOVERY_CHANNEL,
+        {
+          tagId: 'abcd1234',
+          appId: 'app-id',
+        }
+      );
     });
 
     it('should temporarily blacklist devices that time out from discovery attempts', async () => {

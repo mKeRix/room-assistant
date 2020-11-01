@@ -26,7 +26,10 @@ import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presenc
 import { BluetoothService } from '../bluetooth/bluetooth.service';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
+export const APP_DISCOVERY_CHANNEL = 'bluetooth-low-energy.app-discovery';
 const APPLE_ADVERTISEMENT_ID = Buffer.from([0x4c, 0x00, 0x10]);
+
+type AppDiscoveryEvent = { tagId: string; appId: string };
 
 @Injectable() // parameters determined experimentally
 export class BluetoothLowEnergyService
@@ -74,6 +77,12 @@ export class BluetoothLowEnergyService
       this.handleNewDistance.bind(this)
     );
     this.clusterService.subscribe(NEW_DISTANCE_CHANNEL);
+
+    this.clusterService.on(
+      APP_DISCOVERY_CHANNEL,
+      this.handleAppDiscovery.bind(this)
+    );
+    this.clusterService.subscribe(APP_DISCOVERY_CHANNEL);
   }
 
   /**
@@ -410,13 +419,19 @@ export class BluetoothLowEnergyService
         try {
           this.logger.log(`Attempting app discovery for tag ${tag.id}`);
           const appId = await this.discoverCompanionAppId(tag);
-          this.companionAppTags.set(tag.id, appId);
 
           if (appId) {
             this.logger.log(
               `Discovered companion app with ID ${appId} for tag ${tag.id}`
             );
           }
+
+          const event = {
+            tagId: tag.id,
+            appId: appId,
+          } as AppDiscoveryEvent;
+          this.clusterService.publish(APP_DISCOVERY_CHANNEL, event);
+          this.handleAppDiscovery(event);
         } catch (e) {
           if (e.message === 'timed out') {
             this.logger.debug(
@@ -436,13 +451,28 @@ export class BluetoothLowEnergyService
           this.companionAppTags.delete(tag.id);
         }
       }
+    }
 
-      const appId = this.companionAppTags.get(tag.id);
-      if (appId != null) {
-        tag.id = appId;
-      }
+    const appId = this.companionAppTags.get(tag.id);
+    if (appId != null) {
+      tag.id = appId;
     }
 
     return tag;
+  }
+
+  /**
+   * Adds discovered app information to the local cache.
+   * Does not override already existing values to null.
+   *
+   * @param event - Discovered information
+   */
+  protected handleAppDiscovery(event: AppDiscoveryEvent): void {
+    const oldId = this.companionAppTags.get(event.tagId);
+
+    if (!(oldId != null && event.appId == null)) {
+      this.companionAppTags.set(event.tagId, event.appId);
+      this.companionAppBlacklist.delete(event.tagId);
+    }
   }
 }
