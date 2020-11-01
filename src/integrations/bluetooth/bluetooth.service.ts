@@ -43,7 +43,7 @@ export class BluetoothService {
 
   /**
    * Locks the adapter and establishes a connection the given BLE peripheral.
-   * Connection attempts time out after 10s.
+   * Connection attempts time out after 30s.
    *
    * @param peripheral - BLE peripheral to connect to
    */
@@ -70,13 +70,14 @@ export class BluetoothService {
     });
 
     try {
-      await promiseWithTimeout(peripheral.connectAsync(), 10000);
+      await promiseWithTimeout(peripheral.connectAsync(), 30 * 1000);
       return peripheral;
     } catch (e) {
       this.logger.error(
         `Failed to connect to ${peripheral.address}: ${e.message}`,
         e.trace
       );
+      peripheral.disconnect();
       peripheral.removeAllListeners();
       await this.resetHciDevice(this.lowEnergyAdapterId);
       this.unlockAdapter(this.lowEnergyAdapterId);
