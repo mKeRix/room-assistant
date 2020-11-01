@@ -408,6 +408,7 @@ export class BluetoothLowEnergyService
         this.companionAppTags.set(tag.id, null);
 
         try {
+          this.logger.log(`Attempting app discovery for tag ${tag.id}`);
           const appId = await this.discoverCompanionAppId(tag);
           this.companionAppTags.set(tag.id, appId);
 

@@ -214,12 +214,17 @@ export class BluetoothService {
    * @param adapterId - HCI Device ID of the adapter to lock
    */
   lockAdapter(adapterId: number): void {
+    this.logger.debug(`Locking adapter ${adapterId}`);
+
     switch (this.adapterStates.get(adapterId)) {
       case 'inquiry':
         throw new Error(
           `Trying to lock adapter ${adapterId} even though it is already locked`
         );
       case 'scan':
+        this.logger.debug(
+          `Stop scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
+        );
         noble.stopScanning();
     }
 
@@ -232,6 +237,7 @@ export class BluetoothService {
    * @param adapterId - HCI Device ID of the adapter to unlock
    */
   async unlockAdapter(adapterId: number): Promise<void> {
+    this.logger.debug(`Unlocking adapter ${adapterId}`);
     this.adapterStates.set(adapterId, 'inactive');
 
     if (adapterId == this.lowEnergyAdapterId) {
@@ -263,9 +269,15 @@ export class BluetoothService {
   private async handleAdapterStateChange(state: string): Promise<void> {
     if (this.adapterStates.get(this.lowEnergyAdapterId) != 'inquiry') {
       if (state === 'poweredOn') {
+        this.logger.debug(
+          `Start scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
+        );
         await noble.startScanningAsync([], true);
         this.adapterStates.set(this.lowEnergyAdapterId, 'scan');
       } else {
+        this.logger.debug(
+          `Stop scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
+        );
         await noble.stopScanning();
         this.adapterStates.set(this.lowEnergyAdapterId, 'inactive');
       }
