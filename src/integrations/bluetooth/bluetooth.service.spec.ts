@@ -357,7 +357,7 @@ Requesting information ...
         );
       }).rejects.toThrow();
 
-      expect(peripheral.disconnect).toHaveBeenCalled();
+      expect(mockExec).toHaveBeenCalledWith(expect.stringContaining('reset'));
       expect(peripheral.removeAllListeners).toHaveBeenCalled();
     });
 

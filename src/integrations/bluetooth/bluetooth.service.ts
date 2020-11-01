@@ -77,8 +77,8 @@ export class BluetoothService {
         `Failed to connect to ${peripheral.address}: ${e.message}`,
         e.trace
       );
-      peripheral.disconnect();
       peripheral.removeAllListeners();
+      await this.resetHciDevice(this.lowEnergyAdapterId);
       this.unlockAdapter(this.lowEnergyAdapterId);
       throw e;
     }
