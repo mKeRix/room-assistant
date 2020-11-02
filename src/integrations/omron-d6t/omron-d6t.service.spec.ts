@@ -23,7 +23,6 @@ jest.mock(
   },
   { virtual: true }
 );
-jest.mock('canvas', () => undefined, { virtual: true });
 
 const VALID_RESPONSE = Buffer.from([
   0xe5,
@@ -111,8 +110,7 @@ describe('OmronD6tService', () => {
     );
   });
 
-  it('should register a new camera on bootstrap if available', async () => {
-    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(true);
+  it('should register a new camera on bootstrap', async () => {
     await service.onApplicationBootstrap();
 
     expect(entitiesService.add).toHaveBeenCalledWith(
@@ -151,7 +149,6 @@ describe('OmronD6tService', () => {
   });
 
   it('should update the camera entity with the generated heatmap', async () => {
-    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(true);
     entitiesService.add.mockImplementation((entity) => entity);
     jest.spyOn(service, 'getPixelTemperatures').mockResolvedValue([]);
     jest.spyOn(service, 'getCoordinates').mockResolvedValue([
