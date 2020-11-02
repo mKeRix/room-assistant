@@ -111,6 +111,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Set up QEMU
+        if: steps.semantic.outputs.new_release_published == 'true'
         uses: docker/setup-qemu-action@v1
         with:
           platforms: all
@@ -120,6 +121,7 @@ jobs:
         with:
           version: latest
       - name: Cache Docker layers
+        if: steps.semantic.outputs.new_release_published == 'true'
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
