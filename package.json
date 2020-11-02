@@ -43,6 +43,7 @@
     "docs:build": "vuepress build docs"
   },
   "dependencies": {
+    "2d-array-rotation": "^2.1.1",
     "@nestjs/common": "^7.4.4",
     "@nestjs/core": "^7.4.4",
     "@nestjs/platform-express": "^7.4.4",
@@ -62,9 +63,11 @@
     "mathjs": "^7.5.1",
     "nest-emitter": "^1.1.1",
     "nest-winston": "^1.4.0",
+    "pureimage": "^0.2.5",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^6.6.3",
     "slugify": "^1.4.5",
+    "stream-buffers": "^3.0.2",
     "swagger-ui-express": "^4.1.4",
     "systeminformation": "^4.27.11",
     "update-notifier": "^5.0.0",
@@ -109,7 +112,6 @@
   },
   "optionalDependencies": {
     "@abandonware/noble": "1.9.2-9",
-    "canvas": "^2.6.1",
     "i2c-bus": "^5.1.0",
     "mdns": "^2.5.1",
     "onoff": "^6.0.0"

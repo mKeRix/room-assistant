@@ -20,7 +20,8 @@ import { Camera } from '../../entities/camera';
 const TEMPERATURE_COMMAND = 0x4c;
 
 @Injectable()
-export class OmronD6tService extends ThermopileOccupancyService
+export class OmronD6tService
+  extends ThermopileOccupancyService
   implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly config: OmronD6tConfig;
   private i2cBus: PromisifiedBus;
@@ -44,14 +45,7 @@ export class OmronD6tService extends ThermopileOccupancyService
     this.logger.log(`Opening i2c bus ${this.config.busNumber}`);
     this.i2cBus = await i2cBus.openPromisified(this.config.busNumber);
     this.sensor = this.createSensor();
-
-    if (this.isHeatmapAvailable()) {
-      this.camera = this.createHeatmapCamera();
-    } else {
-      this.logger.warn(
-        'Heatmap is unavailable due to the canvas dependency not being installed'
-      );
-    }
+    this.camera = this.createHeatmapCamera();
   }
 
   /**
@@ -76,13 +70,10 @@ export class OmronD6tService extends ThermopileOccupancyService
 
       this.sensor.state = coordinates.length;
       this.sensor.attributes.coordinates = coordinates;
-
-      if (this.camera != undefined) {
-        this.camera.state = await this.generateHeatmap(
-          temperatures,
-          this.config.heatmap
-        );
-      }
+      this.camera.state = await this.generateHeatmap(
+        temperatures,
+        this.config.heatmap
+      );
     } catch (e) {
       if (e instanceof I2CError) {
         this.logger.debug(`Error during I2C communication: ${e.message}`);
