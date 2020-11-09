@@ -6,7 +6,8 @@ export class NewDistanceEvent {
     rssi: number,
     measuredPower: number,
     distance: number,
-    outOfRange = false
+    outOfRange = false,
+    batteryLevel?: number
   ) {
     this.instanceName = instanceName;
     this.tagId = tagId;
@@ -15,6 +16,7 @@ export class NewDistanceEvent {
     this.measuredPower = measuredPower;
     this.distance = distance;
     this.outOfRange = outOfRange;
+    this.batteryLevel = batteryLevel;
   }
 
   instanceName: string;
@@ -24,4 +26,5 @@ export class NewDistanceEvent {
   measuredPower: number;
   distance: number;
   outOfRange: boolean;
+  batteryLevel?: number;
 }
