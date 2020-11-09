@@ -38,7 +38,7 @@ export class IBeacon extends Tag {
     return `${this.uuid}-${this.major}-${this.minor}`;
   }
 
-  get batteryLevel() {
+  get batteryLevel(): number | undefined {
     if (!this.batteryMask) {
       return undefined;
     }

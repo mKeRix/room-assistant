@@ -1,19 +1,19 @@
 import { RoomPresenceDistanceSensor } from './room-presence-distance.sensor';
 import { DeviceTracker } from '../../entities/device-tracker';
+import { Sensor } from '../../entities/sensor';
 import { RoomPresenceProxyHandler } from './room-presence.proxy';
 
 describe('RoomPresenceProxyHandler', () => {
   let proxy: RoomPresenceDistanceSensor;
   let deviceTracker: DeviceTracker;
+  let batterySensor: Sensor;
+  let sensor: RoomPresenceDistanceSensor;
 
   beforeEach(() => {
     deviceTracker = new DeviceTracker('test-tracker', 'Test Tracker');
+    batterySensor = new Sensor('test-battery', 'Test Battery');
 
-    const sensor = new RoomPresenceDistanceSensor(
-      'test-sensor',
-      'Test Sensor',
-      0
-    );
+    sensor = new RoomPresenceDistanceSensor('test-sensor', 'Test Sensor', 0);
     proxy = new Proxy<RoomPresenceDistanceSensor>(
       sensor,
       new RoomPresenceProxyHandler(deviceTracker)
@@ -30,5 +30,16 @@ describe('RoomPresenceProxyHandler', () => {
     proxy.updateState();
 
     expect(deviceTracker.state).toBeFalsy();
+  });
+
+  it('should set the battery level to value', () => {
+    const sensorProxy = new Proxy<RoomPresenceDistanceSensor>(
+      sensor,
+      new RoomPresenceProxyHandler(deviceTracker, batterySensor)
+    );
+
+    sensorProxy['batteryLevel'] = 99;
+
+    expect(batterySensor.state).toBe(99);
   });
 });

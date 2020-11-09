@@ -423,6 +423,41 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
+  it('should apply a tag batteryMask override for iBeacon if it exists', () => {
+    const handleDistanceSpy = jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+
+    mockConfig.onlyIBeacon = true;
+    mockConfig.processIBeacon = true;
+
+    mockConfig.tagOverrides = {
+      '2f234454cf6d4a0fadf2f4911ba9ffa6-1-25346': {
+        batteryMask: 0x0000ff00,
+      },
+    };
+
+    const iBeaconDataWith99Battery = Buffer.from(iBeaconData);
+    iBeaconDataWith99Battery[22] = 99;
+
+    service.handleDiscovery({
+      id: 'test-ibeacon',
+      rssi: -50,
+      advertisement: {
+        localName: 'Test Beacon',
+        manufacturerData: iBeaconDataWith99Battery,
+      },
+    } as Peripheral);
+
+    expect(handleDistanceSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        batteryLevel: 99,
+      })
+    );
+  });
+
   it('should not publish state changes for devices that are not on the whitelist', () => {
     jest.spyOn(service, 'isOnWhitelist').mockReturnValue(false);
 
@@ -696,20 +731,54 @@ describe('BluetoothLowEnergyService', () => {
     expect(entitiesService.add).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'ble-new',
-        name: 'New Tag Room',
+        name: 'New Tag Room Presence',
         timeout: 20,
       }),
       expect.any(Array)
     );
     expect(entitiesService.add).toHaveBeenCalledWith(
-      new DeviceTracker('ble-new-tracker', 'New Tag Tracker', true),
-      expect.any(Array)
+      new DeviceTracker('ble-new-tracker', 'New Tag Tracker', true)
     );
     expect(
       util.types.isProxy(entitiesService.add.mock.calls[1][0])
     ).toBeTruthy();
     expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 20 * 1000);
     expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 1.3, false);
+  });
+
+  it('should add a new battery sensor and set the battery level', () => {
+    const sensor = new BluetoothLowEnergyPresenceSensor('test', 'Test', 0);
+    entitiesService.has.mockReturnValue(false);
+    entitiesService.add.mockReturnValue(sensor);
+
+    service.handleNewDistance(
+      new NewDistanceEvent(
+        'test-instance',
+        'new',
+        'New Tag',
+        -80,
+        -50,
+        1.3,
+        false,
+        99
+      )
+    );
+
+    expect(entitiesService.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'ble-new',
+        name: 'New Tag Room Presence',
+      }),
+      expect.any(Array)
+    );
+    expect(entitiesService.add).toHaveBeenCalledWith(
+      new DeviceTracker('ble-new-tracker', 'New Tag Tracker', true)
+    );
+    expect(entitiesService.add).toHaveBeenCalledWith(
+      new Sensor('ble-new-battery', 'New Tag Battery', true),
+      expect.any(Array)
+    );
+    expect(sensor.batteryLevel).toBe(99);
   });
 
   it('should update the sensor RSSI and measuredPower information', () => {

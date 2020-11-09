@@ -14,7 +14,7 @@ import { ClusterService } from '../../cluster/cluster.service';
 import { NewDistanceEvent } from './new-distance.event';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { SensorConfig } from '../home-assistant/sensor-config';
-import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
+import { Device } from '../home-assistant/device';
 import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { KalmanFilterable } from '../../util/filters';
@@ -28,12 +28,6 @@ import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presenc
 import { BluetoothService } from '../bluetooth/bluetooth.service';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
-
-class deviceCustomizations {
-  identifiers: string;
-  name: string;
-  viaDevice: string;
-}
 
 @Injectable() // parameters determined experimentally
 export class BluetoothLowEnergyService
@@ -138,6 +132,8 @@ export class BluetoothLowEnergyService
   handleNewDistance(event: NewDistanceEvent): void {
     const sensorId = makeId(`ble ${event.tagId}`);
     let sensor: BluetoothLowEnergyPresenceSensor;
+    const hasBattery = event.batteryLevel !== undefined;
+
     if (this.entitiesService.has(sensorId)) {
       sensor = this.entitiesService.get(
         sensorId
@@ -147,7 +143,7 @@ export class BluetoothLowEnergyService
         sensorId,
         event.tagId,
         event.tagName,
-        event.batteryLevel !== undefined
+        hasBattery
       );
     }
 
@@ -255,7 +251,7 @@ export class BluetoothLowEnergyService
     deviceName: string,
     hasBattery: boolean
   ): BluetoothLowEnergyPresenceSensor {
-    const deviceCustomizations: deviceCustomizations = {
+    const deviceInfo: Device = {
       identifiers: deviceId,
       name: deviceName,
       viaDevice: DISTRIBUTED_DEVICE_ID,
@@ -263,8 +259,7 @@ export class BluetoothLowEnergyService
 
     const deviceTracker = this.createDeviceTracker(
       makeId(`${sensorId}-tracker`),
-      `${deviceName} Tracker`,
-      deviceCustomizations
+      `${deviceName} Tracker`
     );
 
     let batterySensor: Sensor;
@@ -272,17 +267,17 @@ export class BluetoothLowEnergyService
       batterySensor = this.createBatterySensor(
         makeId(`${sensorId}-battery`),
         `${deviceName} Battery`,
-        deviceCustomizations
+        deviceInfo
       );
     }
 
-    const sensorName = `${deviceName} Room`;
+    const sensorName = `${deviceName} Room Presence`;
     const customizations: Array<EntityCustomization<any>> = [
       {
         for: SensorConfig,
         overrides: {
           icon: 'mdi:bluetooth',
-          device: deviceCustomizations,
+          device: deviceInfo,
         },
       },
     ];
@@ -316,22 +311,9 @@ export class BluetoothLowEnergyService
    * @param name - Name for the new device tracker
    * @returns Registered device tracker
    */
-  protected createDeviceTracker(
-    id: string,
-    name: string,
-    deviceCustomizations: deviceCustomizations
-  ): DeviceTracker {
-    const trackerCustomizations: Array<EntityCustomization<any>> = [
-      {
-        for: DeviceTrackerConfig,
-        overrides: {
-          device: deviceCustomizations,
-        },
-      },
-    ];
+  protected createDeviceTracker(id: string, name: string): DeviceTracker {
     return this.entitiesService.add(
-      new DeviceTracker(id, name, true),
-      trackerCustomizations
+      new DeviceTracker(id, name, true)
     ) as DeviceTracker;
   }
 
@@ -340,12 +322,13 @@ export class BluetoothLowEnergyService
    *
    * @param id - Entity ID for the new battery sensor
    * @param name - Name for the new battery sensor
+   * @param deviceInfo - Reference information about the BLE device
    * @returns Registered battery sensor
    */
   protected createBatterySensor(
     id: string,
     name: string,
-    deviceCustomizations: deviceCustomizations
+    deviceInfo: Device
   ): Sensor {
     const batteryCustomizations: Array<EntityCustomization<any>> = [
       {
@@ -353,7 +336,7 @@ export class BluetoothLowEnergyService
         overrides: {
           deviceClass: 'battery',
           unitOfMeasurement: '%',
-          device: deviceCustomizations,
+          device: deviceInfo,
         },
       },
     ];
