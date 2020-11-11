@@ -41,6 +41,12 @@ In order to not clutter your home automation software with the many BLE devices 
 
 If you are unsure what ID your device has you can start room-assistant with the BLE integration enabled, but no whitelist. Devices that are seen for the first time after starting will be logged with their ID to the console.
 
+## Tracking iOS Devices
+
+You can track iOS devices (iPhones, iPads) with this integration using our companion app. You will need to install the app, open it, grant the requested permissions and then follow the on-screen instructions.
+
+The app is currently in beta, you can join it through TestFlight with this link: https://testflight.apple.com/join/OpCkeHf8.
+
 ## Settings
 
 | Name              | Type                            | Default  | Description                                                  |
