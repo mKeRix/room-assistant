@@ -4,7 +4,7 @@ import {
   OnApplicationBootstrap,
   OnModuleInit,
 } from '@nestjs/common';
-import { Peripheral } from '@abandonware/noble';
+import { Peripheral } from '@mkerix/noble';
 import { EntitiesService } from '../../entities/entities.service';
 import { IBeacon } from './i-beacon';
 import { Tag } from './tag';

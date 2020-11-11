@@ -6,14 +6,14 @@ jest.mock('kalmanjs', () => {
   });
 });
 jest.mock(
-  '@abandonware/noble',
+  '@mkerix/noble',
   () => {
     return {};
   },
   { virtual: true }
 );
 
-import { Peripheral } from '@abandonware/noble';
+import { Peripheral } from '@mkerix/noble';
 import { ConfigService } from '../../config/config.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import {

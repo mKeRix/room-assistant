@@ -4,7 +4,7 @@ import {
   OnApplicationBootstrap,
   OnModuleInit,
 } from '@nestjs/common';
-import { Peripheral, Advertisement } from '@abandonware/noble';
+import { Peripheral, Advertisement } from '@mkerix/noble';
 import { EntitiesService } from '../../entities/entities.service';
 import { ConfigService } from '../../config/config.service';
 import { XiaomiMiSensorOptions } from './xiaomi-mi.config';

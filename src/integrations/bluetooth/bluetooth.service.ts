@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import noble, { Peripheral } from '@abandonware/noble';
+import noble, { Peripheral } from '@mkerix/noble';
 import util from 'util';
 import { exec } from 'child_process';
 import { BluetoothHealthIndicator } from './bluetooth.health';

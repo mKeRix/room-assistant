@@ -111,7 +111,7 @@
     "vuepress-plugin-sitemap": "^2.3.1"
   },
   "optionalDependencies": {
-    "@abandonware/noble": "1.9.2-9",
+    "@mkerix/noble": "1.9.2-10.1",
     "i2c-bus": "^5.1.0",
     "mdns": "^2.5.1",
     "onoff": "^6.0.0"

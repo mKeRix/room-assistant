@@ -1,4 +1,4 @@
-import { Peripheral } from '@abandonware/noble';
+import { Peripheral } from '@mkerix/noble';
 import _ from 'lodash';
 
 export class Tag {

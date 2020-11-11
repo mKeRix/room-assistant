@@ -6,7 +6,7 @@ const mockNoble = {
   stopScanning: jest.fn(),
 };
 jest.mock(
-  '@abandonware/noble',
+  '@mkerix/noble',
   () => {
     return mockNoble;
   },
@@ -17,7 +17,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BluetoothService } from './bluetooth.service';
 import { ConfigModule } from '../../config/config.module';
 import { BluetoothHealthIndicator } from './bluetooth.health';
-import { Peripheral } from '@abandonware/noble';
+import { Peripheral } from '@mkerix/noble';
 
 jest.mock('util', () => ({
   ...jest.requireActual('util'),

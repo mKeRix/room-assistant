@@ -1,6 +1,6 @@
 const mockExec = jest.fn();
 jest.mock(
-  '@abandonware/noble',
+  '@mkerix/noble',
   () => {
     return {};
   },
