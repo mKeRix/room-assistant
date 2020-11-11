@@ -56,6 +56,7 @@ If you are unsure what ID your device has you can start room-assistant with the 
 | `maxDistance`     | Number                          |          | Limits the distance at which a received BLE advertisement is still reported if configured. Value is in meters. |
 | `majorMask`       | Number                          | `0xffff` | Filter out bits of the major ID to make dynamic tag IDs with encoded information consistent for filtering. |
 | `minorMask`       | Number                          | `0xffff` | Filter out bits of the minor ID to make dynamic tag IDs with encoded information consistent for filtering. |
+| `batteryMask`     | Number                          | `0x00000000` | If non-zero, extract the beacon's battery level from the major/minor fields. The mask operates on a 32bit value with major as the high two bytes and minor as the low two bytes. |
 | `tagOverrides`    | [Tag Overrides](#tag-overrides) |          | Allows you to override some properties of the tracked devices. |
 | `hciDeviceId`     | Number                          | `0`      | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
 
@@ -67,6 +68,7 @@ The tag overrides object can be considered as a map with the BLE tag ID as key a
 | --------------- | ------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`          | String |         | Sets a friendly name for the device, which is sent to the home automation software for easier identification.                                                                                                                                                                                                                           |
 | `measuredPower` | Number |         | Overrides the [measured power](https://community.estimote.com/hc/en-us/articles/201636913-What-are-Broadcasting-Power-RSSI-and-other-characteristics-of-a-beacon-s-signal-) of a BLE tag, which is used for distance calculation. Should be the expected RSSI when the beacon is exactly 1 meter away from the room-assistant instance. |
+| `batteryMask`       | Number                          | `0x00000000` | If non-zero, extract the beacon's battery level from the major/minor fields. The mask operates on a 32bit value with major as the high two bytes and minor as the low two bytes. |
 
 ::: details Example Config
 ```yaml
@@ -82,6 +84,7 @@ bluetoothLowEnergy:
     7750fb4dab70:
       name: Cool BLE Tag
       measuredPower: -61
+      batteryMask: 0x0000FF00
 ```
 :::
 

@@ -9,6 +9,7 @@ You can accurately know if someone is there even when you are just chilling on y
 And you can even go a step further and configure your personal thermostat preferences or turn on your favorite TV channels depending on who is in the room!
 
 ## How it works
+Room occupancy detection is based on a variety of methods that can be used independently or in tandem. Bluetooth integrations aim at detecting the devices you carry around with you (phone, smart watch). Thermopile sensor integrations will detect humans by the heat they radiate, and regular motion sensors are also supported.
 
 Place a small Linux board like the Raspberry Pi Zero W into any room you want to track and install room-assistant on it.
 For example, if you want to track the bedroom, living room and kitchen you would need to setup 3 different devices that are then placed in those rooms.

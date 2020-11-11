@@ -43,6 +43,7 @@ module.exports = {
     nav: [
       { text: 'Guide', link: '/guide/' },
       { text: 'Integrations', link: '/integrations/' },
+      { text: 'Forum', link: 'https://github.com/mKeRix/room-assistant/discussions' },
       { text: 'Sponsor', link: 'https://github.com/mKeRix/room-assistant?sponsor=1' }
     ],
     sidebar: {

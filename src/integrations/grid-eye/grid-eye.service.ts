@@ -21,7 +21,8 @@ const TEMPERATURE_REGISTER_START = 0x80;
 const FRAMERATE_REGISTER = 0x02;
 
 @Injectable()
-export class GridEyeService extends ThermopileOccupancyService
+export class GridEyeService
+  extends ThermopileOccupancyService
   implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly config: GridEyeConfig;
   private readonly logger: Logger;
@@ -47,14 +48,7 @@ export class GridEyeService extends ThermopileOccupancyService
     this.setRegister(FRAMERATE_REGISTER, 1); // set framerate to 1 FPS -> less noise
 
     this.sensor = this.createSensor();
-
-    if (this.isHeatmapAvailable()) {
-      this.camera = this.createHeatmapCamera();
-    } else {
-      this.logger.warn(
-        'Heatmap is unavailable due to the canvas dependency not being installed'
-      );
-    }
+    this.camera = this.createHeatmapCamera();
   }
 
   /**
@@ -78,13 +72,10 @@ export class GridEyeService extends ThermopileOccupancyService
 
     this.sensor.state = coordinates.length;
     this.sensor.attributes.coordinates = coordinates;
-
-    if (this.camera != undefined) {
-      this.camera.state = await this.generateHeatmap(
-        temperatures,
-        this.config.heatmap
-      );
-    }
+    this.camera.state = await this.generateHeatmap(
+      temperatures,
+      this.config.heatmap
+    );
   }
 
   /**

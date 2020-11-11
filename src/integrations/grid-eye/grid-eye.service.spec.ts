@@ -24,7 +24,6 @@ jest.mock(
   },
   { virtual: true }
 );
-jest.mock('canvas', () => undefined, { virtual: true });
 
 describe('GridEyeService', () => {
   let service: GridEyeService;
@@ -74,8 +73,7 @@ describe('GridEyeService', () => {
     );
   });
 
-  it('should register a new camera on bootstrap if available', async () => {
-    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(true);
+  it('should register a new camera on bootstrap', async () => {
     await service.onApplicationBootstrap();
 
     expect(entitiesService.add).toHaveBeenCalledWith(
@@ -95,7 +93,12 @@ describe('GridEyeService', () => {
 
   it('should update its state based on the calculated coordinates', async () => {
     const mockSensor = new Sensor('grideye', 'Occupancy');
-    entitiesService.add.mockReturnValue(mockSensor);
+    entitiesService.add.mockImplementation((entity) => {
+      if (entity instanceof Sensor) {
+        return mockSensor;
+      }
+      return entity;
+    });
     jest.spyOn(service, 'getCoordinates').mockResolvedValue([
       [1, 2],
       [8, 6],
@@ -113,7 +116,6 @@ describe('GridEyeService', () => {
   });
 
   it('should update the camera entity with the generated heatmap', async () => {
-    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(true);
     entitiesService.add.mockImplementation((entity) => entity);
     jest.spyOn(service, 'getCoordinates').mockResolvedValue([
       [1, 2],
