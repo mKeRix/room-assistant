@@ -76,6 +76,7 @@ When placing your sensor you need to consider a few factors to get reliable resu
 
 | Name               | Type    | Default | Description                                                  |
 | ------------------ | ------- | ------- | ------------------------------------------------------------ |
+| `enabled`          | Boolean | `true`  | Whether the heatmap generation should be enabled or not. Turn this off if you notice very high CPU usage. |
 | `minTemperature`   | Number  | `16`    | Temperature that will be considered the lower bound for the color scale in &deg;C. |
 | `maxTemperature`   | Number  | `30`    | Temperature that will be considered the upper bound for the color scale in &deg;C. |
 | `rotation`         | Number  | `0`     | The amount of degrees that the heatmap output image should be rotated. Only `0`, `90`, `180` or `270` are supported as values. |

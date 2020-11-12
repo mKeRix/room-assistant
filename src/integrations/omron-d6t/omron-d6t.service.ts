@@ -45,7 +45,10 @@ export class OmronD6tService
     this.logger.log(`Opening i2c bus ${this.config.busNumber}`);
     this.i2cBus = await i2cBus.openPromisified(this.config.busNumber);
     this.sensor = this.createSensor();
-    this.camera = this.createHeatmapCamera();
+
+    if (this.config.heatmap.enabled) {
+      this.camera = this.createHeatmapCamera();
+    }
   }
 
   /**
@@ -70,10 +73,13 @@ export class OmronD6tService
 
       this.sensor.state = coordinates.length;
       this.sensor.attributes.coordinates = coordinates;
-      this.camera.state = await this.generateHeatmap(
-        temperatures,
-        this.config.heatmap
-      );
+
+      if (this.config.heatmap.enabled) {
+        this.camera.state = await this.generateHeatmap(
+          temperatures,
+          this.config.heatmap
+        );
+      }
     } catch (e) {
       if (e instanceof I2CError) {
         this.logger.debug(`Error during I2C communication: ${e.message}`);
