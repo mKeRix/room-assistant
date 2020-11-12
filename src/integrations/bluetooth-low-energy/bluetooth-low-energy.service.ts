@@ -461,7 +461,7 @@ export class BluetoothLowEnergyService
       tag.peripheral?.advertisement?.manufacturerData
         ?.slice(0, 3)
         .equals(APPLE_ADVERTISEMENT_ID) &&
-      tag.peripheral.advertisement.manufacturerData.length > 10
+      tag.peripheral.advertisement.manufacturerData.length > 6
     ) {
       if (
         !this.companionAppTags.has(tag.id) &&

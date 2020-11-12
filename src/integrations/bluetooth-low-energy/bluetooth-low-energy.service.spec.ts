@@ -931,7 +931,7 @@ describe('BluetoothLowEnergyService', () => {
         advertisement: {
           localName: 'Test Beacon',
           txPowerLevel: -72,
-          manufacturerData: APPLE_MANUFACTURER_DATA.slice(0, 8),
+          manufacturerData: APPLE_MANUFACTURER_DATA.slice(0, 6),
         },
       } as Peripheral);
 
