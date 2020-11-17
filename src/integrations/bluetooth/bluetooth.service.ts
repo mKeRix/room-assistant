@@ -9,6 +9,7 @@ import { Device } from '../bluetooth-classic/device';
 import { promiseWithTimeout } from '../../util/promises';
 
 type BluetoothAdapterState = 'inquiry' | 'scan' | 'inactive';
+type ExecOutput = { stdout: string; stderr: string };
 
 const execPromise = util.promisify(exec);
 const rssiRegex = new RegExp(/-?[0-9]+/);
@@ -119,12 +120,15 @@ export class BluetoothService {
 
     this.logger.debug(`Querying for RSSI of ${address} using hcitool`);
     try {
-      const output = await execPromise(
-        `hcitool -i hci${adapterId} cc "${address}" && hcitool -i hci${adapterId} rssi "${address}"`,
-        {
-          timeout: this.classicConfig.scanTimeLimit * 1000,
-          killSignal: 'SIGKILL',
-        }
+      const output = await promiseWithTimeout<ExecOutput>(
+        execPromise(
+          `hcitool -i hci${adapterId} cc "${address}" && hcitool -i hci${adapterId} rssi "${address}"`,
+          {
+            timeout: this.classicConfig.scanTimeLimit * 1000,
+            killSignal: 'SIGKILL',
+          }
+        ),
+        this.classicConfig.scanTimeLimit * 1000 * 1.1
       );
       const matches = output.stdout.match(rssiRegex);
 
@@ -172,8 +176,9 @@ export class BluetoothService {
     this.lockAdapter(adapterId);
 
     try {
-      const output = await execPromise(
-        `hcitool -i hci${adapterId} info "${address}"`
+      const output = await promiseWithTimeout<ExecOutput>(
+        execPromise(`hcitool -i hci${adapterId} info "${address}"`),
+        6000
       );
 
       const nameMatches = /Device Name: (.+)/g.exec(output.stdout);
