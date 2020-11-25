@@ -79,8 +79,7 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
     state: number | string
   ): void {
     this.logger.debug(`${device.name}: ${kind}: ${state}${units}`);
-    const sensorName = `${device.name} ${kind}`;
-    const id = makeId(sensorName);
+    const id = makeId(`xiaomi ${device.identifiers} ${kind}`);
     let entity = this.entitiesService.get(id);
     if (!entity) {
       const customizations: Array<EntityCustomization<any>> = [
@@ -94,7 +93,7 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
         },
       ];
       entity = this.entitiesService.add(
-        new Sensor(id, sensorName, true),
+        new Sensor(id, `${device.name} ${kind}`, true),
         customizations
       ) as Sensor;
     }
