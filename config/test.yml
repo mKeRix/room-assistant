@@ -8,6 +8,12 @@ entities:
       debounce:
         wait: 0.75
         maxWait: 2
+    leading_debounced_entity:
+      debounce:
+        wait: 0.75
+        maxWait: 2
+        leading: true
+        trailing: false
     rolling_average_entity:
       rollingAverage:
         window: 60

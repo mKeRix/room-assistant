@@ -159,6 +159,32 @@ describe('EntitiesService', () => {
     );
   });
 
+  it('should debounce state updates on leading edge if configured', () => {
+    jest.useFakeTimers('modern');
+    const spy = jest.spyOn(emitter, 'emit');
+
+    const entityProxy = service.add(
+      new Sensor('leading_debounced_entity', 'Debounce Test')
+    );
+    spy.mockClear();
+
+    entityProxy.state = 42;
+    entityProxy.state = 1337;
+
+    expect(entityProxy.state).toBe(42);
+
+    jest.runAllTimers();
+
+    expect(entityProxy.state).toBe(42);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(
+      'stateUpdate',
+      'leading_debounced_entity',
+      42,
+      false
+    );
+  });
+
   it('should calculate rolling average for non-number states if configured', () => {
     jest.useFakeTimers('modern');
     const spy = jest.spyOn(emitter, 'emit');

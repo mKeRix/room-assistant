@@ -21,12 +21,14 @@ Behaviors may be set per entity ID, with the ID being the key and an object with
 
 #### Debounce
 
-Debouncing is especially helpful for sensors that jump states quickly in an incorrect manner. This could for example be the case for some GPIO sensors or thermopiles.
+Debouncing is especially helpful for sensors that jump states quickly in an incorrect manner. This could for example be the case for some GPIO sensors or thermopiles. This behavior is based on the [Lodash debounce implementation](https://lodash.com/docs/#debounce) and the options will therefore behave the same.
 
-| Name      | Type   | Default | Description                                                  |
-| --------- | ------ | ------- | ------------------------------------------------------------ |
-| `wait`    | Number |         | Number of seconds to wait after the last time the state was updated before publishing it to integrations. |
-| `maxWait` | Number |         | Maximum number of seconds that a state update may be delayed. If left undefined there will be no limit. |
+| Name       | Type    | Default | Description                                                  |
+| ---------- | ------- | ------- | ------------------------------------------------------------ |
+| `wait`     | Number  |         | Number of seconds to wait after the last time the state was updated before publishing it to integrations. |
+| `maxWait`  | Number  |         | Maximum number of seconds that a state update may be delayed. If left undefined there will be no limit. |
+| `leading`  | Boolean | `false` | Invoke the update on the leading edge of the timeout.        |
+| `trailing` | Boolean | `true`  | Invoke the update on the trailing edge of the timeout.       |
 
 ::: details Example Config
 
