@@ -141,7 +141,7 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish temperature', () => {
-    const sensor = new Sensor('testid', 'Test', true);
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.temperature));
@@ -160,7 +160,7 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish humidity', () => {
-    const sensor = new Sensor('testid', 'Test', true);
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.humidity));
@@ -179,8 +179,8 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish temperature and humidity', () => {
-    const temp = new Sensor('temp', 'temp', true);
-    const humidity = new Sensor('humidity', 'humidity', true);
+    const temp = new Sensor('temp', 'temp', true, false);
+    const humidity = new Sensor('humidity', 'humidity', true, false);
     entitiesService.add.mockReturnValueOnce(temp).mockReturnValueOnce(humidity);
 
     service.handleDiscovery(
@@ -213,7 +213,7 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish battery', () => {
-    const sensor = new Sensor('testid', 'Test', true);
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.battery));
@@ -232,7 +232,7 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish moisture', () => {
-    const sensor = new Sensor('testid', 'Test', true);
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.moisture));
@@ -251,7 +251,7 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish even if missing mac address', () => {
-    const sensor = new Sensor('testid', 'Test', true);
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.moistureNoMac));
@@ -260,7 +260,7 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish illuminance', () => {
-    const sensor = new Sensor('testid', 'Test', true);
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.illuminance));
@@ -279,7 +279,7 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish fertility', () => {
-    const sensor = new Sensor('testid', 'Test', true);
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.fertility));
@@ -298,7 +298,7 @@ describe('XiaomiMiService', () => {
   });
 
   it('should reuse existing entities', () => {
-    const sensor = new Sensor('testid', 'Test', true);
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.get.mockReturnValueOnce(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.humidity));
@@ -323,7 +323,7 @@ describe('XiaomiMiService', () => {
       },
     ];
     service.onModuleInit();
-    const sensor = new Sensor('testid', 'Test', true);
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.get.mockReturnValueOnce(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.encrypted));
@@ -361,7 +361,7 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish negative temperatures', () => {
-    const sensor = new Sensor('testid', 'Test', true);
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
     service.handleDiscovery(
       advert(testAddress, serviceData.negativeTemperature)
