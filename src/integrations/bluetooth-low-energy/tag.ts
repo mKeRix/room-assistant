@@ -15,6 +15,7 @@ export class Tag {
   peripheral: Peripheral;
   rssi: number;
   measuredPower: number;
+  isApp = false;
 
   set id(id: string) {
     this._id = id;

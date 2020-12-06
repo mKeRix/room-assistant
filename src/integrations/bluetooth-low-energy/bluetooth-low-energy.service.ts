@@ -29,10 +29,7 @@ import { BluetoothService } from '../bluetooth/bluetooth.service';
 import { promiseWithTimeout } from '../../util/promises';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
-export const APP_DISCOVERY_CHANNEL = 'bluetooth-low-energy.app-discovery';
 const APPLE_ADVERTISEMENT_ID = Buffer.from([0x4c, 0x00, 0x10]);
-
-type AppDiscoveryEvent = { tagId: string; appId: string };
 
 @Injectable() // parameters determined experimentally
 export class BluetoothLowEnergyService
@@ -80,12 +77,6 @@ export class BluetoothLowEnergyService
       this.handleNewDistance.bind(this)
     );
     this.clusterService.subscribe(NEW_DISTANCE_CHANNEL);
-
-    this.clusterService.on(
-      APP_DISCOVERY_CHANNEL,
-      this.handleAppDiscovery.bind(this)
-    );
-    this.clusterService.subscribe(APP_DISCOVERY_CHANNEL);
   }
 
   /**
@@ -121,6 +112,8 @@ export class BluetoothLowEnergyService
         globalSettings.instanceName,
         tag.id,
         tag.name,
+        tag.peripheral.id,
+        tag.isApp,
         tag.rssi,
         tag.measuredPower,
         tag.distance,
@@ -176,6 +169,10 @@ export class BluetoothLowEnergyService
     const sensorId = makeId(`ble ${event.tagId}`);
     let sensor: BluetoothLowEnergyPresenceSensor;
     const hasBattery = event.batteryLevel !== undefined;
+
+    if (event.isApp) {
+      this.handleAppDiscovery(event.peripheralId, event.tagId);
+    }
 
     if (this.entitiesService.has(sensorId)) {
       sensor = this.entitiesService.get(
@@ -468,12 +465,7 @@ export class BluetoothLowEnergyService
             );
           }
 
-          const event = {
-            tagId: tag.id,
-            appId: appId,
-          } as AppDiscoveryEvent;
-          this.clusterService.publish(APP_DISCOVERY_CHANNEL, event);
-          this.handleAppDiscovery(event);
+          this.handleAppDiscovery(tag.id, appId);
         } catch (e) {
           if (e.message === 'timed out') {
             this.logger.debug(
@@ -498,6 +490,7 @@ export class BluetoothLowEnergyService
     const appId = this.companionAppTags.get(tag.id);
     if (appId != null) {
       tag.id = appId;
+      tag.isApp = true;
     }
 
     return tag;
@@ -507,14 +500,15 @@ export class BluetoothLowEnergyService
    * Adds discovered app information to the local cache.
    * Does not override already existing values to null.
    *
-   * @param event - Discovered information
+   * @param tagId - ID of the actual peripheral (e.g. MAC)
+   * @param appId - ID of the discovered app
    */
-  protected handleAppDiscovery(event: AppDiscoveryEvent): void {
-    const oldId = this.companionAppTags.get(event.tagId);
+  protected handleAppDiscovery(tagId: string, appId: string): void {
+    const oldId = this.companionAppTags.get(tagId);
 
-    if (!(oldId != null && event.appId == null)) {
-      this.companionAppTags.set(event.tagId, event.appId);
-      this.companionAppBlacklist.delete(event.tagId);
+    if (!(oldId != null && appId == null)) {
+      this.companionAppTags.set(tagId, appId);
+      this.companionAppBlacklist.delete(tagId);
     }
   }
 

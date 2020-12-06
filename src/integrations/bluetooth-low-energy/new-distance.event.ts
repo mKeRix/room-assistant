@@ -3,6 +3,8 @@ export class NewDistanceEvent {
     instanceName: string,
     tagId: string,
     tagName: string,
+    peripheralId: string,
+    isApp: boolean,
     rssi: number,
     measuredPower: number,
     distance: number,
@@ -12,6 +14,8 @@ export class NewDistanceEvent {
     this.instanceName = instanceName;
     this.tagId = tagId;
     this.tagName = tagName;
+    this.peripheralId = peripheralId;
+    this.isApp = isApp;
     this.rssi = rssi;
     this.measuredPower = measuredPower;
     this.distance = distance;
@@ -22,6 +26,8 @@ export class NewDistanceEvent {
   instanceName: string;
   tagId: string;
   tagName: string;
+  peripheralId: string;
+  isApp: boolean;
   rssi: number;
   measuredPower: number;
   distance: number;
