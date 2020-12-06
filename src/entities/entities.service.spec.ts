@@ -11,6 +11,8 @@ import { ClusterModule } from '../cluster/cluster.module';
 import { Switch } from './switch';
 import { ConfigModule } from '../config/config.module';
 
+jest.mock('mdns', () => ({}), { virtual: true });
+
 describe('EntitiesService', () => {
   let service: EntitiesService;
   const emitter: EventEmitter = new EventEmitter();

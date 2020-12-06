@@ -11,6 +11,7 @@ import { CronJob } from 'cron';
 import * as util from 'util';
 import { ShellSwitch } from './shell.switch';
 
+jest.mock('mdns', () => ({}), { virtual: true });
 jest.mock('cron');
 jest.mock('util', () => ({
   ...jest.requireActual('util'),

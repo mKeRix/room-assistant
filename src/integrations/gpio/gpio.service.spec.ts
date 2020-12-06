@@ -10,6 +10,7 @@ import { mocked } from 'ts-jest/utils';
 import { ClusterService } from '../../cluster/cluster.service';
 import { GpioSwitch } from './gpio.switch';
 
+jest.mock('mdns', () => ({}), { virtual: true });
 jest.mock('onoff');
 
 describe('GpioService', () => {

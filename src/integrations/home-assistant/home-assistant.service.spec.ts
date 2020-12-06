@@ -29,6 +29,7 @@ import { HomeAssistantConfig } from './home-assistant.config';
 import { ConfigService } from '../../config/config.service';
 import c from 'config';
 
+jest.mock('mdns', () => ({}), { virtual: true });
 jest.mock('async-mqtt', () => {
   return {
     connectAsync: jest.fn().mockReturnValue(mockMqttClient),

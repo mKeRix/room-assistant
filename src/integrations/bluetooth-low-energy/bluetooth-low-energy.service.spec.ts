@@ -1,3 +1,4 @@
+jest.mock('mdns', () => ({}), { virtual: true });
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {
     return {
