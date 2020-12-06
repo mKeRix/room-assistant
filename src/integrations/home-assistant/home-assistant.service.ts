@@ -205,7 +205,7 @@ export class HomeAssistantService
     const config = this.entityConfigs.get(
       this.getCombinedId(entityId, distributed)
     );
-    if (config === undefined) {
+    if (config === undefined || !this.config.sendAttributes) {
       return;
     }
 

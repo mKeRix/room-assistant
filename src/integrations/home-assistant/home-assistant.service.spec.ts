@@ -25,6 +25,9 @@ import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
 import { EntitiesModule } from '../../entities/entities.module';
 import { EntitiesService } from '../../entities/entities.service';
 import { ClusterService } from '../../cluster/cluster.service';
+import { HomeAssistantConfig } from './home-assistant.config';
+import { ConfigService } from '../../config/config.service';
+import c from 'config';
 
 jest.mock('async-mqtt', () => {
   return {
@@ -40,6 +43,7 @@ jest.mock('systeminformation', () => {
 describe('HomeAssistantService', () => {
   let service: HomeAssistantService;
   let emitter: EventEmitter;
+  let mockConfig: HomeAssistantConfig;
   const mockMqtt = mocked(mqtt, true);
   const mockSystem = mocked(system);
   const loggerService = {
@@ -50,9 +54,15 @@ describe('HomeAssistantService', () => {
   const entitiesService = {
     refreshStates: jest.fn(),
   };
+  const configService = {
+    get: jest.fn().mockImplementation((key: string) => {
+      return key === 'homeAssistant' ? mockConfig : c.get(key);
+    }),
+  };
   const clusterService = {};
 
   beforeEach(async () => {
+    mockConfig = new HomeAssistantConfig();
     emitter = new EventEmitter();
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -66,6 +76,8 @@ describe('HomeAssistantService', () => {
       .useValue(entitiesService)
       .overrideProvider(ClusterService)
       .useValue(clusterService)
+      .overrideProvider(ConfigService)
+      .useValue(configService)
       .compile();
     module.useLogger(loggerService);
 
@@ -499,6 +511,21 @@ describe('HomeAssistantService', () => {
       JSON.stringify({ state_updated: true, test: 1234 })
     );
     expect(mockMqttClient.publish).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not publish attribute updates if sendAttributes is disabled', async () => {
+    jest.useFakeTimers();
+    mockConfig.sendAttributes = false;
+
+    await service.onModuleInit();
+    service.handleNewEntity(new Sensor('test', 'Test'));
+    service.handleNewAttributes('test', { stateUpdated: true });
+    jest.runAllTimers();
+
+    expect(mockMqttClient.publish).not.toHaveBeenCalledWith(
+      'room-assistant/sensor/test-instance-test/attributes',
+      expect.anything()
+    );
   });
 
   it('should ignore attribute updates if the entity is not registered with Home Assistant', () => {
