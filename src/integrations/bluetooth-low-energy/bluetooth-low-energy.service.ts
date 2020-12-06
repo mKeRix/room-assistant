@@ -26,6 +26,7 @@ import { Sensor } from '../../entities/sensor';
 import { RoomPresenceProxyHandler } from '../room-presence/room-presence.proxy';
 import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presence.sensor';
 import { BluetoothService } from '../bluetooth/bluetooth.service';
+import { promiseWithTimeout } from '../../util/promises';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 export const APP_DISCOVERY_CHANNEL = 'bluetooth-low-energy.app-discovery';
@@ -151,22 +152,10 @@ export class BluetoothLowEnergyService
     );
 
     try {
-      const services = await peripheral.discoverServicesAsync([
-        '5403c8a75c9647e99ab859e373d875a7',
-      ]);
-
-      if (services.length > 0) {
-        const characteristics = await services[0].discoverCharacteristicsAsync([
-          '21c46f33e813440786012ad281030052',
-        ]);
-
-        if (characteristics.length > 0) {
-          const data = await characteristics[0].readAsync();
-          return data.toString('utf-8');
-        }
-      }
-
-      return null;
+      return await promiseWithTimeout<string>(
+        BluetoothLowEnergyService.readCompanionAppId(peripheral),
+        15 * 1000
+      );
     } catch (e) {
       this.logger.error(
         `Failed to search for companion app at tag ${tag.id}: ${e.message}`,
@@ -527,5 +516,31 @@ export class BluetoothLowEnergyService
       this.companionAppTags.set(event.tagId, event.appId);
       this.companionAppBlacklist.delete(event.tagId);
     }
+  }
+
+  /**
+   * Read companion app ID from a peripheral by looking at the relevant characteristic.
+   *
+   * @param peripheral - peripheral to read from
+   */
+  private static async readCompanionAppId(
+    peripheral: Peripheral
+  ): Promise<string> {
+    const services = await peripheral.discoverServicesAsync([
+      '5403c8a75c9647e99ab859e373d875a7',
+    ]);
+
+    if (services.length > 0) {
+      const characteristics = await services[0].discoverCharacteristicsAsync([
+        '21c46f33e813440786012ad281030052',
+      ]);
+
+      if (characteristics.length > 0) {
+        const data = await characteristics[0].readAsync();
+        return data.toString('utf-8');
+      }
+    }
+
+    return null;
   }
 }
