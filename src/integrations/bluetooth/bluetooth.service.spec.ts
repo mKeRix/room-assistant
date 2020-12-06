@@ -370,7 +370,7 @@ Requesting information ...
         connectAsync: jest
           .fn()
           .mockReturnValue(
-            new Promise((resolve) => setTimeout(resolve, 31 * 1000))
+            new Promise((resolve) => setTimeout(resolve, 11 * 1000))
           ),
         disconnect: jest.fn(),
         removeAllListeners: jest.fn(),
@@ -382,7 +382,7 @@ Requesting information ...
         .catch((e) => {
           expect(e).toStrictEqual(new Error('timed out'));
         });
-      jest.advanceTimersByTime(30.5 * 1000);
+      jest.advanceTimersByTime(10.5 * 1000);
 
       return promise;
     });

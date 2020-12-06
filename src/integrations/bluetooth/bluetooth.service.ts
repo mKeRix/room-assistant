@@ -71,7 +71,7 @@ export class BluetoothService {
     });
 
     try {
-      await promiseWithTimeout(peripheral.connectAsync(), 30 * 1000);
+      await promiseWithTimeout(peripheral.connectAsync(), 10 * 1000);
       return peripheral;
     } catch (e) {
       this.logger.error(
