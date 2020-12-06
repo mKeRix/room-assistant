@@ -6,6 +6,13 @@
 import * as crypto from 'crypto';
 export const SERVICE_DATA_UUID = 'fe95';
 
+const ProductNames = {
+  152: 'Mi Flora HHCCJCY01',
+  1371: 'Mijia LYWSD03MMC',
+  1115: 'Mijia LYWSD02',
+  426: 'Miija LYWSDCGQ',
+};
+
 const FrameControlFlags = {
   isFactoryNew: 1 << 0,
   isConnected: 1 << 1,
@@ -69,6 +76,7 @@ export class ServiceData {
   frameControl: FrameControl;
   version: number;
   productId: number;
+  productName: string;
   frameCounter: number;
   macAddress: string;
   capabilities: Capabilities;
@@ -102,6 +110,7 @@ export class Parser {
     this.frameControl = this.parseFrameControl();
     const version = this.parseVersion();
     const productId = this.parseProductId();
+    const productName = this.parseProductName();
     const frameCounter = this.parseFrameCounter();
     const macAddress = this.parseMacAddress();
     const capabilities = this.parseCapabilities();
@@ -117,6 +126,7 @@ export class Parser {
       frameControl: this.frameControl,
       version,
       productId,
+      productName,
       frameCounter,
       macAddress,
       capabilities,
@@ -140,6 +150,11 @@ export class Parser {
 
   parseProductId(): number {
     return this.buffer.readUInt16LE(2);
+  }
+
+  parseProductName(): string {
+    const id = this.parseProductId();
+    return id in ProductNames ? ProductNames[id] : 'Unknown';
   }
 
   parseFrameCounter(): number {
