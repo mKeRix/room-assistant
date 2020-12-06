@@ -39,7 +39,7 @@ export class BluetoothLowEnergyService
   private readonly logger: Logger;
   private readonly seenIds = new Set<string>();
   private readonly companionAppTags = new Map<string, string>();
-  private readonly companionAppBlacklist = new Set<string>();
+  private readonly companionAppDenylist = new Set<string>();
   private tagUpdaters: {
     [tagId: string]: (event: NewDistanceEvent) => void;
   } = {};
@@ -60,9 +60,9 @@ export class BluetoothLowEnergyService
    * Lifecycle hook, called once the host module has been initialized.
    */
   onModuleInit(): void {
-    if (!this.isWhitelistEnabled() && !this.isBlacklistEnabled()) {
+    if (!this.isAllowlistEnabled() && !this.isDenylistEnabled()) {
       this.logger.warn(
-        'The whitelist and blacklist are empty, no sensors will be created! Please add some of the discovered IDs below to your configuration.'
+        'The allowlist and denylist are empty, no sensors will be created! Please add some of the discovered IDs below to your configuration.'
       );
     }
   }
@@ -100,9 +100,9 @@ export class BluetoothLowEnergyService
     }
 
     if (
-      (this.isOnWhitelist(tag.id) ||
-        (!this.isWhitelistEnabled() && this.isBlacklistEnabled())) &&
-      !this.isOnBlacklist(tag.id)
+      (this.isOnAllowlist(tag.id) ||
+        (!this.isAllowlistEnabled() && this.isDenylistEnabled())) &&
+      !this.isOnDenylist(tag.id)
     ) {
       tag = this.applyOverrides(tag);
       tag.rssi = this.filterRssi(tag.id, tag.rssi);
@@ -214,55 +214,65 @@ export class BluetoothLowEnergyService
   }
 
   /**
-   * Determines whether a whitelist has been configured or not.
+   * Determines whether an allowlist has been configured or not.
    *
-   * @returns Whitelist status
+   * @returns Allowlist status
    */
-  isWhitelistEnabled(): boolean {
-    return this.config.whitelist?.length > 0;
+  isAllowlistEnabled(): boolean {
+    return (
+      this.config.allowlist?.length > 0 || this.config.whitelist?.length > 0
+    );
   }
 
   /**
-   * Determines whether a blacklist has been configured or not.
+   * Determines whether a denylist has been configured or not.
    *
-   * @returns Blacklist status
+   * @returns Denylist status
    */
-  isBlacklistEnabled(): boolean {
-    return this.config.blacklist?.length > 0;
+  isDenylistEnabled(): boolean {
+    return (
+      this.config.denylist?.length > 0 || this.config.blacklist?.length > 0
+    );
   }
 
   /**
-   * Checks if an id is on the whitelist of this component.
+   * Checks if an id is on the allowlist of this component.
    *
    * @param id - Device id
-   * @return Whether the id is on the whitelist or not
+   * @return Whether the id is on the allowlist or not
    */
-  isOnWhitelist(id: string): boolean {
-    const whitelist = this.config.whitelist;
-    if (whitelist === undefined || whitelist.length === 0) {
+  isOnAllowlist(id: string): boolean {
+    const allowlist = [
+      ...(this.config.allowlist || []),
+      ...(this.config.whitelist || []),
+    ];
+    if (allowlist.length === 0) {
       return false;
     }
 
-    return this.config.whitelistRegex
-      ? whitelist.some((regex) => id.match(regex))
-      : whitelist.includes(id);
+    return this.config.allowlistRegex || this.config.whitelistRegex
+      ? allowlist.some((regex) => id.match(regex))
+      : allowlist.includes(id);
   }
 
   /**
-   * Checks if an id is on the blacklist of this component.
+   * Checks if an id is on the denylist of this component.
    *
    * @param id - Device id
-   * @return Whether the id is on the blacklist or not
+   * @return Whether the id is on the denylist or not
    */
-  isOnBlacklist(id: string): boolean {
-    const blacklist = this.config.blacklist;
-    if (blacklist === undefined || blacklist.length === 0) {
+  isOnDenylist(id: string): boolean {
+    const denylist = [
+      ...(this.config.denylist || []),
+      ...(this.config.blacklist || []),
+    ];
+    if (denylist.length === 0) {
       return false;
     }
 
-    return this.config.blacklistRegex
-      ? blacklist.some((regex) => id.match(regex))
-      : blacklist.includes(id);
+    return this.config.denylistRegex || this.config.blacklistRegex
+      ? denylist.some((regex) => id.match(regex))
+      : denylist.includes(id);
   }
 
   /**
@@ -451,7 +461,7 @@ export class BluetoothLowEnergyService
     ) {
       if (
         !this.companionAppTags.has(tag.id) &&
-        !this.companionAppBlacklist.has(tag.id)
+        !this.companionAppDenylist.has(tag.id)
       ) {
         this.companionAppTags.set(tag.id, null);
 
@@ -469,11 +479,11 @@ export class BluetoothLowEnergyService
         } catch (e) {
           if (e.message === 'timed out') {
             this.logger.debug(
-              `Temporarily blacklisting ${tag.id} from app discovery due to timeout`
+              `Temporarily denylisting ${tag.id} from app discovery due to timeout`
             );
-            this.companionAppBlacklist.add(tag.id);
+            this.companionAppDenylist.add(tag.id);
             setTimeout(
-              () => this.companionAppBlacklist.delete(tag.id),
+              () => this.companionAppDenylist.delete(tag.id),
               3 * 60 * 1000
             );
           } else {
@@ -508,7 +518,7 @@ export class BluetoothLowEnergyService
 
     if (!(oldId != null && appId == null)) {
       this.companionAppTags.set(tagId, appId);
-      this.companionAppBlacklist.delete(tagId);
+      this.companionAppDenylist.delete(tagId);
     }
   }
 

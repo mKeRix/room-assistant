@@ -30,7 +30,7 @@ import { Camera } from '../../entities/camera';
 import { CameraConfig } from './camera-config';
 import { EntitiesService } from '../../entities/entities.service';
 
-const PROPERTY_BLACKLIST = ['component', 'configTopic', 'commandStore'];
+const PROPERTY_DENYLIST = ['component', 'configTopic', 'commandStore'];
 
 @Injectable()
 export class HomeAssistantService
@@ -356,7 +356,7 @@ export class HomeAssistantService
    * @returns Formatted message
    */
   protected formatMessage(message: object): object {
-    const filteredMessage = _.omit(message, PROPERTY_BLACKLIST);
+    const filteredMessage = _.omit(message, PROPERTY_DENYLIST);
     return this.deepMap(filteredMessage, (obj) => {
       return _.mapKeys(obj, (v, k) => {
         return _.snakeCase(k);
