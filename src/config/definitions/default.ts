@@ -2,6 +2,7 @@ import { BluetoothLowEnergyConfig } from '../../integrations/bluetooth-low-energ
 import { ClusterConfig } from '../../cluster/cluster.config';
 import { GlobalConfig } from '../global.config';
 import { HomeAssistantConfig } from '../../integrations/home-assistant/home-assistant.config';
+import { AdTemplateConfig } from '../../integrations/ad-template/ad-template.config';
 import { OmronD6tConfig } from '../../integrations/omron-d6t/omron-d6t.config';
 import { GridEyeConfig } from '../../integrations/grid-eye/grid-eye.config';
 import { BluetoothClassicConfig } from '../../integrations/bluetooth-classic/bluetooth-classic.config';
@@ -16,6 +17,7 @@ export class AppConfig {
   entities: EntitiesConfig = new EntitiesConfig();
   bluetoothLowEnergy: BluetoothLowEnergyConfig = new BluetoothLowEnergyConfig();
   bluetoothClassic: BluetoothClassicConfig = new BluetoothClassicConfig();
+  adTemplate: AdTemplateConfig = new AdTemplateConfig();
   omronD6t: OmronD6tConfig = new OmronD6tConfig();
   gridEye: GridEyeConfig = new GridEyeConfig();
   gpio: GpioConfig = new GpioConfig();
