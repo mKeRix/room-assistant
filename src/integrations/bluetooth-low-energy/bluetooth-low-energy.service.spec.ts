@@ -506,6 +506,7 @@ describe('BluetoothLowEnergyService', () => {
     mockConfig.whitelist = ['vip-id', 'vip2-id'];
 
     expect(service.isOnAllowlist('vip-id')).toBeTruthy();
+    expect(service.isOnAllowlist('VIP2-id')).toBeTruthy();
     expect(service.isOnAllowlist('random-id')).toBeFalsy();
   });
 
@@ -524,6 +525,7 @@ describe('BluetoothLowEnergyService', () => {
     mockConfig.denylist = ['vip-id', 'vip2-id'];
 
     expect(service.isOnDenylist('vip-id')).toBeTruthy();
+    expect(service.isOnDenylist('VIP2-id')).toBeTruthy();
     expect(service.isOnDenylist('random-id')).toBeFalsy();
   });
 
