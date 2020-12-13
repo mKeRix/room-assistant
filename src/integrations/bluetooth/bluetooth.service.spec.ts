@@ -94,6 +94,14 @@ describe('BluetoothService', () => {
       expect(mockExec).toHaveBeenCalledWith('hciconfig hci1 reset');
     });
 
+    it('should reset the HCI device if the command execution times out', async () => {
+      mockExec.mockRejectedValue({ message: 'timed out' });
+
+      const result = await service.inquireClassicRssi(1, '08:05:90:ed:3b:60');
+      expect(result).toBeUndefined();
+      expect(mockExec).toHaveBeenCalledWith('hciconfig hci1 reset');
+    });
+
     it('should stop scanning on an adapter while performing an inquiry', async () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];

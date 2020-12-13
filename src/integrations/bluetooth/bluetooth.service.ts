@@ -169,8 +169,14 @@ export class BluetoothService {
         e.message?.includes('I/O')
       ) {
         this.logger.debug(e.message);
+      } else if (e.message == 'timed out') {
+        this.logger.warn(
+          `Bluetooth adapter ${adapterId} seems stuck, resetting`
+        );
+        this.healthIndicator.reportError();
+        await this.resetHciDevice(adapterId);
       } else {
-        this.logger.error(e.message);
+        this.logger.error(`Inquiring RSSI via BT Classic failed: ${e.message}`);
         this.healthIndicator.reportError();
       }
 
