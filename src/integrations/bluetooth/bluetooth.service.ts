@@ -7,18 +7,36 @@ import { BluetoothClassicConfig } from '../bluetooth-classic/bluetooth-classic.c
 import { ConfigService } from '../../config/config.service';
 import { Device } from '../bluetooth-classic/device';
 import { promiseWithTimeout } from '../../util/promises';
+import { Interval } from '@nestjs/schedule';
+
+const RSSI_REGEX = new RegExp(/-?[0-9]+/);
+const INQUIRY_LOCK_TIMEOUT = 30 * 1000;
+
+const execPromise = util.promisify(exec);
 
 type BluetoothAdapterState = 'inquiry' | 'scan' | 'inactive';
 type ExecOutput = { stdout: string; stderr: string };
 
-const execPromise = util.promisify(exec);
-const rssiRegex = new RegExp(/-?[0-9]+/);
+class BluetoothAdapter {
+  state: BluetoothAdapterState;
+  startedAt: Date;
+}
+
+class BluetoothAdapterMap extends Map<number, BluetoothAdapter> {
+  getState(key: number): BluetoothAdapterState {
+    return this.get(key)?.state;
+  }
+
+  setState(key: number, state: BluetoothAdapterState): this {
+    return this.set(key, { state, startedAt: new Date() });
+  }
+}
 
 @Injectable()
 export class BluetoothService {
   private readonly logger: Logger = new Logger(BluetoothService.name);
   private readonly classicConfig: BluetoothClassicConfig;
-  private readonly adapterStates = new Map<number, BluetoothAdapterState>();
+  private readonly adapters = new BluetoothAdapterMap();
   private lowEnergyAdapterId: number;
 
   constructor(
@@ -130,7 +148,7 @@ export class BluetoothService {
         ),
         this.classicConfig.scanTimeLimit * 1000 * 1.1
       );
-      const matches = output.stdout.match(rssiRegex);
+      const matches = output.stdout.match(RSSI_REGEX);
 
       this.healthIndicator.reportSuccess();
 
@@ -221,7 +239,7 @@ export class BluetoothService {
   lockAdapter(adapterId: number): void {
     this.logger.debug(`Locking adapter ${adapterId}`);
 
-    switch (this.adapterStates.get(adapterId)) {
+    switch (this.adapters.getState(adapterId)) {
       case 'inquiry':
         throw new Error(
           `Trying to lock adapter ${adapterId} even though it is already locked`
@@ -233,7 +251,7 @@ export class BluetoothService {
         noble.stopScanning();
     }
 
-    this.adapterStates.set(adapterId, 'inquiry');
+    this.adapters.setState(adapterId, 'inquiry');
   }
 
   /**
@@ -243,11 +261,31 @@ export class BluetoothService {
    */
   async unlockAdapter(adapterId: number): Promise<void> {
     this.logger.debug(`Unlocking adapter ${adapterId}`);
-    this.adapterStates.set(adapterId, 'inactive');
+    this.adapters.setState(adapterId, 'inactive');
 
     if (adapterId == this.lowEnergyAdapterId) {
       await this.handleAdapterStateChange(noble.state);
     }
+  }
+
+  /**
+   * Checks if any adapters had a lock acquired on them for longer than
+   * INQUIRY_LOCK_TIMEOUT and resets them before unlocking them again.
+   */
+  @Interval(10 * 1000)
+  resetDeadlockedAdapters(): void {
+    this.adapters.forEach(async (adapter, adapterId) => {
+      if (
+        adapter.state === 'inquiry' &&
+        adapter.startedAt.getTime() < Date.now() - INQUIRY_LOCK_TIMEOUT
+      ) {
+        this.logger.log(
+          `Detected unusually long lock on Bluetooth adapter ${adapterId}, resetting`
+        );
+        await this.resetHciDevice(adapterId);
+        await this.unlockAdapter(adapterId);
+      }
+    });
   }
 
   /**
@@ -272,19 +310,19 @@ export class BluetoothService {
    * @param state - State of the HCI adapter
    */
   private async handleAdapterStateChange(state: string): Promise<void> {
-    if (this.adapterStates.get(this.lowEnergyAdapterId) != 'inquiry') {
+    if (this.adapters.getState(this.lowEnergyAdapterId) != 'inquiry') {
       if (state === 'poweredOn') {
         this.logger.debug(
           `Start scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
         );
         await noble.startScanningAsync([], true);
-        this.adapterStates.set(this.lowEnergyAdapterId, 'scan');
+        this.adapters.setState(this.lowEnergyAdapterId, 'scan');
       } else {
         this.logger.debug(
           `Stop scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
         );
         await noble.stopScanning();
-        this.adapterStates.set(this.lowEnergyAdapterId, 'inactive');
+        this.adapters.setState(this.lowEnergyAdapterId, 'inactive');
       }
     }
   }

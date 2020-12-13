@@ -413,4 +413,19 @@ Requesting information ...
       expect(peripheral.disconnectAsync).toHaveBeenCalled();
     });
   });
+
+  it('should reset adapters that have been locked for too long', () => {
+    jest.useFakeTimers('modern');
+
+    service.lockAdapter(0); // should time out
+
+    service.unlockAdapter(1); // already unlocked
+    jest.setSystemTime(Date.now() + 31 * 1000);
+    service.lockAdapter(2); // should not time out
+
+    service.resetDeadlockedAdapters();
+
+    expect(mockExec).toHaveBeenCalledTimes(1);
+    expect(mockExec).toHaveBeenCalledWith('hciconfig hci0 reset');
+  });
 });
