@@ -254,6 +254,13 @@ export class HomeAssistantService
   }
 
   /**
+   * Checks if room-assistant is connected to the MQTT broker.
+   */
+  isConnected(): boolean {
+    return this.mqttClient?.connected;
+  }
+
+  /**
    * Handles broker re-connection events.
    */
   protected handleReconnect(): void {
