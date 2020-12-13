@@ -146,7 +146,7 @@ export class BluetoothService {
             killSignal: 'SIGKILL',
           }
         ),
-        this.classicConfig.scanTimeLimit * 1000 * 1.1
+        this.classicConfig.scanTimeLimit * 1000 * 1.5
       );
       const matches = output.stdout.match(RSSI_REGEX);
 
