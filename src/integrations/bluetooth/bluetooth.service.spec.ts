@@ -255,7 +255,7 @@ Requesting information ...
     it('should only setup noble listeners once', () => {
       service.onLowEnergyDiscovery(() => undefined);
       service.onLowEnergyDiscovery(() => undefined);
-      expect(mockNoble.on).toHaveBeenCalledTimes(4);
+      expect(mockNoble.on).toHaveBeenCalledTimes(5);
     });
 
     it('should enable scanning when the adapter is inactive', () => {
@@ -419,6 +419,29 @@ Requesting information ...
       );
 
       expect(peripheral.disconnectAsync).toHaveBeenCalled();
+    });
+
+    it('should restart scanning if nothing has been detected for a while', async () => {
+      jest.useFakeTimers('modern');
+
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      service.onLowEnergyDiscovery(() => {});
+      const stateCallback = mockNoble.on.mock.calls.find(
+        (call) => call[0] === 'stateChange'
+      )[1];
+      const discoveryCallback = mockNoble.on.mock.calls.find(
+        (call) => call[0] === 'discover'
+      )[1];
+      await stateCallback('poweredOn');
+      jest.resetAllMocks();
+
+      discoveryCallback();
+      jest.setSystemTime(Date.now() + 31 * 1000);
+
+      await service.verifyLowEnergyScanner();
+
+      expect(mockNoble.stopScanning).toHaveBeenCalledTimes(1);
+      expect(mockNoble.startScanningAsync).toHaveBeenCalledTimes(1);
     });
   });
 

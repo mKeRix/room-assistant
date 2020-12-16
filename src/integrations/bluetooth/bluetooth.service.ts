@@ -11,6 +11,7 @@ import { Interval } from '@nestjs/schedule';
 
 const RSSI_REGEX = new RegExp(/-?[0-9]+/);
 const INQUIRY_LOCK_TIMEOUT = 30 * 1000;
+const SCAN_NO_PERIPHERAL_TIMEOUT = 30 * 1000;
 
 const execPromise = util.promisify(exec);
 
@@ -38,6 +39,7 @@ export class BluetoothService {
   private readonly classicConfig: BluetoothClassicConfig;
   private readonly adapters = new BluetoothAdapterMap();
   private lowEnergyAdapterId: number;
+  private lastLowEnergyDiscovery: Date;
 
   constructor(
     private readonly configService: ConfigService,
@@ -295,12 +297,33 @@ export class BluetoothService {
   }
 
   /**
+   * Restarts the scanning process if nothing has been detected for a while.
+   */
+  @Interval(5 * 1000)
+  async verifyLowEnergyScanner(): Promise<void> {
+    if (
+      this.lowEnergyAdapterId != undefined &&
+      this.adapters.getState(this.lowEnergyAdapterId) == 'scan' &&
+      this.lastLowEnergyDiscovery != undefined &&
+      this.lastLowEnergyDiscovery.getTime() <
+        Date.now() - SCAN_NO_PERIPHERAL_TIMEOUT
+    ) {
+      this.logger.warn(
+        'Did not detect any low energy advertisements in a while, restarting scanner'
+      );
+      await this.handleAdapterStateChange('poweredOff');
+      await this.handleAdapterStateChange('poweredOn');
+    }
+  }
+
+  /**
    * Sets up Noble hooks.
    */
   private setupNoble(): void {
     this.lowEnergyAdapterId = parseInt(process.env.NOBLE_HCI_DEVICE_ID) || 0;
 
     noble.on('stateChange', this.handleAdapterStateChange.bind(this));
+    noble.on('discover', () => (this.lastLowEnergyDiscovery = new Date()));
     noble.on('warning', (message) => {
       if (message == 'unknown peripheral undefined RSSI update!') {
         return;
