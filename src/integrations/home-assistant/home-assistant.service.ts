@@ -178,7 +178,9 @@ export class HomeAssistantService
       return;
     }
 
-    this.logger.debug(`Sending new state ${state} for ${config.uniqueId}`);
+    const logState = state instanceof Buffer ? '<binary>' : state;
+    this.logger.debug(`Sending new state ${logState} for ${config.uniqueId}`);
+
     this.mqttClient.publish(
       config.stateTopic,
       state instanceof Buffer ? state : String(state),
