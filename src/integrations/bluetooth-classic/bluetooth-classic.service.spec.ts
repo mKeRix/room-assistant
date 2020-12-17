@@ -483,6 +483,7 @@ describe('BluetoothClassicService', () => {
     sensor.distances['test-instance'] = {
       distance: 10,
       outOfRange: false,
+      instanceName: 'bt-test',
       lastUpdatedAt: new Date(),
     };
     const device = { address: 'test', name: 'Test' };
@@ -521,6 +522,7 @@ describe('BluetoothClassicService', () => {
     sensor.distances = {};
     sensor.distances['test-instance'] = {
       distance: 10,
+      instanceName: 'bt-test',
       outOfRange: false,
       lastUpdatedAt: new Date(Date.now() - 25 * 1000),
     };
