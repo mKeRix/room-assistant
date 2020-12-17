@@ -6,9 +6,11 @@ class TimedDistance {
   distance: number;
   outOfRange: boolean;
   lastUpdatedAt: Date = new Date();
+  instanceName: string;
 
-  constructor(distance: number, outOfRange = false) {
+  constructor(distance: number, instanceName: string, outOfRange = false) {
     this.distance = distance;
+    this.instanceName = instanceName;
     this.outOfRange = outOfRange;
   }
 }
@@ -34,7 +36,7 @@ export class RoomPresenceDistanceSensor extends Sensor {
     distance: number,
     outOfRange = false
   ): void {
-    this.distances[instanceName] = new TimedDistance(distance, outOfRange);
+    this.distances[instanceName] = new TimedDistance(distance, instanceName, outOfRange);
     this.updateState();
   }
 
@@ -52,6 +54,7 @@ export class RoomPresenceDistanceSensor extends Sensor {
       if (this.state === closestInRange[0]) {
         this.attributes.distance = closestInRange[1].distance;
         this.attributes.lastUpdatedAt = closestInRange[1].lastUpdatedAt.toISOString();
+        this.attributes.instanceName = closestInRange[1].instanceName;
       }
     } else if (this.state !== STATE_NOT_HOME) {
       this.setNotHome();
