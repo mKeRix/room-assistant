@@ -411,6 +411,7 @@ Requesting information ...
 
     it('should disconnect from a peripheral', async () => {
       const peripheral = {
+        state: 'connected',
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
       };
 
@@ -419,6 +420,19 @@ Requesting information ...
       );
 
       expect(peripheral.disconnectAsync).toHaveBeenCalled();
+    });
+
+    it('should not try to disconnect from a peripheral that is not connected', async () => {
+      const peripheral = {
+        state: 'disconnected',
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      };
+
+      await service.disconnectLowEnergyDevice(
+        (peripheral as unknown) as Peripheral
+      );
+
+      expect(peripheral.disconnectAsync).not.toHaveBeenCalled();
     });
 
     it('should restart scanning if nothing has been detected for a while', async () => {

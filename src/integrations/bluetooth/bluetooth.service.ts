@@ -112,6 +112,10 @@ export class BluetoothService {
    * @param peripheral - BLE peripheral to disconnect from
    */
   async disconnectLowEnergyDevice(peripheral: Peripheral): Promise<void> {
+    if (!['connecting', 'connected'].includes(peripheral.state)) {
+      return;
+    }
+
     this.logger.debug(
       `Disconnecting from BLE device at address ${peripheral.address}`
     );
