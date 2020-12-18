@@ -180,7 +180,7 @@ export class BluetoothService {
           `Bluetooth adapter ${adapterId} seems stuck, resetting`
         );
         this.healthIndicator.reportError();
-        await this.resetHciDevice(adapterId);
+        await this.hardResetHciDevice(adapterId);
       } else {
         this.logger.error(`Inquiring RSSI via BT Classic failed: ${e.message}`);
         this.healthIndicator.reportError();
@@ -233,11 +233,24 @@ export class BluetoothService {
   }
 
   /**
-   * Reset the hci (Bluetooth) device used for inquiries.
+   * Reset the hci (Bluetooth) device.
    */
   protected async resetHciDevice(adapterId: number): Promise<void> {
     try {
       await execPromise(`hciconfig hci${adapterId} reset`);
+    } catch (e) {
+      this.logger.error(e.message);
+    }
+  }
+
+  /**
+   * Hard reset the hci (Bluetooth) device (down and up).
+   */
+  protected async hardResetHciDevice(adapterId: number): Promise<void> {
+    try {
+      await execPromise(
+        `hciconfig hci${adapterId} down && hciconfig hci${adapterId} up`
+      );
     } catch (e) {
       this.logger.error(e.message);
     }
