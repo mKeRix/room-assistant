@@ -1230,6 +1230,8 @@ describe('BluetoothLowEnergyService', () => {
           manufacturerData: APPLE_MANUFACTURER_DATA,
         },
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        once: jest.fn(),
+        removeListener: jest.fn(),
       } as unknown) as Peripheral;
 
       bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
@@ -1253,6 +1255,7 @@ describe('BluetoothLowEnergyService', () => {
           manufacturerData: APPLE_MANUFACTURER_DATA,
         },
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        removeListener: jest.fn(),
       } as unknown) as Peripheral;
 
       bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
@@ -1273,6 +1276,7 @@ describe('BluetoothLowEnergyService', () => {
           manufacturerData: APPLE_MANUFACTURER_DATA,
         },
         discoverServicesAsync: jest.fn().mockResolvedValue([]),
+        removeListener: jest.fn(),
       } as unknown) as Peripheral;
 
       bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
@@ -1298,6 +1302,7 @@ describe('BluetoothLowEnergyService', () => {
           manufacturerData: APPLE_MANUFACTURER_DATA,
         },
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        removeListener: jest.fn(),
       } as unknown) as Peripheral;
 
       bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
@@ -1326,6 +1331,7 @@ describe('BluetoothLowEnergyService', () => {
           manufacturerData: APPLE_MANUFACTURER_DATA,
         },
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        removeListener: jest.fn(),
       } as unknown) as Peripheral;
 
       bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
@@ -1353,6 +1359,7 @@ describe('BluetoothLowEnergyService', () => {
           manufacturerData: APPLE_MANUFACTURER_DATA,
         },
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        removeListener: jest.fn(),
       } as unknown) as Peripheral;
 
       bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);

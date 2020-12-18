@@ -140,13 +140,22 @@ export class BluetoothLowEnergyService
    * @param tag - Peripheral to connect to
    */
   async discoverCompanionAppId(tag: Tag): Promise<string | null> {
+    let disconnectListener: () => void;
+    const disconnectPromise = new Promise<string>((resolve) => {
+      disconnectListener = () => resolve(null);
+      tag.peripheral.once('disconnect', disconnectListener);
+    });
+
     const peripheral = await this.bluetoothService.connectLowEnergyDevice(
       tag.peripheral
     );
 
     try {
       return await promiseWithTimeout<string>(
-        BluetoothLowEnergyService.readCompanionAppId(peripheral),
+        Promise.race([
+          BluetoothLowEnergyService.readCompanionAppId(peripheral),
+          disconnectPromise,
+        ]),
         15 * 1000
       );
     } catch (e) {
@@ -156,6 +165,7 @@ export class BluetoothLowEnergyService
       );
       return null;
     } finally {
+      tag.peripheral.removeListener('disconnect', disconnectListener);
       this.bluetoothService.disconnectLowEnergyDevice(tag.peripheral);
     }
   }
