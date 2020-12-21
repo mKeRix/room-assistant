@@ -6,7 +6,7 @@ import { BluetoothHealthIndicator } from './bluetooth.health';
 import { BluetoothClassicConfig } from '../bluetooth-classic/bluetooth-classic.config';
 import { ConfigService } from '../../config/config.service';
 import { Device } from '../bluetooth-classic/device';
-import { promiseWithTimeout } from '../../util/promises';
+import { promiseWithTimeout, sleep } from '../../util/promises';
 import { Interval } from '@nestjs/schedule';
 
 const RSSI_REGEX = new RegExp(/-?[0-9]+/);
@@ -73,6 +73,14 @@ export class BluetoothService {
       throw new Error('Trying to connect to a non-connectable device');
     }
 
+    if (peripheral.state === 'connected') {
+      return peripheral;
+    } else if (peripheral.state === 'connecting') {
+      throw new Error(
+        `Connection to ${peripheral.address} is already trying to be established`
+      );
+    }
+
     this.logger.debug(
       `Connecting to BLE device at address ${peripheral.address}`
     );
@@ -100,8 +108,7 @@ export class BluetoothService {
       );
       peripheral.disconnect();
       peripheral.removeAllListeners();
-      await this.resetHciDevice(this.lowEnergyAdapterId);
-      this.unlockAdapter(this.lowEnergyAdapterId);
+      noble.reset();
       throw e;
     }
   }
@@ -126,6 +133,7 @@ export class BluetoothService {
         `Failed to disconnect from ${peripheral.address}: ${e.message}`,
         e.trace
       );
+      noble.reset();
     }
   }
 
@@ -152,7 +160,7 @@ export class BluetoothService {
             killSignal: 'SIGKILL',
           }
         ),
-        this.classicConfig.scanTimeLimit * 1000 * 1.5
+        this.classicConfig.scanTimeLimit * 1000 * 2
       );
       const matches = output.stdout.match(RSSI_REGEX);
 
@@ -248,9 +256,9 @@ export class BluetoothService {
    */
   protected async hardResetHciDevice(adapterId: number): Promise<void> {
     try {
-      await execPromise(
-        `hciconfig hci${adapterId} down && hciconfig hci${adapterId} up`
-      );
+      await execPromise(`hciconfig hci${adapterId} down`);
+      await sleep(1200);
+      await execPromise(`hciconfig hci${adapterId} up`);
     } catch (e) {
       this.logger.error(e.message);
     }
@@ -285,6 +293,10 @@ export class BluetoothService {
    * @param adapterId - HCI Device ID of the adapter to unlock
    */
   async unlockAdapter(adapterId: number): Promise<void> {
+    if (this.adapters.getState(this.lowEnergyAdapterId) != 'inquiry') {
+      return;
+    }
+
     this.logger.debug(`Unlocking adapter ${adapterId}`);
     this.adapters.setState(adapterId, 'inactive');
 
@@ -320,16 +332,17 @@ export class BluetoothService {
   async verifyLowEnergyScanner(): Promise<void> {
     if (
       this.lowEnergyAdapterId != undefined &&
-      this.adapters.getState(this.lowEnergyAdapterId) == 'scan' &&
+      ['scan', 'inactive'].includes(
+        this.adapters.getState(this.lowEnergyAdapterId)
+      ) &&
       this.lastLowEnergyDiscovery != undefined &&
       this.lastLowEnergyDiscovery.getTime() <
         Date.now() - SCAN_NO_PERIPHERAL_TIMEOUT
     ) {
       this.logger.warn(
-        'Did not detect any low energy advertisements in a while, restarting scanner'
+        'Did not detect any low energy advertisements in a while, resetting'
       );
-      await this.handleAdapterStateChange('poweredOff');
-      await this.handleAdapterStateChange('poweredOn');
+      await this.hardResetHciDevice(this.lowEnergyAdapterId);
     }
   }
 
@@ -338,6 +351,7 @@ export class BluetoothService {
    */
   private setupNoble(): void {
     this.lowEnergyAdapterId = parseInt(process.env.NOBLE_HCI_DEVICE_ID) || 0;
+    this.adapters.setState(this.lowEnergyAdapterId, 'inactive');
 
     noble.on('stateChange', this.handleAdapterStateChange.bind(this));
     noble.on('discover', () => (this.lastLowEnergyDiscovery = new Date()));
@@ -356,20 +370,26 @@ export class BluetoothService {
    * @param state - State of the HCI adapter
    */
   private async handleAdapterStateChange(state: string): Promise<void> {
-    if (this.adapters.getState(this.lowEnergyAdapterId) != 'inquiry') {
-      if (state === 'poweredOn') {
+    const adapterState = this.adapters.getState(this.lowEnergyAdapterId);
+    if (state === 'poweredOn') {
+      if (adapterState == 'inactive') {
         this.logger.debug(
           `Start scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
         );
-        await noble.startScanningAsync([], true);
-        this.adapters.setState(this.lowEnergyAdapterId, 'scan');
-      } else {
-        this.logger.debug(
-          `Stop scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
-        );
-        await noble.stopScanning();
-        this.adapters.setState(this.lowEnergyAdapterId, 'inactive');
+
+        try {
+          await promiseWithTimeout(noble.startScanningAsync([], true), 3000);
+          this.adapters.setState(this.lowEnergyAdapterId, 'scan');
+        } catch (e) {
+          this.logger.error(`Failed to start scanning: ${e.message}`, e.stack);
+          await this.hardResetHciDevice(this.lowEnergyAdapterId);
+        }
       }
+    } else if (adapterState === 'scan') {
+      this.logger.debug(
+        `Adapter ${this.lowEnergyAdapterId} went into state ${state}, cannot continue scanning`
+      );
+      this.adapters.setState(this.lowEnergyAdapterId, 'inactive');
     }
   }
 }

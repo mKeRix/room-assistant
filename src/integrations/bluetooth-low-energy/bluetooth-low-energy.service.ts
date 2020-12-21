@@ -487,18 +487,18 @@ export class BluetoothLowEnergyService
 
           this.handleAppDiscovery(tag.id, appId);
         } catch (e) {
-          if (e.message === 'timed out') {
+          if (e.message?.includes('already locked')) {
             this.logger.debug(
-              `Temporarily denylisting ${tag.id} from app discovery due to timeout`
+              `Unable to retrieve companion ID, retrying on next advertisement: ${e.message}`
+            );
+          } else {
+            this.logger.warn(
+              `Temporarily denylisting ${tag.id} from app discovery due to error: ${e.message}`
             );
             this.companionAppDenylist.add(tag.id);
             setTimeout(
               () => this.companionAppDenylist.delete(tag.id),
               3 * 60 * 1000
-            );
-          } else {
-            this.logger.debug(
-              `Unable to retrieve companion ID, retrying on next advertisement: ${e.message}`
             );
           }
 
