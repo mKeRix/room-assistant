@@ -161,17 +161,26 @@ export class ClusterService
     super.processEvent(msg);
     const data = this.decodeMsg(msg);
 
-    if (!data.chunk && data.state === 'leader') {
-      const leaders = Object.entries(this._nodes).filter(
-        (node) => node[1]?.state === 'leader'
+    // jad 12/21/2020: data.chunk sometimes fails due to undefined data, adding 
+    //  if clause around it:
+    if (data) {
+      if (!data.chunk && data.state === 'leader') {
+        const leaders = Object.entries(this._nodes).filter(
+          (node) => node[1]?.state === 'leader'
+        );
+
+        if (leaders.length > 1) {
+          leaders.forEach((leader) => {
+            this._nodes[leader[0]].state = 'citizen';
+          });
+          this.holdElections();
+        }
+      }
+    } else {
+      this.logger.debug(
+        `data = null, skipping data[` + data + `]`
       );
 
-      if (leaders.length > 1) {
-        leaders.forEach((leader) => {
-          this._nodes[leader[0]].state = 'citizen';
-        });
-        this.holdElections();
-      }
     }
 
     return this;
