@@ -162,7 +162,7 @@ export class ClusterService
     const data = this.decodeMsg(msg);
 
     // jad 12/21/2020: data.chunk sometimes fails due to undefined data, adding 
-    //  if clause around it:
+    // if clause around it:
     if (data) {
       if (!data.chunk && data.state === 'leader') {
         const leaders = Object.entries(this._nodes).filter(
