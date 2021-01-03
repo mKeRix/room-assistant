@@ -15,7 +15,7 @@ const SCAN_NO_PERIPHERAL_TIMEOUT = 30 * 1000;
 
 const execPromise = util.promisify(exec);
 
-type BluetoothAdapterState = 'inquiry' | 'scan' | 'inactive';
+type BluetoothAdapterState = 'inquiry' | 'scan' | 'inactive' | 'resetting';
 type ExecOutput = { stdout: string; stderr: string };
 
 class BluetoothAdapter {
@@ -244,8 +244,17 @@ export class BluetoothService {
    * Reset the hci (Bluetooth) device.
    */
   protected async resetHciDevice(adapterId: number): Promise<void> {
+    if (this.adapters.getState(adapterId) === 'resetting') {
+      throw new Error('Adapter is already resetting');
+    }
+
     try {
+      this.adapters.setState(adapterId, 'resetting');
       await execPromise(`hciconfig hci${adapterId} reset`);
+      this.adapters.setState(
+        adapterId,
+        this.lowEnergyAdapterId === adapterId ? 'scan' : 'inactive'
+      );
     } catch (e) {
       this.logger.error(e.message);
     }
@@ -255,10 +264,16 @@ export class BluetoothService {
    * Hard reset the hci (Bluetooth) device (down and up).
    */
   protected async hardResetHciDevice(adapterId: number): Promise<void> {
+    if (this.adapters.getState(adapterId) === 'resetting') {
+      throw new Error('Adapter is already resetting');
+    }
+
     try {
+      this.adapters.setState(adapterId, 'resetting');
       await execPromise(`hciconfig hci${adapterId} down`);
       await sleep(1200);
       await execPromise(`hciconfig hci${adapterId} up`);
+      this.adapters.setState(adapterId, 'inactive');
     } catch (e) {
       this.logger.error(e.message);
     }
