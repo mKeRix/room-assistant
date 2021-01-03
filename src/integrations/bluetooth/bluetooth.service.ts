@@ -294,7 +294,7 @@ export class BluetoothService {
         );
       case 'scan':
         this.logger.debug(
-          `Stop scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
+          `Stopping scanning for BLE peripherals on adapter ${adapterId}`
         );
         noble.stopScanning();
     }
@@ -370,6 +370,16 @@ export class BluetoothService {
 
     noble.on('stateChange', this.handleAdapterStateChange.bind(this));
     noble.on('discover', () => (this.lastLowEnergyDiscovery = new Date()));
+    noble.on('scanStart', () =>
+      this.logger.debug(
+        `Started scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
+      )
+    );
+    noble.on('scanStop', () =>
+      this.logger.debug(
+        `Stopped scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
+      )
+    );
     noble.on('warning', (message) => {
       if (message == 'unknown peripheral undefined RSSI update!') {
         return;
@@ -385,11 +395,15 @@ export class BluetoothService {
    * @param state - State of the HCI adapter
    */
   private async handleAdapterStateChange(state: string): Promise<void> {
+    this.logger.debug(
+      `Adapter ${this.lowEnergyAdapterId} went into state ${state}`
+    );
     const adapterState = this.adapters.getState(this.lowEnergyAdapterId);
+
     if (state === 'poweredOn') {
       if (adapterState == 'inactive') {
         this.logger.debug(
-          `Start scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
+          `Starting scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
         );
 
         try {
@@ -402,7 +416,7 @@ export class BluetoothService {
       }
     } else if (adapterState === 'scan') {
       this.logger.debug(
-        `Adapter ${this.lowEnergyAdapterId} went into state ${state}, cannot continue scanning`
+        `Adapter ${this.lowEnergyAdapterId} is set to inactive`
       );
       this.adapters.setState(this.lowEnergyAdapterId, 'inactive');
     }
