@@ -1,3 +1,5 @@
+import { makeCounterProvider } from '@willsoto/nestjs-prometheus';
+
 const mockExec = jest.fn();
 const mockNoble = {
   state: 'poweredOn',
@@ -40,7 +42,14 @@ describe('BluetoothService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule],
-      providers: [BluetoothService, BluetoothHealthIndicator],
+      providers: [
+        BluetoothService,
+        BluetoothHealthIndicator,
+        makeCounterProvider({
+          name: 'bluetooth_le_advertisements_received_count',
+          help: '',
+        }),
+      ],
     })
       .overrideProvider(BluetoothHealthIndicator)
       .useValue(healthIndicator)

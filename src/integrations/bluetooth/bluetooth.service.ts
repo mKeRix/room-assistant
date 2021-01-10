@@ -9,6 +9,8 @@ import { Device } from '../bluetooth-classic/device';
 import { promiseWithTimeout, sleep } from '../../util/promises';
 import { Interval } from '@nestjs/schedule';
 import _ from 'lodash';
+import { Counter } from 'prom-client';
+import { InjectMetric } from '@willsoto/nestjs-prometheus';
 
 const RSSI_REGEX = new RegExp(/-?[0-9]+/);
 const INQUIRY_LOCK_TIMEOUT = 30 * 1000;
@@ -44,7 +46,9 @@ export class BluetoothService {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly healthIndicator: BluetoothHealthIndicator
+    private readonly healthIndicator: BluetoothHealthIndicator,
+    @InjectMetric('bluetooth_le_advertisements_received_count')
+    private readonly advertisementReceivedCounter: Counter<string>
   ) {
     this.classicConfig = this.configService.get('bluetoothClassic');
   }
@@ -393,6 +397,7 @@ export class BluetoothService {
     noble.on('stateChange', this.handleAdapterStateChange.bind(this));
     noble.on('discover', () => {
       this.lastLowEnergyDiscovery = new Date();
+      this.advertisementReceivedCounter.inc();
       if (this.adapters.getState(this.lowEnergyAdapterId) === 'inactive') {
         this.adapters.setState(this.lowEnergyAdapterId, 'scan');
       }

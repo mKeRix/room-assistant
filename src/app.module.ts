@@ -10,6 +10,7 @@ import { NestEmitterModule } from 'nest-emitter';
 import { EventEmitter } from 'events';
 import { WINSTON_LOGGER } from './logger';
 import { StatusModule } from './status/status.module';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 export const VERSION = require('../package.json').version;
@@ -26,6 +27,7 @@ export const CONFIGURED_INTEGRATIONS = c
     StatusModule,
     ScheduleModule.forRoot(),
     NestEmitterModule.forRoot(new EventEmitter()),
+    PrometheusModule.register(),
     IntegrationsModule.register(CONFIGURED_INTEGRATIONS, WINSTON_LOGGER),
   ],
 })
