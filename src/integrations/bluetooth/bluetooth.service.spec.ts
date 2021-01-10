@@ -47,7 +47,7 @@ describe('BluetoothService', () => {
         BluetoothHealthIndicator,
         makeCounterProvider({
           name: 'bluetooth_le_advertisements_received_count',
-          help: '',
+          help: 'help',
         }),
       ],
     })
