@@ -88,25 +88,17 @@ describe('BluetoothService', () => {
       ).rejects.toThrow();
     });
 
-    it('should reset the HCI device if the query took too long', async () => {
-      mockExec.mockRejectedValue({ signal: 'SIGKILL' });
-
-      const result = await service.inquireClassicRssi(1, '08:05:90:ed:3b:60');
-      expect(result).toBeUndefined();
-      expect(mockExec).toHaveBeenCalledWith('hciconfig hci1 reset');
-    });
-
-    it('should hard reset the HCI device if the command execution times out', async () => {
-      jest.spyOn(Promises, 'sleep').mockResolvedValue();
+    it('should cancel the connection if the query took too long', async () => {
       mockExec
-        .mockRejectedValueOnce({ message: 'timed out' })
-        .mockResolvedValue({ stdout: '' });
+        .mockRejectedValueOnce({ signal: 'SIGKILL' })
+        .mockResolvedValue({});
 
       const result = await service.inquireClassicRssi(1, '08:05:90:ed:3b:60');
-
       expect(result).toBeUndefined();
-      expect(mockExec).toHaveBeenCalledWith('hciconfig hci1 down');
-      expect(mockExec).toHaveBeenCalledWith('hciconfig hci1 up');
+      expect(mockExec).toHaveBeenCalledWith(
+        'hcitool -i hci1 cmd 0x01 0x0008',
+        expect.anything()
+      );
     });
 
     it('should stop scanning on an adapter while performing an inquiry', async () => {
@@ -238,10 +230,12 @@ Requesting information ...
     });
 
     it('should not report an error if the scan was stopped due to low time limits', async () => {
-      mockExec.mockRejectedValue({
-        message: 'killed',
-        signal: 'SIGKILL',
-      });
+      mockExec
+        .mockRejectedValueOnce({
+          message: 'killed',
+          signal: 'SIGKILL',
+        })
+        .mockResolvedValue({});
       await service.inquireClassicRssi(0, '');
 
       expect(healthIndicator.reportError).not.toHaveBeenCalled();
@@ -262,7 +256,7 @@ Requesting information ...
     it('should only setup noble listeners once', () => {
       service.onLowEnergyDiscovery(() => undefined);
       service.onLowEnergyDiscovery(() => undefined);
-      expect(mockNoble.on).toHaveBeenCalledTimes(5);
+      expect(mockNoble.on).toHaveBeenCalledTimes(9);
     });
 
     it('should enable scanning when the adapter is inactive', () => {
@@ -394,7 +388,6 @@ Requesting information ...
         );
       }).rejects.toThrow();
 
-      expect(mockNoble.reset).toHaveBeenCalled();
       expect(peripheral.removeAllListeners).toHaveBeenCalled();
     });
 
@@ -497,23 +490,10 @@ Requesting information ...
 
       await service.verifyLowEnergyScanner();
 
-      expect(mockExec).toHaveBeenCalledWith('hciconfig hci0 down');
-      expect(mockExec).toHaveBeenCalledWith('hciconfig hci0 up');
+      expect(mockExec).toHaveBeenCalledWith(
+        'hciconfig hci0 reset',
+        expect.anything()
+      );
     });
-  });
-
-  it('should reset adapters that have been locked for too long', () => {
-    jest.useFakeTimers('modern');
-
-    service.lockAdapter(0); // should time out
-
-    service.unlockAdapter(1); // already unlocked
-    jest.setSystemTime(Date.now() + 31 * 1000);
-    service.lockAdapter(2); // should not time out
-
-    service.resetDeadlockedAdapters();
-
-    expect(mockExec).toHaveBeenCalledTimes(1);
-    expect(mockExec).toHaveBeenCalledWith('hciconfig hci0 reset');
   });
 });

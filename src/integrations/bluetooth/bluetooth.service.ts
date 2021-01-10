@@ -8,6 +8,7 @@ import { ConfigService } from '../../config/config.service';
 import { Device } from '../bluetooth-classic/device';
 import { promiseWithTimeout, sleep } from '../../util/promises';
 import { Interval } from '@nestjs/schedule';
+import _ from 'lodash';
 
 const RSSI_REGEX = new RegExp(/-?[0-9]+/);
 const INQUIRY_LOCK_TIMEOUT = 30 * 1000;
@@ -108,7 +109,6 @@ export class BluetoothService {
       );
       peripheral.disconnect();
       peripheral.removeAllListeners();
-      noble.reset();
       throw e;
     }
   }
@@ -133,7 +133,7 @@ export class BluetoothService {
         `Failed to disconnect from ${peripheral.address}: ${e.message}`,
         e.trace
       );
-      noble.reset();
+      this.resetLowEnergy();
     }
   }
 
@@ -170,25 +170,14 @@ export class BluetoothService {
     } catch (e) {
       if (e.signal === 'SIGKILL') {
         this.logger.debug(
-          `Query of ${address} reached scan time limit, resetting hci${this.classicConfig.hciDeviceId}`
+          `Query of ${address} reached scan time limit, cancelling connection attempt`
         );
-        await this.resetHciDevice(adapterId);
-
-        // when not reachable a scan runs for 6s, so lower time limits might not be an error
-        if (this.classicConfig.scanTimeLimit >= 6) {
-          this.healthIndicator.reportError();
-        }
+        await this.cancelClassicInquiry(adapterId);
       } else if (
         e.message?.includes('Input/output') ||
         e.message?.includes('I/O')
       ) {
         this.logger.debug(e.message);
-      } else if (e.message == 'timed out') {
-        this.logger.warn(
-          `Bluetooth adapter ${adapterId} seems stuck, resetting`
-        );
-        this.healthIndicator.reportError();
-        await this.hardResetHciDevice(adapterId);
       } else {
         this.logger.error(`Inquiring RSSI via BT Classic failed: ${e.message}`);
         this.healthIndicator.reportError();
@@ -198,6 +187,17 @@ export class BluetoothService {
     } finally {
       this.unlockAdapter(adapterId);
     }
+  }
+
+  /**
+   * Cancels the connection attempt to a BT Classic device.
+   *
+   * @param adapterId - HCI Adapter ID to use for queries
+   */
+  async cancelClassicInquiry(adapterId: number): Promise<void> {
+    await execPromise(`hcitool -i hci${adapterId} cmd 0x01 0x0008`, {
+      timeout: 3000,
+    });
   }
 
   /**
@@ -215,7 +215,9 @@ export class BluetoothService {
 
     try {
       const output = await promiseWithTimeout<ExecOutput>(
-        execPromise(`hcitool -i hci${adapterId} info "${address}"`),
+        execPromise(`hcitool -i hci${adapterId} info "${address}"`, {
+          timeout: this.classicConfig.scanTimeLimit * 1000,
+        }),
         6000
       );
 
@@ -248,32 +250,42 @@ export class BluetoothService {
       throw new Error('Adapter is already resetting');
     }
 
+    this.logger.debug(`Resetting HCI adapter ${adapterId}`);
+
     try {
       this.adapters.setState(adapterId, 'resetting');
-      await execPromise(`hciconfig hci${adapterId} reset`);
-      this.adapters.setState(
-        adapterId,
-        this.lowEnergyAdapterId === adapterId ? 'scan' : 'inactive'
-      );
+
+      await execPromise(`hciconfig hci${adapterId} reset`, {
+        timeout: 3000,
+      });
+
+      if (this.lowEnergyAdapterId === adapterId) {
+        await sleep(500);
+        noble.resetBindings();
+        await this.handleAdapterStateChange(noble.state);
+      }
+
+      this.adapters.setState(adapterId, 'inactive');
     } catch (e) {
       this.logger.error(e.message);
     }
   }
 
   /**
-   * Hard reset the hci (Bluetooth) device (down and up).
+   * Resets noble low energy scanning.
    */
-  protected async hardResetHciDevice(adapterId: number): Promise<void> {
-    if (this.adapters.getState(adapterId) === 'resetting') {
+  protected async resetLowEnergy(): Promise<void> {
+    if (this.adapters.getState(this.lowEnergyAdapterId) === 'resetting') {
       throw new Error('Adapter is already resetting');
     }
 
+    this.logger.debug('Resetting low energy scanning');
+
     try {
-      this.adapters.setState(adapterId, 'resetting');
-      await execPromise(`hciconfig hci${adapterId} down`);
-      await sleep(1200);
-      await execPromise(`hciconfig hci${adapterId} up`);
-      this.adapters.setState(adapterId, 'inactive');
+      this.adapters.setState(this.lowEnergyAdapterId, 'resetting');
+      noble.reset();
+      this.adapters.setState(this.lowEnergyAdapterId, 'inactive');
+      await this.handleAdapterStateChange(noble.state);
     } catch (e) {
       this.logger.error(e.message);
     }
@@ -308,7 +320,7 @@ export class BluetoothService {
    * @param adapterId - HCI Device ID of the adapter to unlock
    */
   async unlockAdapter(adapterId: number): Promise<void> {
-    if (this.adapters.getState(this.lowEnergyAdapterId) != 'inquiry') {
+    if (this.adapters.getState(adapterId) != 'inquiry') {
       return;
     }
 
@@ -325,16 +337,15 @@ export class BluetoothService {
    * INQUIRY_LOCK_TIMEOUT and resets them before unlocking them again.
    */
   @Interval(10 * 1000)
-  resetDeadlockedAdapters(): void {
+  unlockDeadlockedAdapters(): void {
     this.adapters.forEach(async (adapter, adapterId) => {
       if (
         adapter.state === 'inquiry' &&
         adapter.startedAt.getTime() < Date.now() - INQUIRY_LOCK_TIMEOUT
       ) {
         this.logger.log(
-          `Detected unusually long lock on Bluetooth adapter ${adapterId}, resetting`
+          `Detected unusually long lock on Bluetooth adapter ${adapterId}, force unlocking`
         );
-        await this.resetHciDevice(adapterId);
         await this.unlockAdapter(adapterId);
       }
     });
@@ -343,7 +354,7 @@ export class BluetoothService {
   /**
    * Restarts the scanning process if nothing has been detected for a while.
    */
-  @Interval(5 * 1000)
+  @Interval(30 * 1000)
   async verifyLowEnergyScanner(): Promise<void> {
     if (
       this.lowEnergyAdapterId != undefined &&
@@ -357,7 +368,7 @@ export class BluetoothService {
       this.logger.warn(
         'Did not detect any low energy advertisements in a while, resetting'
       );
-      await this.hardResetHciDevice(this.lowEnergyAdapterId);
+      await this.resetHciDevice(this.lowEnergyAdapterId);
     }
   }
 
@@ -368,8 +379,26 @@ export class BluetoothService {
     this.lowEnergyAdapterId = parseInt(process.env.NOBLE_HCI_DEVICE_ID) || 0;
     this.adapters.setState(this.lowEnergyAdapterId, 'inactive');
 
+    const debouncedScanRecovery = _.debounce(
+      async () => {
+        if (this.adapters.getState(this.lowEnergyAdapterId) === 'scan') {
+          this.logger.debug('Trying to recover low energy scanner');
+          await this.resetLowEnergy();
+        }
+      },
+      10 * 1000,
+      { maxWait: 30 * 1000 }
+    );
+
     noble.on('stateChange', this.handleAdapterStateChange.bind(this));
-    noble.on('discover', () => (this.lastLowEnergyDiscovery = new Date()));
+    noble.on('discover', () => {
+      this.lastLowEnergyDiscovery = new Date();
+      if (this.adapters.getState(this.lowEnergyAdapterId) === 'inactive') {
+        this.adapters.setState(this.lowEnergyAdapterId, 'scan');
+      }
+    });
+    noble.on('scanStart', debouncedScanRecovery.cancel.bind(this));
+    noble.on('scanStop', debouncedScanRecovery.bind(this));
     noble.on('scanStart', () =>
       this.logger.debug(
         `Started scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
@@ -407,11 +436,14 @@ export class BluetoothService {
         );
 
         try {
-          await promiseWithTimeout(noble.startScanningAsync([], true), 3000);
+          await promiseWithTimeout(
+            noble.startScanningAsync([], true),
+            30 * 1000
+          );
           this.adapters.setState(this.lowEnergyAdapterId, 'scan');
         } catch (e) {
           this.logger.error(`Failed to start scanning: ${e.message}`, e.stack);
-          await this.hardResetHciDevice(this.lowEnergyAdapterId);
+          this.resetHciDevice(this.lowEnergyAdapterId);
         }
       }
     } else if (adapterState === 'scan') {
