@@ -117,10 +117,11 @@
     "webpack": "^4.45.0"
   },
   "optionalDependencies": {
-    "@mkerix/noble": "1.9.2-10.3",
+    "@mkerix/noble": "1.9.2-10.4",
     "i2c-bus": "^5.1.0",
     "mdns": "^2.5.1",
-    "onoff": "^6.0.0"
+    "onoff": "^6.0.0",
+    "winston-elasticsearch": "^0.12.3"
   },
   "engines": {
     "node": ">= 10 < 13"

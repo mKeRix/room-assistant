@@ -44,6 +44,7 @@ jest.useFakeTimers();
 describe('BluetoothLowEnergyService', () => {
   let service: BluetoothLowEnergyService;
   const bluetoothService = {
+    lowEnergyScanUptime: 16 * 1000,
     onLowEnergyDiscovery: jest.fn(),
     connectLowEnergyDevice: jest.fn(),
     disconnectLowEnergyDevice: jest.fn(),
@@ -197,6 +198,7 @@ describe('BluetoothLowEnergyService', () => {
       'Test Beacon',
       'abcd1234',
       false,
+      false,
       -50,
       -52,
       0.7
@@ -232,6 +234,7 @@ describe('BluetoothLowEnergyService', () => {
       'Test Beacon',
       'abcd1234',
       false,
+      false,
       -59,
       -59,
       1
@@ -263,6 +266,7 @@ describe('BluetoothLowEnergyService', () => {
       '123-123',
       'Test BLE Device',
       '123-123',
+      false,
       false,
       -81,
       -59,
@@ -379,6 +383,7 @@ describe('BluetoothLowEnergyService', () => {
       'abcd',
       'Test BLE Device',
       'abcd',
+      false,
       false,
       -81,
       -80,
@@ -768,6 +773,7 @@ describe('BluetoothLowEnergyService', () => {
         'Test',
         'test',
         false,
+        false,
         -80,
         -50,
         2
@@ -790,6 +796,7 @@ describe('BluetoothLowEnergyService', () => {
         'new',
         'New Tag',
         'new',
+        false,
         false,
         -80,
         -50,
@@ -826,6 +833,7 @@ describe('BluetoothLowEnergyService', () => {
         'new',
         'New Tag',
         'new',
+        false,
         false,
         -80,
         -50,
@@ -864,6 +872,7 @@ describe('BluetoothLowEnergyService', () => {
         'Test',
         'test',
         false,
+        false,
         -80,
         -50,
         2
@@ -880,6 +889,7 @@ describe('BluetoothLowEnergyService', () => {
         'Test',
         'test',
         false,
+        false,
         -40,
         -45,
         2
@@ -891,6 +901,7 @@ describe('BluetoothLowEnergyService', () => {
         'test',
         'Test',
         'test',
+        false,
         false,
         -70,
         -50,
@@ -1002,35 +1013,15 @@ describe('BluetoothLowEnergyService', () => {
       expect(discoverSpy).not.toHaveBeenCalled();
     });
 
-    it('should ignore Apple advertisements from non iOS-devices', async () => {
-      jest
-        .spyOn(service, 'handleNewDistance')
-        .mockImplementation(() => undefined);
-      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
-      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
-      const discoverSpy = jest.spyOn(service, 'discoverCompanionAppId');
-
-      await service.handleDiscovery({
-        id: 'abcd1234',
-        rssi: -50,
-        connectable: true,
-        advertisement: {
-          localName: 'Test Beacon',
-          txPowerLevel: -72,
-          manufacturerData: APPLE_MANUFACTURER_DATA.slice(0, 6),
-        },
-      } as Peripheral);
-
-      expect(discoverSpy).not.toHaveBeenCalled();
-    });
-
     it('should override tag ids with companion app IDs', async () => {
       const handleDistanceSpy = jest
         .spyOn(service, 'handleNewDistance')
         .mockImplementation(() => undefined);
       jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
       jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
-      jest.spyOn(service, 'discoverCompanionAppId').mockResolvedValue('app-id');
+      jest
+        .spyOn(service, 'discoverCompanionAppId')
+        .mockResolvedValue({ appId: 'app-id', modelName: null });
 
       await service.handleDiscovery({
         id: 'abcd1234',
@@ -1096,7 +1087,7 @@ describe('BluetoothLowEnergyService', () => {
       jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
       const discoverSpy = jest
         .spyOn(service, 'discoverCompanionAppId')
-        .mockResolvedValue('app-id');
+        .mockResolvedValue({ appId: 'app-id', modelName: null });
 
       const peripheral = {
         id: 'abcd1234',
@@ -1121,7 +1112,9 @@ describe('BluetoothLowEnergyService', () => {
         .mockImplementation(() => undefined);
       jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
       jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
-      jest.spyOn(service, 'discoverCompanionAppId').mockResolvedValue('app-id');
+      jest
+        .spyOn(service, 'discoverCompanionAppId')
+        .mockResolvedValue({ appId: 'app-id', modelName: null });
 
       await service.handleDiscovery({
         id: 'abcd1234',
@@ -1159,6 +1152,7 @@ describe('BluetoothLowEnergyService', () => {
           'Test',
           'peripheral-id',
           true,
+          true,
           -80,
           -50,
           2
@@ -1177,7 +1171,7 @@ describe('BluetoothLowEnergyService', () => {
       expect(discoverSpy).not.toHaveBeenCalled();
     });
 
-    it('should temporarily denylist devices that time out from discovery attempts', async () => {
+    it('should denylist devices that time out from discovery attempts', async () => {
       jest.useFakeTimers('modern');
       jest
         .spyOn(service, 'handleNewDistance')
@@ -1203,12 +1197,6 @@ describe('BluetoothLowEnergyService', () => {
       await service.handleDiscovery(peripheral);
 
       expect(discoverSpy).toHaveBeenCalledTimes(1);
-
-      jest.advanceTimersByTime(3 * 60 * 1000);
-
-      await service.handleDiscovery(peripheral);
-
-      expect(discoverSpy).toHaveBeenCalledTimes(2);
     });
 
     it('should discover the companion app ID from the well known characteristic', async () => {
@@ -1238,7 +1226,9 @@ describe('BluetoothLowEnergyService', () => {
 
       const actual = await service.discoverCompanionAppId(new Tag(peripheral));
 
-      expect(actual).toBe('app-id');
+      expect(actual).toMatchObject({
+        appId: 'app-id',
+      });
     });
 
     it('should return null if device does not have characteristic', async () => {

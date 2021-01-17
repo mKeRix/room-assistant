@@ -4,7 +4,7 @@ const mockExec = jest.fn();
 const mockNoble = {
   state: 'poweredOn',
   on: jest.fn(),
-  startScanningAsync: jest.fn(),
+  startScanning: jest.fn(),
   stopScanning: jest.fn(),
   reset: jest.fn(),
 };
@@ -114,14 +114,16 @@ describe('BluetoothService', () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
       await stateChangeHandler('poweredOn');
+      const scanStartHandler = mockNoble.on.mock.calls[5][1];
+      scanStartHandler();
 
-      expect(mockNoble.startScanningAsync).toHaveBeenCalledTimes(1);
+      expect(mockNoble.startScanning).toHaveBeenCalledTimes(1);
 
       let execResolve;
       const execPromise = new Promise((r) => (execResolve = r));
       mockExec.mockReturnValue(execPromise);
       const inquirePromise = service.inquireClassicRssi(0, 'x').then(() => {
-        expect(mockNoble.startScanningAsync).toHaveBeenCalledTimes(2);
+        expect(mockNoble.startScanning).toHaveBeenCalledTimes(2);
       });
 
       expect(mockNoble.stopScanning).toHaveBeenCalledTimes(1);
@@ -139,15 +141,17 @@ describe('BluetoothService', () => {
       mockExec.mockRejectedValue({ stderr: 'error' });
       await service.inquireClassicRssi(0, 'x');
 
-      expect(mockNoble.startScanningAsync).toHaveBeenCalledTimes(2);
+      expect(mockNoble.startScanning).toHaveBeenCalledTimes(2);
     });
 
     it('should stop scanning on an adapter while getting Classic device info', async () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
       await stateChangeHandler('poweredOn');
+      const scanStartHandler = mockNoble.on.mock.calls[5][1];
+      scanStartHandler();
 
-      expect(mockNoble.startScanningAsync).toHaveBeenCalledTimes(1);
+      expect(mockNoble.startScanning).toHaveBeenCalledTimes(1);
 
       let execResolve;
       const execPromise = new Promise((r) => (execResolve = r));
@@ -155,7 +159,7 @@ describe('BluetoothService', () => {
       const inquirePromise = service
         .inquireClassicDeviceInfo(0, 'x')
         .then(() => {
-          expect(mockNoble.startScanningAsync).toHaveBeenCalledTimes(2);
+          expect(mockNoble.startScanning).toHaveBeenCalledTimes(2);
         });
 
       expect(mockNoble.stopScanning).toHaveBeenCalledTimes(1);
@@ -265,7 +269,7 @@ Requesting information ...
     it('should only setup noble listeners once', () => {
       service.onLowEnergyDiscovery(() => undefined);
       service.onLowEnergyDiscovery(() => undefined);
-      expect(mockNoble.on).toHaveBeenCalledTimes(9);
+      expect(mockNoble.on).toHaveBeenCalledTimes(10);
     });
 
     it('should enable scanning when the adapter is inactive', () => {
@@ -274,7 +278,7 @@ Requesting information ...
 
       stateChangeHandler('poweredOn');
 
-      expect(mockNoble.startScanningAsync).toHaveBeenCalledTimes(1);
+      expect(mockNoble.startScanning).toHaveBeenCalledTimes(1);
     });
 
     it('should not enable scanning when the adapter is performing a Classic inquiry', () => {
@@ -285,12 +289,12 @@ Requesting information ...
       const execPromise = new Promise((r) => (execResolve = r));
       mockExec.mockReturnValue(execPromise);
       const inquirePromise = service.inquireClassicRssi(0, 'x').then(() => {
-        expect(mockNoble.startScanningAsync).toHaveBeenCalledTimes(1);
+        expect(mockNoble.startScanning).toHaveBeenCalledTimes(1);
       });
 
       stateChangeHandler('poweredOn');
 
-      expect(mockNoble.startScanningAsync).not.toHaveBeenCalled();
+      expect(mockNoble.startScanning).not.toHaveBeenCalled();
 
       execResolve({ stdout: '-1' });
 
@@ -306,7 +310,7 @@ Requesting information ...
       mockExec.mockReturnValue(execPromise);
       await service.inquireClassicRssi(1, 'x');
 
-      expect(mockNoble.startScanningAsync).toHaveBeenCalledTimes(1);
+      expect(mockNoble.startScanning).toHaveBeenCalledTimes(1);
       expect(mockNoble.stopScanning).not.toHaveBeenCalled();
     });
 
@@ -454,6 +458,8 @@ Requesting information ...
     });
 
     it('should reset the adapter if the disconnect fails', async () => {
+      service.onLowEnergyDiscovery(() => undefined);
+
       const peripheral = {
         state: 'connected',
         disconnectAsync: jest.fn().mockRejectedValue({ message: '' }),
@@ -463,7 +469,10 @@ Requesting information ...
         (peripheral as unknown) as Peripheral
       );
 
-      expect(mockNoble.reset).toHaveBeenCalled();
+      expect(mockExec).toHaveBeenCalledWith(
+        'hciconfig hci0 reset',
+        expect.anything()
+      );
     });
 
     it('should not try to disconnect from a peripheral that is not connected', async () => {
@@ -488,9 +497,9 @@ Requesting information ...
       const stateCallback = mockNoble.on.mock.calls.find(
         (call) => call[0] === 'stateChange'
       )[1];
-      const discoveryCallback = mockNoble.on.mock.calls.find(
+      const discoveryCallback = mockNoble.on.mock.calls.filter(
         (call) => call[0] === 'discover'
-      )[1];
+      )[1][1];
       await stateCallback('poweredOn');
       jest.resetAllMocks();
 

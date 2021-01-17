@@ -29,7 +29,9 @@ import { BluetoothService } from '../bluetooth/bluetooth.service';
 import { promiseWithTimeout } from '../../util/promises';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
-const APPLE_ADVERTISEMENT_ID = Buffer.from([0x4c, 0x00, 0x10]);
+const APPLE_ADVERTISEMENT_ID = Buffer.from([0x4c, 0x00]);
+
+type DeviceInfo = { modelName: string; appId: string };
 
 @Injectable() // parameters determined experimentally
 export class BluetoothLowEnergyService
@@ -113,6 +115,7 @@ export class BluetoothLowEnergyService
         tag.id,
         tag.name,
         tag.peripheral.id,
+        tag.discoverySuccessful,
         tag.isApp,
         tag.rssi,
         tag.measuredPower,
@@ -139,7 +142,7 @@ export class BluetoothLowEnergyService
    *
    * @param tag - Peripheral to connect to
    */
-  async discoverCompanionAppId(tag: Tag): Promise<string | null> {
+  async discoverCompanionAppId(tag: Tag): Promise<DeviceInfo | null> {
     let disconnectListener: () => void;
     const disconnectPromise = new Promise<string>((resolve) => {
       disconnectListener = () => resolve(null);
@@ -151,12 +154,12 @@ export class BluetoothLowEnergyService
     );
 
     try {
-      return await promiseWithTimeout<string>(
+      return await promiseWithTimeout<DeviceInfo>(
         Promise.race([
-          BluetoothLowEnergyService.readCompanionAppId(peripheral),
+          BluetoothLowEnergyService.readDeviceInfo(peripheral),
           disconnectPromise,
         ]),
-        15 * 1000
+        5 * 1000
       );
     } catch (e) {
       this.logger.error(
@@ -180,8 +183,11 @@ export class BluetoothLowEnergyService
     let sensor: BluetoothLowEnergyPresenceSensor;
     const hasBattery = event.batteryLevel !== undefined;
 
-    if (event.isApp) {
-      this.handleAppDiscovery(event.peripheralId, event.tagId);
+    if (event.discoverySuccessful) {
+      this.handleAppDiscovery(
+        event.peripheralId,
+        event.isApp ? event.tagId : null
+      );
     }
 
     if (this.entitiesService.has(sensorId)) {
@@ -463,11 +469,11 @@ export class BluetoothLowEnergyService
     // more info: http://www.davidgyoungtech.com/2020/05/07/hacking-the-overflow-area
     // manufacturer data seems broken in noble though
     if (
+      this.bluetoothService.lowEnergyScanUptime > 15 * 1000 &&
       tag.peripheral.connectable &&
       tag.peripheral?.advertisement?.manufacturerData
-        ?.slice(0, 3)
-        .equals(APPLE_ADVERTISEMENT_ID) &&
-      tag.peripheral.advertisement.manufacturerData.length > 6
+        ?.slice(0, 2)
+        .equals(APPLE_ADVERTISEMENT_ID)
     ) {
       if (
         !this.companionAppTags.has(tag.id) &&
@@ -477,15 +483,37 @@ export class BluetoothLowEnergyService
 
         try {
           this.logger.log(`Attempting app discovery for tag ${tag.id}`);
-          const appId = await this.discoverCompanionAppId(tag);
+          const deviceInfo = await this.discoverCompanionAppId(tag);
 
-          if (appId) {
-            this.logger.log(
-              `Discovered companion app with ID ${appId} for tag ${tag.id}`
+          if (deviceInfo?.modelName) {
+            this.logger.debug(
+              `Tag ${tag.id} is advertised as ${deviceInfo.modelName}`
             );
           }
 
-          this.handleAppDiscovery(tag.id, appId);
+          if (deviceInfo?.appId) {
+            this.logger.log(
+              `Discovered companion app with ID ${deviceInfo.appId} for tag ${tag.id}`
+            );
+          }
+
+          if (
+            deviceInfo != null &&
+            !deviceInfo.appId &&
+            (deviceInfo.modelName?.startsWith('iPhone') ||
+              deviceInfo.modelName?.startsWith('iPad'))
+          ) {
+            this.logger.debug(
+              `Tag ${tag.id} could have the companion app, retrying in a minute`
+            );
+            this.companionAppDenylist.add(tag.id);
+            setTimeout(
+              () => this.companionAppDenylist.delete(tag.id),
+              60 * 1000
+            );
+          } else {
+            this.handleAppDiscovery(tag.id, deviceInfo?.appId);
+          }
         } catch (e) {
           if (e.message?.includes('already locked')) {
             this.logger.debug(
@@ -493,13 +521,9 @@ export class BluetoothLowEnergyService
             );
           } else {
             this.logger.warn(
-              `Temporarily denylisting ${tag.id} from app discovery due to error: ${e.message}`
+              `Denylisting ${tag.id} from app discovery due to error: ${e.message}`
             );
             this.companionAppDenylist.add(tag.id);
-            setTimeout(
-              () => this.companionAppDenylist.delete(tag.id),
-              3 * 60 * 1000
-            );
           }
 
           this.companionAppTags.delete(tag.id);
@@ -507,6 +531,7 @@ export class BluetoothLowEnergyService
       }
     }
 
+    tag.discoverySuccessful = this.companionAppTags.has(tag.id);
     const appId = this.companionAppTags.get(tag.id);
     if (appId != null) {
       tag.id = appId;
@@ -533,20 +558,22 @@ export class BluetoothLowEnergyService
   }
 
   /**
-   * Read companion app ID from a peripheral by looking at the relevant characteristic.
+   * Reads a characteristic value of a BLE peripheral as string.
    *
    * @param peripheral - peripheral to read from
+   * @param serviceUuid - UUID of the service that contains the characteristic
+   * @param characteristicUuid - UUID of the characteristic to read
    */
-  private static async readCompanionAppId(
-    peripheral: Peripheral
+  private static async readCharacteristic(
+    peripheral: Peripheral,
+    serviceUuid: string,
+    characteristicUuid: string
   ): Promise<string> {
-    const services = await peripheral.discoverServicesAsync([
-      '5403c8a75c9647e99ab859e373d875a7',
-    ]);
+    const services = await peripheral.discoverServicesAsync([serviceUuid]);
 
     if (services.length > 0) {
       const characteristics = await services[0].discoverCharacteristicsAsync([
-        '21c46f33e813440786012ad281030052',
+        characteristicUuid,
       ]);
 
       if (characteristics.length > 0) {
@@ -556,5 +583,28 @@ export class BluetoothLowEnergyService
     }
 
     return null;
+  }
+
+  /**
+   * Reads the model name and companion app id, if present.
+   * Either property may be null, which means that the information was not
+   * available.
+   *
+   * @param peripheral - BLE peripheral to read from
+   */
+  private static async readDeviceInfo(
+    peripheral: Peripheral
+  ): Promise<DeviceInfo> {
+    const appId = await this.readCharacteristic(
+      peripheral,
+      '5403c8a75c9647e99ab859e373d875a7',
+      '21c46f33e813440786012ad281030052'
+    );
+    const modelName = await this.readCharacteristic(peripheral, '180a', '2a24');
+
+    return {
+      appId,
+      modelName,
+    };
   }
 }
