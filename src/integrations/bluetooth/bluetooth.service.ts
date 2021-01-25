@@ -55,14 +55,6 @@ export class BluetoothService {
   }
 
   /**
-   * Returns the number of milliseconds that the current BLE scan has been
-   * running. Returns 0 if currently no scan is running.
-   */
-  get lowEnergyScanUptime(): number {
-    return this.scanStartedAt ? Date.now() - this.scanStartedAt.getTime() : 0;
-  }
-
-  /**
    * Registers a callback function that will be invoked when a
    * Bluetooth Low Energy peripheral advertisement was received.
    *

@@ -464,16 +464,18 @@ export class BluetoothLowEnergyService
    * @param tag - Tag that should be overridden
    */
   protected async applyCompanionAppOverride(tag: Tag): Promise<Tag> {
+    const manufacturerData = tag.peripheral?.advertisement?.manufacturerData;
+
     // only Apple devices are supported for the companion app
     // a more sophisticated detection could be possible by looking at the overflow area
     // more info: http://www.davidgyoungtech.com/2020/05/07/hacking-the-overflow-area
     // manufacturer data seems broken in noble though
     if (
-      this.bluetoothService.lowEnergyScanUptime > 15 * 1000 &&
       tag.peripheral.connectable &&
-      tag.peripheral?.advertisement?.manufacturerData
-        ?.slice(0, 2)
-        .equals(APPLE_ADVERTISEMENT_ID)
+      BluetoothLowEnergyService.isAppleDevice(manufacturerData) &&
+      BluetoothLowEnergyService.overflowContainsCompanionApp(
+        BluetoothLowEnergyService.extractOverflowArea(manufacturerData)
+      )
     ) {
       if (
         !this.companionAppTags.has(tag.id) &&
@@ -487,13 +489,21 @@ export class BluetoothLowEnergyService
 
           if (deviceInfo?.modelName) {
             this.logger.debug(
-              `Tag ${tag.id} is advertised as ${deviceInfo.modelName}`
+              `Tag ${tag.id} is advertised as ${
+                deviceInfo.modelName
+              } with manufacturer data ${tag.peripheral.advertisement.manufacturerData.toString(
+                'hex'
+              )}`
             );
           }
 
           if (deviceInfo?.appId) {
             this.logger.log(
-              `Discovered companion app with ID ${deviceInfo.appId} for tag ${tag.id}`
+              `Discovered companion app with ID ${deviceInfo.appId} for tag ${
+                tag.id
+              } with manufacturer data ${tag.peripheral.advertisement.manufacturerData.toString(
+                'hex'
+              )}`
             );
           }
 
@@ -555,6 +565,44 @@ export class BluetoothLowEnergyService
       this.companionAppTags.set(tagId, appId);
       this.companionAppDenylist.delete(tagId);
     }
+  }
+
+  /**
+   * Checks if an advertisements is from an Apple device.
+   *
+   * @param manufacturerData - Manufacturer Data sent within in BLE advertisement
+   */
+  private static isAppleDevice(manufacturerData: Buffer): boolean {
+    return manufacturerData?.slice(0, 2).equals(APPLE_ADVERTISEMENT_ID);
+  }
+
+  /**
+   * Extracts the overflow area from the manufacturer data if present.
+   * If not present it will return null.
+   * More info: http://www.davidgyoungtech.com/2020/05/07/hacking-the-overflow-area
+   *
+   * @param manufacturerData - Manufacturer Data sent within in BLE advertisement
+   */
+  private static extractOverflowArea(manufacturerData: Buffer): Buffer | null {
+    if (
+      manufacturerData == null ||
+      manufacturerData.length < 19 ||
+      manufacturerData.readUInt8(manufacturerData.length - 17) != 0x01
+    ) {
+      return null;
+    }
+
+    return manufacturerData.slice(manufacturerData.length - 16);
+  }
+
+  /**
+   * Checks if the advertisement contains an overflow area.
+   * Determined by the 4th bit of the 3rd byte.
+   *
+   * @param overflowArea - Overflow Area part of the Manufacturer Data
+   */
+  private static overflowContainsCompanionApp(overflowArea: Buffer): boolean {
+    return overflowArea != null && ((overflowArea.readUInt8(3) >> 4) & 1) === 1;
   }
 
   /**
