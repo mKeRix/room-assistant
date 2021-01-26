@@ -198,7 +198,6 @@ describe('BluetoothLowEnergyService', () => {
       'Test Beacon',
       'abcd1234',
       false,
-      false,
       -50,
       -52,
       0.7
@@ -234,7 +233,6 @@ describe('BluetoothLowEnergyService', () => {
       'Test Beacon',
       'abcd1234',
       false,
-      false,
       -59,
       -59,
       1
@@ -266,7 +264,6 @@ describe('BluetoothLowEnergyService', () => {
       '123-123',
       'Test BLE Device',
       '123-123',
-      false,
       false,
       -81,
       -59,
@@ -383,7 +380,6 @@ describe('BluetoothLowEnergyService', () => {
       'abcd',
       'Test BLE Device',
       'abcd',
-      false,
       false,
       -81,
       -80,
@@ -773,7 +769,6 @@ describe('BluetoothLowEnergyService', () => {
         'Test',
         'test',
         false,
-        false,
         -80,
         -50,
         2
@@ -796,7 +791,6 @@ describe('BluetoothLowEnergyService', () => {
         'new',
         'New Tag',
         'new',
-        false,
         false,
         -80,
         -50,
@@ -833,7 +827,6 @@ describe('BluetoothLowEnergyService', () => {
         'new',
         'New Tag',
         'new',
-        false,
         false,
         -80,
         -50,
@@ -872,7 +865,6 @@ describe('BluetoothLowEnergyService', () => {
         'Test',
         'test',
         false,
-        false,
         -80,
         -50,
         2
@@ -889,7 +881,6 @@ describe('BluetoothLowEnergyService', () => {
         'Test',
         'test',
         false,
-        false,
         -40,
         -45,
         2
@@ -901,7 +892,6 @@ describe('BluetoothLowEnergyService', () => {
         'test',
         'Test',
         'test',
-        false,
         false,
         -70,
         -50,
@@ -958,7 +948,15 @@ describe('BluetoothLowEnergyService', () => {
     const APPLE_MANUFACTURER_DATA = Buffer.from([
       0x4c,
       0x00,
+      0x01,
+      0x00,
+      0x00,
+      0x00,
       0x10,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
       0x00,
       0x00,
       0x00,
@@ -1019,9 +1017,7 @@ describe('BluetoothLowEnergyService', () => {
         .mockImplementation(() => undefined);
       jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
       jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
-      jest
-        .spyOn(service, 'discoverCompanionAppId')
-        .mockResolvedValue({ appId: 'app-id', modelName: null });
+      jest.spyOn(service, 'discoverCompanionAppId').mockResolvedValue('app-id');
 
       await service.handleDiscovery({
         id: 'abcd1234',
@@ -1087,7 +1083,7 @@ describe('BluetoothLowEnergyService', () => {
       jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
       const discoverSpy = jest
         .spyOn(service, 'discoverCompanionAppId')
-        .mockResolvedValue({ appId: 'app-id', modelName: null });
+        .mockResolvedValue('app-id');
 
       const peripheral = {
         id: 'abcd1234',
@@ -1112,9 +1108,7 @@ describe('BluetoothLowEnergyService', () => {
         .mockImplementation(() => undefined);
       jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
       jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
-      jest
-        .spyOn(service, 'discoverCompanionAppId')
-        .mockResolvedValue({ appId: 'app-id', modelName: null });
+      jest.spyOn(service, 'discoverCompanionAppId').mockResolvedValue('app-id');
 
       await service.handleDiscovery({
         id: 'abcd1234',
@@ -1151,7 +1145,6 @@ describe('BluetoothLowEnergyService', () => {
           'app-id',
           'Test',
           'peripheral-id',
-          true,
           true,
           -80,
           -50,
@@ -1226,9 +1219,7 @@ describe('BluetoothLowEnergyService', () => {
 
       const actual = await service.discoverCompanionAppId(new Tag(peripheral));
 
-      expect(actual).toMatchObject({
-        appId: 'app-id',
-      });
+      expect(actual).toBe('app-id');
     });
 
     it('should return null if device does not have characteristic', async () => {
@@ -1246,6 +1237,7 @@ describe('BluetoothLowEnergyService', () => {
         },
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
         removeListener: jest.fn(),
+        once: jest.fn(),
       } as unknown) as Peripheral;
 
       bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
@@ -1267,6 +1259,7 @@ describe('BluetoothLowEnergyService', () => {
         },
         discoverServicesAsync: jest.fn().mockResolvedValue([]),
         removeListener: jest.fn(),
+        once: jest.fn(),
       } as unknown) as Peripheral;
 
       bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
@@ -1293,6 +1286,7 @@ describe('BluetoothLowEnergyService', () => {
         },
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
         removeListener: jest.fn(),
+        once: jest.fn(),
       } as unknown) as Peripheral;
 
       bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
@@ -1322,6 +1316,7 @@ describe('BluetoothLowEnergyService', () => {
         },
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
         removeListener: jest.fn(),
+        once: jest.fn(),
       } as unknown) as Peripheral;
 
       bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
@@ -1350,6 +1345,7 @@ describe('BluetoothLowEnergyService', () => {
         },
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
         removeListener: jest.fn(),
+        once: jest.fn(),
       } as unknown) as Peripheral;
 
       bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
