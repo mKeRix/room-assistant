@@ -41,7 +41,7 @@ export class BluetoothService {
   private readonly logger: Logger = new Logger(BluetoothService.name);
   private readonly classicConfig: BluetoothClassicConfig;
   private readonly adapters = new BluetoothAdapterMap();
-  private lowEnergyAdapterId: number;
+  private _lowEnergyAdapterId: number;
   private lastLowEnergyDiscovery: Date;
   private scanStartedAt?: Date;
 
@@ -55,13 +55,43 @@ export class BluetoothService {
   }
 
   /**
+   * Returns the time in milliseconds since the last discovery or since the
+   * scan state started if no discovery was made yet.
+   * Returns null if the time is unknown.
+   */
+  private get timeSinceLastDiscovery(): number | null {
+    if (
+      this._lowEnergyAdapterId == null ||
+      !['inactive', 'scan'].includes(
+        this.adapters.getState(this._lowEnergyAdapterId)
+      )
+    ) {
+      return null;
+    }
+
+    const timestamp =
+      this.lastLowEnergyDiscovery == null
+        ? this.adapters.get(this._lowEnergyAdapterId).startedAt
+        : this.lastLowEnergyDiscovery;
+    return Date.now() - timestamp.getTime();
+  }
+
+  /**
+   * Returns the ID of the adapter that is used for BLE.
+   * Returns null if BLE was not setup yet.
+   */
+  get lowEnergyAdapterId(): number | undefined {
+    return this._lowEnergyAdapterId;
+  }
+
+  /**
    * Registers a callback function that will be invoked when a
    * Bluetooth Low Energy peripheral advertisement was received.
    *
    * @param callback - Callback function that receives a peripheral
    */
   onLowEnergyDiscovery(callback: (peripheral: Peripheral) => void): void {
-    if (this.lowEnergyAdapterId == undefined) {
+    if (this._lowEnergyAdapterId == undefined) {
       this.setupNoble();
     }
 
@@ -90,7 +120,7 @@ export class BluetoothService {
     this.logger.debug(
       `Connecting to BLE device at address ${peripheral.address}`
     );
-    this.lockAdapter(this.lowEnergyAdapterId);
+    this.lockAdapter(this._lowEnergyAdapterId);
 
     peripheral.once('disconnect', (e) => {
       if (e) {
@@ -101,7 +131,7 @@ export class BluetoothService {
         );
       }
 
-      this.unlockAdapter(this.lowEnergyAdapterId);
+      this.unlockAdapter(this._lowEnergyAdapterId);
     });
 
     try {
@@ -138,7 +168,7 @@ export class BluetoothService {
         `Failed to disconnect from ${peripheral.address}: ${e.message}`,
         e.trace
       );
-      this.resetHciDevice(this.lowEnergyAdapterId);
+      this.resetHciDevice(this._lowEnergyAdapterId);
     }
   }
 
@@ -250,7 +280,7 @@ export class BluetoothService {
   /**
    * Reset the hci (Bluetooth) device.
    */
-  protected async resetHciDevice(adapterId: number): Promise<void> {
+  async resetHciDevice(adapterId: number): Promise<void> {
     if (this.adapters.getState(adapterId) === 'resetting') {
       throw new Error('Adapter is already resetting');
     }
@@ -258,7 +288,7 @@ export class BluetoothService {
     this.logger.debug(`Resetting HCI adapter ${adapterId}`);
     this.adapters.setState(adapterId, 'resetting');
 
-    if (this.lowEnergyAdapterId === adapterId) {
+    if (this._lowEnergyAdapterId === adapterId) {
       noble.stopScanning();
     }
 
@@ -270,7 +300,7 @@ export class BluetoothService {
       this.logger.error(e.message);
     }
 
-    if (this.lowEnergyAdapterId === adapterId) {
+    if (this._lowEnergyAdapterId === adapterId) {
       await sleep(5000);
 
       try {
@@ -279,8 +309,8 @@ export class BluetoothService {
       } catch (e) {
         this.logger.error('Failed to reset low energy library', e.stack);
       } finally {
-        if (this.adapters.getState(this.lowEnergyAdapterId) === 'resetting') {
-          this.adapters.setState(this.lowEnergyAdapterId, 'inactive');
+        if (this.adapters.getState(this._lowEnergyAdapterId) === 'resetting') {
+          this.adapters.setState(this._lowEnergyAdapterId, 'inactive');
         }
       }
     } else {
@@ -326,7 +356,7 @@ export class BluetoothService {
     this.logger.debug(`Unlocking adapter ${adapterId}`);
     this.adapters.setState(adapterId, 'inactive');
 
-    if (adapterId == this.lowEnergyAdapterId) {
+    if (adapterId == this._lowEnergyAdapterId) {
       await this.handleAdapterStateChange(noble.state);
     }
   }
@@ -355,21 +385,11 @@ export class BluetoothService {
    */
   @Interval(15 * 1000)
   async verifyLowEnergyScanner(): Promise<void> {
-    if (
-      this.lowEnergyAdapterId != undefined &&
-      ['scan', 'inactive'].includes(
-        this.adapters.getState(this.lowEnergyAdapterId)
-      ) &&
-      this.adapters.get(this.lowEnergyAdapterId).startedAt.getTime() <
-        Date.now() - 15 * 1000 &&
-      this.lastLowEnergyDiscovery != undefined &&
-      this.lastLowEnergyDiscovery.getTime() <
-        Date.now() - SCAN_NO_PERIPHERAL_TIMEOUT
-    ) {
+    if (this.timeSinceLastDiscovery > SCAN_NO_PERIPHERAL_TIMEOUT) {
       this.logger.warn(
         'Did not detect any low energy advertisements in a while, resetting'
       );
-      await this.resetHciDevice(this.lowEnergyAdapterId);
+      await this.resetHciDevice(this._lowEnergyAdapterId);
     }
   }
 
@@ -377,14 +397,14 @@ export class BluetoothService {
    * Sets up Noble hooks.
    */
   private setupNoble(): void {
-    this.lowEnergyAdapterId = parseInt(process.env.NOBLE_HCI_DEVICE_ID) || 0;
-    this.adapters.setState(this.lowEnergyAdapterId, 'inactive');
+    this._lowEnergyAdapterId = parseInt(process.env.NOBLE_HCI_DEVICE_ID) || 0;
+    this.adapters.setState(this._lowEnergyAdapterId, 'inactive');
 
     const debouncedScanRecovery = _.debounce(
       async () => {
-        if (this.adapters.getState(this.lowEnergyAdapterId) === 'scan') {
+        if (this.adapters.getState(this._lowEnergyAdapterId) === 'scan') {
           this.logger.debug('Trying to recover low energy scanner');
-          await this.resetHciDevice(this.lowEnergyAdapterId);
+          await this.resetHciDevice(this._lowEnergyAdapterId);
         }
       },
       10 * 1000,
@@ -412,10 +432,10 @@ export class BluetoothService {
    */
   private handleScanStart(): void {
     this.logger.debug(
-      `Started scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
+      `Started scanning for BLE peripherals on adapter ${this._lowEnergyAdapterId}`
     );
     this.scanStartedAt = new Date();
-    this.adapters.setState(this.lowEnergyAdapterId, 'scan');
+    this.adapters.setState(this._lowEnergyAdapterId, 'scan');
   }
 
   /**
@@ -423,11 +443,11 @@ export class BluetoothService {
    */
   private handleScanStop(): void {
     this.logger.debug(
-      `Stopped scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
+      `Stopped scanning for BLE peripherals on adapter ${this._lowEnergyAdapterId}`
     );
     this.scanStartedAt = null;
-    if (this.adapters.getState(this.lowEnergyAdapterId) === 'scan') {
-      this.adapters.setState(this.lowEnergyAdapterId, 'inactive');
+    if (this.adapters.getState(this._lowEnergyAdapterId) === 'scan') {
+      this.adapters.setState(this._lowEnergyAdapterId, 'inactive');
     }
   }
 
@@ -437,7 +457,7 @@ export class BluetoothService {
   private handleDiscover(): void {
     this.lastLowEnergyDiscovery = new Date();
     this.advertisementReceivedCounter.inc();
-    const adapterState = this.adapters.get(this.lowEnergyAdapterId);
+    const adapterState = this.adapters.get(this._lowEnergyAdapterId);
     if (
       adapterState.state === 'inactive' ||
       (adapterState.state === 'resetting' &&
@@ -454,23 +474,23 @@ export class BluetoothService {
    */
   private async handleAdapterStateChange(state: string): Promise<void> {
     this.logger.debug(
-      `Adapter ${this.lowEnergyAdapterId} went into state ${state}`
+      `Adapter ${this._lowEnergyAdapterId} went into state ${state}`
     );
-    const adapterState = this.adapters.getState(this.lowEnergyAdapterId);
+    const adapterState = this.adapters.getState(this._lowEnergyAdapterId);
 
     if (state === 'poweredOn') {
       if (['resetting', 'inactive'].includes(adapterState)) {
         this.logger.debug(
-          `Starting scanning for BLE peripherals on adapter ${this.lowEnergyAdapterId}`
+          `Starting scanning for BLE peripherals on adapter ${this._lowEnergyAdapterId}`
         );
 
         noble.startScanning([], true);
       }
     } else if (adapterState === 'scan') {
       this.logger.debug(
-        `Adapter ${this.lowEnergyAdapterId} is set to inactive`
+        `Adapter ${this._lowEnergyAdapterId} is set to inactive`
       );
-      this.adapters.setState(this.lowEnergyAdapterId, 'inactive');
+      this.adapters.setState(this._lowEnergyAdapterId, 'inactive');
     }
   }
 }

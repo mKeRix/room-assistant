@@ -27,11 +27,10 @@ import { RoomPresenceProxyHandler } from '../room-presence/room-presence.proxy';
 import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presence.sensor';
 import { BluetoothService } from '../bluetooth/bluetooth.service';
 import { promiseWithTimeout } from '../../util/promises';
+import * as util from 'util';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 const APPLE_ADVERTISEMENT_ID = Buffer.from([0x4c, 0x00]);
-
-type DeviceInfo = { modelName: string; appId: string };
 
 @Injectable() // parameters determined experimentally
 export class BluetoothLowEnergyService
@@ -115,7 +114,6 @@ export class BluetoothLowEnergyService
         tag.id,
         tag.name,
         tag.peripheral.id,
-        tag.discoverySuccessful,
         tag.isApp,
         tag.rssi,
         tag.measuredPower,
@@ -142,34 +140,40 @@ export class BluetoothLowEnergyService
    *
    * @param tag - Peripheral to connect to
    */
-  async discoverCompanionAppId(tag: Tag): Promise<DeviceInfo | null> {
-    let disconnectListener: () => void;
-    const disconnectPromise = new Promise<string>((resolve) => {
-      disconnectListener = () => resolve(null);
-      tag.peripheral.once('disconnect', disconnectListener);
-    });
+  async discoverCompanionAppId(tag: Tag): Promise<string | null> {
+    const disconnectPromise = util
+      .promisify(tag.peripheral.once)
+      .bind(tag.peripheral)('disconnect');
 
     const peripheral = await this.bluetoothService.connectLowEnergyDevice(
       tag.peripheral
     );
 
     try {
-      return await promiseWithTimeout<DeviceInfo>(
+      return await promiseWithTimeout<string | null>(
         Promise.race([
-          BluetoothLowEnergyService.readDeviceInfo(peripheral),
+          BluetoothLowEnergyService.readCompanionAppId(peripheral),
           disconnectPromise,
         ]),
-        5 * 1000
+        15 * 1000
       );
     } catch (e) {
       this.logger.error(
         `Failed to search for companion app at tag ${tag.id}: ${e.message}`,
         e.trace
       );
+
+      if (e.message === 'timed out') {
+        this.bluetoothService.resetHciDevice(
+          this.bluetoothService.lowEnergyAdapterId
+        );
+      }
+
       return null;
     } finally {
-      tag.peripheral.removeListener('disconnect', disconnectListener);
-      this.bluetoothService.disconnectLowEnergyDevice(tag.peripheral);
+      if (!['disconnecting', 'disconnected'].includes(tag.peripheral.state)) {
+        this.bluetoothService.disconnectLowEnergyDevice(tag.peripheral);
+      }
     }
   }
 
@@ -183,11 +187,8 @@ export class BluetoothLowEnergyService
     let sensor: BluetoothLowEnergyPresenceSensor;
     const hasBattery = event.batteryLevel !== undefined;
 
-    if (event.discoverySuccessful) {
-      this.handleAppDiscovery(
-        event.peripheralId,
-        event.isApp ? event.tagId : null
-      );
+    if (event.isApp) {
+      this.handleAppDiscovery(event.peripheralId, event.tagId);
     }
 
     if (this.entitiesService.has(sensorId)) {
@@ -471,77 +472,46 @@ export class BluetoothLowEnergyService
     // more info: http://www.davidgyoungtech.com/2020/05/07/hacking-the-overflow-area
     // manufacturer data seems broken in noble though
     if (
+      !this.companionAppTags.has(tag.id) &&
+      !this.companionAppDenylist.has(tag.id) &&
       tag.peripheral.connectable &&
       BluetoothLowEnergyService.isAppleDevice(manufacturerData) &&
       BluetoothLowEnergyService.overflowContainsCompanionApp(
         BluetoothLowEnergyService.extractOverflowArea(manufacturerData)
       )
     ) {
-      if (
-        !this.companionAppTags.has(tag.id) &&
-        !this.companionAppDenylist.has(tag.id)
-      ) {
-        this.companionAppTags.set(tag.id, null);
+      let appId: string;
 
-        try {
-          this.logger.log(`Attempting app discovery for tag ${tag.id}`);
-          const deviceInfo = await this.discoverCompanionAppId(tag);
+      this.logger.log(`Attempting app discovery for tag ${tag.id}`);
+      this.logger.debug(
+        `Tag ${
+          tag.id
+        } seems to broadcast the app with manufacturer data ${tag.peripheral.advertisement.manufacturerData.toString(
+          'hex'
+        )}`
+      );
 
-          if (deviceInfo?.modelName) {
-            this.logger.debug(
-              `Tag ${tag.id} is advertised as ${
-                deviceInfo.modelName
-              } with manufacturer data ${tag.peripheral.advertisement.manufacturerData.toString(
-                'hex'
-              )}`
-            );
-          }
+      try {
+        appId = await this.discoverCompanionAppId(tag);
+      } catch (e) {
+        this.logger.warn(
+          `Failed to discover companion app ID due to error: ${e.message}`
+        );
+      }
 
-          if (deviceInfo?.appId) {
-            this.logger.log(
-              `Discovered companion app with ID ${deviceInfo.appId} for tag ${
-                tag.id
-              } with manufacturer data ${tag.peripheral.advertisement.manufacturerData.toString(
-                'hex'
-              )}`
-            );
-          }
-
-          if (
-            deviceInfo != null &&
-            !deviceInfo.appId &&
-            (deviceInfo.modelName?.startsWith('iPhone') ||
-              deviceInfo.modelName?.startsWith('iPad'))
-          ) {
-            this.logger.debug(
-              `Tag ${tag.id} could have the companion app, retrying in a minute`
-            );
-            this.companionAppDenylist.add(tag.id);
-            setTimeout(
-              () => this.companionAppDenylist.delete(tag.id),
-              60 * 1000
-            );
-          } else {
-            this.handleAppDiscovery(tag.id, deviceInfo?.appId);
-          }
-        } catch (e) {
-          if (e.message?.includes('already locked')) {
-            this.logger.debug(
-              `Unable to retrieve companion ID, retrying on next advertisement: ${e.message}`
-            );
-          } else {
-            this.logger.warn(
-              `Denylisting ${tag.id} from app discovery due to error: ${e.message}`
-            );
-            this.companionAppDenylist.add(tag.id);
-          }
-
-          this.companionAppTags.delete(tag.id);
-        }
+      if (appId != null) {
+        this.logger.log(
+          `Discovered companion app with ID ${appId} for tag ${tag.id}`
+        );
+        this.handleAppDiscovery(tag.id, appId);
+      } else {
+        this.logger.debug(
+          `Tag ${tag.id} should have the companion app, retrying in a minute`
+        );
+        this.banDeviceFromDiscovery(tag.id, 60 * 1000);
       }
     }
 
-    tag.discoverySuccessful = this.companionAppTags.has(tag.id);
     const appId = this.companionAppTags.get(tag.id);
     if (appId != null) {
       tag.id = appId;
@@ -565,6 +535,17 @@ export class BluetoothLowEnergyService
       this.companionAppTags.set(tagId, appId);
       this.companionAppDenylist.delete(tagId);
     }
+  }
+
+  /**
+   * Temporarily bans a device from the app discovery process.
+   *
+   * @param tagId - ID of the tag that should be banned
+   * @param duration - Time in milliseconds that the ban should be active for
+   */
+  private banDeviceFromDiscovery(tagId: string, duration: number) {
+    this.companionAppDenylist.add(tagId);
+    setTimeout(() => this.companionAppDenylist.delete(tagId), duration);
   }
 
   /**
@@ -616,7 +597,7 @@ export class BluetoothLowEnergyService
     peripheral: Peripheral,
     serviceUuid: string,
     characteristicUuid: string
-  ): Promise<string> {
+  ): Promise<string | null> {
     const services = await peripheral.discoverServicesAsync([serviceUuid]);
 
     if (services.length > 0) {
@@ -634,25 +615,18 @@ export class BluetoothLowEnergyService
   }
 
   /**
-   * Reads the model name and companion app id, if present.
-   * Either property may be null, which means that the information was not
-   * available.
+   * Reads the companion app ID from the pre-defined characteristic.
+   * May return null, which means no ID was found.
    *
    * @param peripheral - BLE peripheral to read from
    */
-  private static async readDeviceInfo(
+  private static readCompanionAppId(
     peripheral: Peripheral
-  ): Promise<DeviceInfo> {
-    const appId = await this.readCharacteristic(
+  ): Promise<string | null> {
+    return this.readCharacteristic(
       peripheral,
       '5403c8a75c9647e99ab859e373d875a7',
       '21c46f33e813440786012ad281030052'
     );
-    const modelName = await this.readCharacteristic(peripheral, '180a', '2a24');
-
-    return {
-      appId,
-      modelName,
-    };
   }
 }

@@ -117,7 +117,7 @@
     "webpack": "^4.45.0"
   },
   "optionalDependencies": {
-    "@mkerix/noble": "1.9.2-10.4",
+    "@mkerix/noble": "1.9.2-10.5",
     "i2c-bus": "^5.1.0",
     "mdns": "^2.5.1",
     "onoff": "^6.0.0",

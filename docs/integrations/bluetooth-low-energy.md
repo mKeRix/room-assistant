@@ -29,6 +29,7 @@ If you want to run room-assistant without root privileges (as it is recommended)
 
 ```shell
 sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
+sudo setcap cap_net_admin+eip $(eval readlink -f `which hciconfig`)
 ```
 
 ### Running with Docker
