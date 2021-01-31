@@ -48,6 +48,19 @@ You can track iOS devices (iPhones, iPads) with this integration using our compa
 
 The app is currently in beta, you can join it through TestFlight with this link: https://testflight.apple.com/join/OpCkeHf8.
 
+It is recommended to raise the `timeout` setting to at least `60` when using the companion app, as the signal may not always be constant.
+
+::: details Example Config
+
+```yaml
+bluetoothLowEnergy:
+  timeout: 60
+  allowlist:
+  - 'UUID-LIKE-IN-THE-APP'
+```
+
+:::
+
 ## Settings
 
 | Name              | Type                            | Default  | Description                                                  |
