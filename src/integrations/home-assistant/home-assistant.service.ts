@@ -135,25 +135,18 @@ export class HomeAssistantService
 
     this.entityConfigs.set(combinedId, config);
 
-    if (config instanceof DeviceTrackerConfig) {
-      // auto discovery not supported by Home Assistant yet
-      this.logger.log(
-        `Device tracker requires manual setup in Home Assistant with topic: ${config.stateTopic}`
-      );
-    } else {
-      // camera entities do not support stateTopic
-      const message = this.formatMessage(
-        config instanceof CameraConfig ? _.omit(config, ['stateTopic']) : config
-      );
+    // camera entities do not support stateTopic
+    const message = this.formatMessage(
+      config instanceof CameraConfig ? _.omit(config, ['stateTopic']) : config
+    );
 
-      this.logger.debug(
-        `Registering entity ${config.uniqueId} under ${config.configTopic}`
-      );
-      this.mqttClient.publish(config.configTopic, JSON.stringify(message), {
-        qos: 0,
-        retain: true,
-      });
-    }
+    this.logger.debug(
+      `Registering entity ${config.uniqueId} under ${config.configTopic}`
+    );
+    this.mqttClient.publish(config.configTopic, JSON.stringify(message), {
+      qos: 0,
+      retain: true,
+    });
 
     this.mqttClient.publish(config.availabilityTopic, config.payloadAvailable, {
       qos: 0,
