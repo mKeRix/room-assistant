@@ -44,10 +44,12 @@ jest.useFakeTimers();
 describe('BluetoothLowEnergyService', () => {
   let service: BluetoothLowEnergyService;
   const bluetoothService = {
+    lowEnergyAdapterId: 0,
     lowEnergyScanUptime: 16 * 1000,
     onLowEnergyDiscovery: jest.fn(),
     connectLowEnergyDevice: jest.fn(),
     disconnectLowEnergyDevice: jest.fn(),
+    resetHciDevice: jest.fn(),
   };
   const clusterService = {
     on: jest.fn(),
@@ -489,6 +491,7 @@ describe('BluetoothLowEnergyService', () => {
     mockConfig.allowlist = ['vip-id', 'vip2-id'];
 
     expect(service.isOnAllowlist('vip-id')).toBeTruthy();
+    expect(service.isOnAllowlist('VIP2-id')).toBeTruthy();
     expect(service.isOnAllowlist('random-id')).toBeFalsy();
   });
 
@@ -545,6 +548,7 @@ describe('BluetoothLowEnergyService', () => {
     mockConfig.blacklist = ['vip-id', 'vip2-id'];
 
     expect(service.isOnDenylist('vip-id')).toBeTruthy();
+    expect(service.isOnDenylist('VIP2-id')).toBeTruthy();
     expect(service.isOnDenylist('random-id')).toBeFalsy();
   });
 
@@ -1011,6 +1015,52 @@ describe('BluetoothLowEnergyService', () => {
       expect(discoverSpy).not.toHaveBeenCalled();
     });
 
+    it('should ignore advertisements from devices without overflow area', async () => {
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      const discoverSpy = jest.spyOn(service, 'discoverCompanionAppId');
+
+      await service.handleDiscovery({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: Buffer.from([0x4c, 0x00, 0x00]),
+        },
+      } as Peripheral);
+
+      expect(discoverSpy).not.toHaveBeenCalled();
+    });
+
+    it('should ignore advertisements from devices that do not advertise the right service in the overflow area', async () => {
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      const discoverSpy = jest.spyOn(service, 'discoverCompanionAppId');
+      const manufacturerData = Buffer.from(APPLE_MANUFACTURER_DATA);
+      manufacturerData.set([0x01], 6);
+
+      await service.handleDiscovery({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData,
+        },
+      } as Peripheral);
+
+      expect(discoverSpy).not.toHaveBeenCalled();
+    });
+
     it('should override tag ids with companion app IDs', async () => {
       const handleDistanceSpy = jest
         .spyOn(service, 'handleNewDistance')
@@ -1164,7 +1214,7 @@ describe('BluetoothLowEnergyService', () => {
       expect(discoverSpy).not.toHaveBeenCalled();
     });
 
-    it('should denylist devices that time out from discovery attempts', async () => {
+    it('should temporarily denylist devices that error out from discovery attempts', async () => {
       jest.useFakeTimers('modern');
       jest
         .spyOn(service, 'handleNewDistance')
@@ -1173,7 +1223,7 @@ describe('BluetoothLowEnergyService', () => {
       jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
       const discoverSpy = jest
         .spyOn(service, 'discoverCompanionAppId')
-        .mockRejectedValue(new Error('timed out'));
+        .mockRejectedValue(new Error('expected for this test'));
 
       const peripheral = {
         id: 'abcd1234',
@@ -1190,6 +1240,42 @@ describe('BluetoothLowEnergyService', () => {
       await service.handleDiscovery(peripheral);
 
       expect(discoverSpy).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(1 * 60 * 1000);
+
+      await service.handleDiscovery(peripheral);
+
+      expect(discoverSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('should reset the adapter when discovery attempts time out', async () => {
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+
+      const peripheral = ({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        discoverServicesAsync: jest
+          .fn()
+          .mockRejectedValue(new Error('timed out')),
+        once: jest.fn(),
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+      } as unknown) as Peripheral;
+      bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
+
+      await service.handleDiscovery(peripheral);
+
+      expect(bluetoothService.resetHciDevice).toHaveBeenCalledWith(
+        bluetoothService.lowEnergyAdapterId
+      );
     });
 
     it('should discover the companion app ID from the well known characteristic', async () => {
@@ -1355,6 +1441,37 @@ describe('BluetoothLowEnergyService', () => {
       expect(bluetoothService.disconnectLowEnergyDevice).toHaveBeenCalledWith(
         peripheral
       );
+    });
+
+    it('should not disconnect from an already disconnecting peripheral', async () => {
+      const gattCharacteristic = {
+        readAsync: jest.fn().mockResolvedValue(Buffer.from('app-id', 'utf-8')),
+      };
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockResolvedValue([gattCharacteristic]),
+      };
+      const peripheral = ({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        removeListener: jest.fn(),
+        once: jest.fn(),
+        state: 'disconnecting',
+      } as unknown) as Peripheral;
+
+      bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
+
+      await service.discoverCompanionAppId(new Tag(peripheral));
+
+      expect(bluetoothService.disconnectLowEnergyDevice).not.toHaveBeenCalled();
     });
   });
 });
