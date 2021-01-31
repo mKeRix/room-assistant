@@ -40,3 +40,6 @@ docs/.vuepress/dist
 # Config
 config/*.yml
 !config/test.yml
+
+# Test Setup Utils
+update-test-instances.sh

@@ -24,7 +24,7 @@ export abstract class ThermopileOccupancyService {
    *
    * @returns Matrix of temperatures
    */
-  abstract async getPixelTemperatures(): Promise<number[][]>;
+  abstract getPixelTemperatures(): Promise<number[][]>;
 
   /**
    * Calculates the coordinates with human presence based on the temperatures.

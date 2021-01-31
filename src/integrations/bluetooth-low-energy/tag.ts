@@ -1,7 +1,8 @@
-import { Peripheral } from '@abandonware/noble';
+import { Peripheral } from '@mkerix/noble';
 import _ from 'lodash';
 
 export class Tag {
+  private _id;
   private _name;
 
   constructor(peripheral: Peripheral) {
@@ -14,9 +15,14 @@ export class Tag {
   peripheral: Peripheral;
   rssi: number;
   measuredPower: number;
+  isApp = false;
+
+  set id(id: string) {
+    this._id = id;
+  }
 
   get id(): string {
-    return this.peripheral.id;
+    return this._id || this.peripheral.id;
   }
 
   get name(): string {

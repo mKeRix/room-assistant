@@ -1,7 +1,7 @@
 FROM node:12-alpine as build
 ARG ROOM_ASSISTANT_VERSION=latest
 
-RUN apk add --no-cache python make g++ libusb-dev eudev-dev avahi-dev cairo-dev jpeg-dev pango-dev giflib-dev
+RUN apk add --no-cache python make g++ libusb-dev eudev-dev avahi-dev
 RUN npm install -g --unsafe-perm room-assistant@$ROOM_ASSISTANT_VERSION
 
 FROM node:12-alpine

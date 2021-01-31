@@ -142,6 +142,7 @@ describe('ThermopileOccupancyService', () => {
     await service.generateHeatmap(
       PRESENCE_TEMPERATURES,
       {
+        enabled: true,
         rotation: 90,
         minTemperature: 16,
         maxTemperature: 30,

@@ -1,5 +1,5 @@
 import { Tag } from './tag';
-import { Peripheral } from '@abandonware/noble';
+import { Peripheral } from '@mkerix/noble';
 
 export class IBeacon extends Tag {
   constructor(

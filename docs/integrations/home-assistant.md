@@ -18,10 +18,11 @@ room-assistant makes use of the [MQTT auto discovery](https://www.home-assistant
 
 ## Settings
 
-| Name          | Type                          | Default                 | Description                                 |
-| ------------- | ----------------------------- | ----------------------- | ------------------------------------------- |
-| `mqttUrl`     | String                        | `mqtt://localhost:1883` | Connection string for your MQTT broker.     |
-| `mqttOptions` | [MQTT Options](#mqtt-options) |                         | Additional options for the MQTT connection. |
+| Name             | Type                          | Default                 | Description                                                  |
+| ---------------- | ----------------------------- | ----------------------- | ------------------------------------------------------------ |
+| `mqttUrl`        | String                        | `mqtt://localhost:1883` | Connection string for your MQTT broker.                      |
+| `mqttOptions`    | [MQTT Options](#mqtt-options) |                         | Additional options for the MQTT connection.                  |
+| `sendAttributes` | Boolean                       | `true`                  | Whether entity attributes should be forwarded to Home Assistant or not. May be disabled to reduce the number of messages that Home Assistant needs to process. |
 
 ### MQTT Options
 

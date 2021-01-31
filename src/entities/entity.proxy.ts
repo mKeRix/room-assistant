@@ -15,6 +15,7 @@ export class EntityProxyHandler implements ProxyHandler<Entity> {
         new AttributesProxyHandler(
           target.id,
           target.distributed,
+          target.stateLocked,
           this.emitter,
           this.isLeader
         )
@@ -32,7 +33,7 @@ export class EntityProxyHandler implements ProxyHandler<Entity> {
     if (
       p === 'state' &&
       oldValue !== value &&
-      (!target.distributed || this.isLeader())
+      (!target.distributed || !target.stateLocked || this.isLeader())
     ) {
       this.emitter.emit('stateUpdate', target.id, value, target.distributed);
     }

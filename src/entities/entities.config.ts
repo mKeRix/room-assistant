@@ -10,6 +10,8 @@ export class EntityBehavior {
 export class DebounceOptions {
   wait?: number;
   maxWait?: number;
+  leading: boolean;
+  trailing?: boolean;
 }
 
 export class RollingAverageOptions {

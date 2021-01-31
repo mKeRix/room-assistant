@@ -1,10 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export abstract class Entity {
-  constructor(id: string, name: string, distributed = false) {
+  constructor(
+    id: string,
+    name: string,
+    distributed = false,
+    stateLocked = true
+  ) {
     this.id = id;
     this.name = name;
     this.distributed = distributed;
+    this.stateLocked = stateLocked;
   }
 
   readonly id: string;
@@ -19,4 +25,5 @@ export abstract class Entity {
   attributes: { [key: string]: any } = {};
 
   readonly distributed: boolean;
+  readonly stateLocked: boolean;
 }

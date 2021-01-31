@@ -6,6 +6,7 @@ export class AttributesProxyHandler
   constructor(
     private readonly entityId: string,
     private readonly distributed: boolean,
+    private readonly stateLocked: boolean,
     private readonly emitter: EntitiesEventEmitter,
     private readonly isLeader: () => boolean
   ) {}
@@ -19,7 +20,10 @@ export class AttributesProxyHandler
     const oldValue = target[p as string];
     target[p as string] = value;
 
-    if (!_.isEqual(value, oldValue) && (!this.distributed || this.isLeader())) {
+    if (
+      !_.isEqual(value, oldValue) &&
+      (!this.distributed || !this.stateLocked || this.isLeader())
+    ) {
       this.emitter.emit(
         'attributesUpdate',
         this.entityId,

@@ -1,6 +1,6 @@
 const mockExec = jest.fn();
 jest.mock(
-  '@abandonware/noble',
+  '@mkerix/noble',
   () => {
     return {};
   },
@@ -32,6 +32,7 @@ import { Device } from './device';
 import { DeviceTracker } from '../../entities/device-tracker';
 import * as util from 'util';
 
+jest.mock('mdns', () => ({}), { virtual: true });
 jest.mock('../room-presence/room-presence-distance.sensor');
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {

@@ -10,6 +10,8 @@ import { NestEmitterModule } from 'nest-emitter';
 import { EventEmitter } from 'events';
 import { WINSTON_LOGGER } from './logger';
 import { StatusModule } from './status/status.module';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { register } from 'prom-client';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 export const VERSION = require('../package.json').version;
@@ -17,6 +19,10 @@ export const CONFIGURED_INTEGRATIONS = c
   .get<string[]>('global.integrations')
   // lodash separates numbers in the case functions - we want them to stick together, hence we remove the dashes around numbers
   .map((id) => _.kebabCase(id).replace(/-([1-9]+)-/, '$1'));
+
+register.setDefaultLabels({
+  instanceName: c.get<string>('global.instanceName'),
+});
 
 @Module({
   imports: [
@@ -26,6 +32,7 @@ export const CONFIGURED_INTEGRATIONS = c
     StatusModule,
     ScheduleModule.forRoot(),
     NestEmitterModule.forRoot(new EventEmitter()),
+    PrometheusModule.register(),
     IntegrationsModule.register(CONFIGURED_INTEGRATIONS, WINSTON_LOGGER),
   ],
 })

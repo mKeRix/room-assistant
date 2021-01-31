@@ -30,7 +30,7 @@ import { Camera } from '../../entities/camera';
 import { CameraConfig } from './camera-config';
 import { EntitiesService } from '../../entities/entities.service';
 
-const PROPERTY_BLACKLIST = ['component', 'configTopic', 'commandStore'];
+const PROPERTY_DENYLIST = ['component', 'configTopic', 'commandStore'];
 
 @Injectable()
 export class HomeAssistantService
@@ -171,7 +171,9 @@ export class HomeAssistantService
       return;
     }
 
-    this.logger.debug(`Sending new state ${state} for ${config.uniqueId}`);
+    const logState = state instanceof Buffer ? '<binary>' : state;
+    this.logger.debug(`Sending new state ${logState} for ${config.uniqueId}`);
+
     this.mqttClient.publish(
       config.stateTopic,
       state instanceof Buffer ? state : String(state),
@@ -198,7 +200,7 @@ export class HomeAssistantService
     const config = this.entityConfigs.get(
       this.getCombinedId(entityId, distributed)
     );
-    if (config === undefined) {
+    if (config === undefined || !this.config.sendAttributes) {
       return;
     }
 
@@ -244,6 +246,13 @@ export class HomeAssistantService
         config.commandStore[command]();
       }
     }
+  }
+
+  /**
+   * Checks if room-assistant is connected to the MQTT broker.
+   */
+  isConnected(): boolean {
+    return this.mqttClient?.connected;
   }
 
   /**
@@ -349,7 +358,7 @@ export class HomeAssistantService
    * @returns Formatted message
    */
   protected formatMessage(message: object): object {
-    const filteredMessage = _.omit(message, PROPERTY_BLACKLIST);
+    const filteredMessage = _.omit(message, PROPERTY_DENYLIST);
     return this.deepMap(filteredMessage, (obj) => {
       return _.mapKeys(obj, (v, k) => {
         return _.snakeCase(k);

@@ -4,10 +4,12 @@ import {
   OnApplicationBootstrap,
   OnModuleInit,
 } from '@nestjs/common';
-import { Peripheral, Advertisement } from '@abandonware/noble';
+import { Peripheral, Advertisement } from '@mkerix/noble';
 import { EntitiesService } from '../../entities/entities.service';
 import { ConfigService } from '../../config/config.service';
 import { XiaomiMiSensorOptions } from './xiaomi-mi.config';
+import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
+import { Device } from '../home-assistant/device';
 import { makeId } from '../../util/id';
 import { SERVICE_DATA_UUID, ServiceData, Parser, EventTypes } from './parser';
 import { Sensor } from '../../entities/sensor';
@@ -63,33 +65,35 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
   /**
    * Record a measurement.
    *
-   * @param devName - The name of the device that took the measurement.
-   * @param kind - The kind of measurement.
+   * @param device - The device and associated information that took the measurement.
+   * @param kind - The kind of measurement (used to name the sensor e.g. "Temperature").
+   * @param devClass - The class of measurement (related to Home-Assistant device class e.g. "temperature").
    * @param units - The units of the measurement.
    * @param state - The current measurement.
    */
   private recordMeasure(
-    devName: string,
+    device: Device,
     kind: string,
+    devClass: string,
     units: string,
     state: number | string
   ): void {
-    this.logger.debug(`${devName}: ${kind}: ${state}${units}`);
-    const sensorName = `${devName} ${kind}`;
-    const id = makeId(sensorName);
+    this.logger.debug(`${device.name}: ${kind}: ${state}${units}`);
+    const id = makeId(`xiaomi ${device.identifiers} ${kind}`);
     let entity = this.entitiesService.get(id);
     if (!entity) {
       const customizations: Array<EntityCustomization<any>> = [
         {
           for: SensorConfig,
           overrides: {
-            deviceClass: kind,
+            deviceClass: devClass,
             unitOfMeasurement: units,
+            device: device,
           },
         },
       ];
       entity = this.entitiesService.add(
-        new Sensor(id, sensorName),
+        new Sensor(id, `${device.name} ${kind}`, true, false),
         customizations
       ) as Sensor;
     }
@@ -135,11 +139,22 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
       );
       return;
     }
+
+    const device: Device = {
+      name: options.name,
+      manufacturer: 'Xiaomi',
+      model: serviceData.productName,
+      swVersion: serviceData.version.toString(),
+      identifiers: peripheral.id,
+      viaDevice: DISTRIBUTED_DEVICE_ID,
+    };
+
     const event = serviceData.event;
     switch (serviceData.eventType) {
       case EventTypes.temperature: {
         this.recordMeasure(
-          options.name,
+          device,
+          'Temperature',
           'temperature',
           '°C',
           event.temperature
@@ -147,26 +162,28 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
         break;
       }
       case EventTypes.humidity: {
-        this.recordMeasure(options.name, 'humidity', '%', event.humidity);
+        this.recordMeasure(device, 'Humidity', 'humidity', '%', event.humidity);
         break;
       }
       case EventTypes.battery: {
-        this.recordMeasure(options.name, 'battery', '%', event.battery);
+        this.recordMeasure(device, 'Battery', 'battery', '%', event.battery);
         break;
       }
       case EventTypes.temperatureAndHumidity: {
         this.recordMeasure(
-          options.name,
+          device,
+          'Temperature',
           'temperature',
           '°C',
           event.temperature
         );
-        this.recordMeasure(options.name, 'humidity', '%', event.humidity);
+        this.recordMeasure(device, 'Humidity', 'humidity', '%', event.humidity);
         break;
       }
       case EventTypes.illuminance: {
         this.recordMeasure(
-          options.name,
+          device,
+          'Illuminance',
           'illuminance',
           'lx',
           event.illuminance
@@ -174,11 +191,17 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
         break;
       }
       case EventTypes.moisture: {
-        this.recordMeasure(options.name, 'humidity', '%', event.moisture);
+        this.recordMeasure(device, 'Moisture', undefined, '%', event.moisture);
         break;
       }
       case EventTypes.fertility: {
-        this.recordMeasure(options.name, null, 'µS/cm', event.fertility);
+        this.recordMeasure(
+          device,
+          'Conductivity',
+          undefined,
+          'µS/cm',
+          event.fertility
+        );
         break;
       }
       default: {

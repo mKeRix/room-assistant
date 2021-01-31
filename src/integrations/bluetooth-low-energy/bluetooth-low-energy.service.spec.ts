@@ -1,3 +1,4 @@
+jest.mock('mdns', () => ({}), { virtual: true });
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {
     return {
@@ -6,14 +7,14 @@ jest.mock('kalmanjs', () => {
   });
 });
 jest.mock(
-  '@abandonware/noble',
+  '@mkerix/noble',
   () => {
     return {};
   },
   { virtual: true }
 );
 
-import { Peripheral } from '@abandonware/noble';
+import { Peripheral } from '@mkerix/noble';
 import { ConfigService } from '../../config/config.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -37,13 +38,19 @@ import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import * as util from 'util';
 import { BluetoothService } from '../bluetooth/bluetooth.service';
 import { BluetoothModule } from '../bluetooth/bluetooth.module';
+import { Tag } from './tag';
 
 jest.useFakeTimers();
 
 describe('BluetoothLowEnergyService', () => {
   let service: BluetoothLowEnergyService;
   const bluetoothService = {
+    lowEnergyAdapterId: 0,
+    lowEnergyScanUptime: 16 * 1000,
     onLowEnergyDiscovery: jest.fn(),
+    connectLowEnergyDevice: jest.fn(),
+    disconnectLowEnergyDevice: jest.fn(),
+    resetHciDevice: jest.fn(),
   };
   const clusterService = {
     on: jest.fn(),
@@ -132,12 +139,12 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should warn if no whitelist has been configured', () => {
-    mockConfig.whitelist = ['abcd'];
+  it('should warn if no allowlist has been configured', () => {
+    mockConfig.allowlist = ['abcd'];
     service.onModuleInit();
     expect(loggerService.warn).not.toHaveBeenCalled();
 
-    mockConfig.whitelist = [];
+    mockConfig.allowlist = [];
     service.onModuleInit();
     expect(loggerService.warn).toHaveBeenCalled();
   });
@@ -156,11 +163,11 @@ describe('BluetoothLowEnergyService', () => {
     expect(service.isIBeacon(Buffer.from([123, 12, 51, 6]))).toBeFalsy();
   });
 
-  it('should ignore tags that are not iBeacons if only those should be processed', () => {
+  it('should ignore tags that are not iBeacons if only those should be processed', async () => {
     mockConfig.processIBeacon = true;
     mockConfig.onlyIBeacon = true;
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       advertisement: {
         manufacturerData: Buffer.from([1, 2, 3]),
       },
@@ -168,17 +175,17 @@ describe('BluetoothLowEnergyService', () => {
     expect(clusterService.publish).not.toHaveBeenCalled();
   });
 
-  it('should publish iBeacon distance changes', () => {
+  it('should publish iBeacon distance changes', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
 
     mockConfig.onlyIBeacon = true;
     mockConfig.processIBeacon = true;
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'abcd1234',
       rssi: -50,
       advertisement: {
@@ -192,6 +199,8 @@ describe('BluetoothLowEnergyService', () => {
       'test-instance',
       '2f234454cf6d4a0fadf2f4911ba9ffa6-1-2',
       'Test Beacon',
+      'abcd1234',
+      false,
       -50,
       -52,
       0.7
@@ -203,15 +212,15 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should not process iBeacon data if disabled in the config', () => {
+  it('should not process iBeacon data if disabled in the config', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
 
     mockConfig.processIBeacon = false;
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'abcd1234',
       rssi: -59,
       advertisement: {
@@ -225,6 +234,8 @@ describe('BluetoothLowEnergyService', () => {
       'test-instance',
       'abcd1234',
       'Test Beacon',
+      'abcd1234',
+      false,
       -59,
       -59,
       1
@@ -236,14 +247,14 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should publish distance changes for normal BLE devices', () => {
+  it('should publish distance changes for normal BLE devices', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '123-123',
       rssi: -81,
       advertisement: {
@@ -255,6 +266,8 @@ describe('BluetoothLowEnergyService', () => {
       'test-instance',
       '123-123',
       'Test BLE Device',
+      '123-123',
+      false,
       -81,
       -59,
       10.5
@@ -266,13 +279,13 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should ignore devices that are not on the whitelist', () => {
+  it('should ignore devices that are not on the allowlist', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    mockConfig.whitelist = ['123-1-1'];
+    mockConfig.allowlist = ['123-1-1'];
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '123-1-2',
       rssi: -82,
       advertisement: {},
@@ -281,14 +294,14 @@ describe('BluetoothLowEnergyService', () => {
     expect(clusterService.publish).not.toHaveBeenCalled();
   });
 
-  it('should not publish anything if the whitelist and blacklist are empty', () => {
+  it('should not publish anything if the allowlist and denylist are empty', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    mockConfig.whitelist = [];
-    mockConfig.blacklist = [];
+    mockConfig.allowlist = [];
+    mockConfig.denylist = [];
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '89:47:65',
       rssi: -82,
       advertisement: {},
@@ -297,14 +310,14 @@ describe('BluetoothLowEnergyService', () => {
     expect(clusterService.publish).not.toHaveBeenCalled();
   });
 
-  it('should not publish anything if the device is on the blacklist', () => {
+  it('should not publish anything if the device is on the denylist', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    mockConfig.whitelist = ['89:47:65', 'abcd'];
-    mockConfig.blacklist = ['89:47:65'];
+    mockConfig.allowlist = ['89:47:65', 'abcd'];
+    mockConfig.denylist = ['89:47:65'];
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '89:47:65',
       rssi: -82,
       advertisement: {},
@@ -313,14 +326,14 @@ describe('BluetoothLowEnergyService', () => {
     expect(clusterService.publish).not.toHaveBeenCalled();
   });
 
-  it('should publish all devices not on blacklist if there is no whitelist', () => {
+  it('should publish all devices not on denylist if there is no allowlist', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    mockConfig.whitelist = [];
-    mockConfig.blacklist = ['89:47:65'];
+    mockConfig.allowlist = [];
+    mockConfig.denylist = ['89:47:65'];
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'abcd',
       rssi: -82,
       advertisement: {},
@@ -329,14 +342,14 @@ describe('BluetoothLowEnergyService', () => {
     expect(clusterService.publish).toHaveBeenCalled();
   });
 
-  it('should not publish devices on blacklist if there is no whitelist', () => {
+  it('should not publish devices on denylist if there is no allowlist', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    mockConfig.whitelist = [];
-    mockConfig.blacklist = ['89:47:65'];
+    mockConfig.allowlist = [];
+    mockConfig.denylist = ['89:47:65'];
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '89:47:65',
       rssi: -82,
       advertisement: {},
@@ -345,19 +358,19 @@ describe('BluetoothLowEnergyService', () => {
     expect(clusterService.publish).not.toHaveBeenCalled();
   });
 
-  it('should apply tag distance override if it exists', () => {
+  it('should apply tag distance override if it exists', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
     mockConfig.tagOverrides = {
       abcd: {
         measuredPower: -80,
       },
     };
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'abcd',
       rssi: -81,
       advertisement: {
@@ -369,6 +382,8 @@ describe('BluetoothLowEnergyService', () => {
       'test-instance',
       'abcd',
       'Test BLE Device',
+      'abcd',
+      false,
       -81,
       -80,
       1.1
@@ -379,7 +394,7 @@ describe('BluetoothLowEnergyService', () => {
       expectedEvent
     );
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'defg',
       rssi: -81,
       advertisement: {
@@ -388,6 +403,7 @@ describe('BluetoothLowEnergyService', () => {
     } as Peripheral);
 
     expectedEvent.tagId = 'defg';
+    expectedEvent.peripheralId = 'defg';
     expectedEvent.distance = 10.5;
     expectedEvent.measuredPower = -59;
     expect(handleDistanceSpy).toHaveBeenCalledWith(expectedEvent);
@@ -397,19 +413,19 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should apply a tag name override if it exists', () => {
+  it('should apply a tag name override if it exists', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
     mockConfig.tagOverrides = {
       abcd: {
         name: 'better name',
       },
     };
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'abcd',
       rssi: -12,
       advertisement: {
@@ -424,12 +440,12 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should apply a tag batteryMask override for iBeacon if it exists', () => {
+  it('should apply a tag batteryMask override for iBeacon if it exists', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
 
     mockConfig.onlyIBeacon = true;
     mockConfig.processIBeacon = true;
@@ -443,7 +459,7 @@ describe('BluetoothLowEnergyService', () => {
     const iBeaconDataWith99Battery = Buffer.from(iBeaconData);
     iBeaconDataWith99Battery[22] = 99;
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'test-ibeacon',
       rssi: -50,
       advertisement: {
@@ -459,10 +475,10 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should not publish state changes for devices that are not on the whitelist', () => {
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(false);
+  it('should not publish state changes for devices that are not on the allowlist', async () => {
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(false);
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'abcd',
       rssi: -30,
       advertisement: {},
@@ -472,51 +488,91 @@ describe('BluetoothLowEnergyService', () => {
     expect(clusterService.publish).not.toHaveBeenCalled();
   });
 
-  it('should match ids to a normal whitelist', () => {
-    mockConfig.whitelist = ['vip-id', 'vip2-id'];
+  it('should match ids to a normal allowlist', () => {
+    mockConfig.allowlist = ['vip-id', 'vip2-id'];
 
-    expect(service.isOnWhitelist('vip-id')).toBeTruthy();
-    expect(service.isOnWhitelist('random-id')).toBeFalsy();
+    expect(service.isOnAllowlist('vip-id')).toBeTruthy();
+    expect(service.isOnAllowlist('VIP2-id')).toBeTruthy();
+    expect(service.isOnAllowlist('random-id')).toBeFalsy();
   });
 
-  it('should match ids to a regex whitelist', () => {
+  it('should match ids to a regex allowlist', () => {
+    mockConfig.allowlist = ['vip-[a-z]+', '^[1-9]+$'];
+    mockConfig.allowlistRegex = true;
+
+    expect(service.isOnAllowlist('vip-def')).toBeTruthy();
+    expect(service.isOnAllowlist('asvip-abcd')).toBeTruthy();
+    expect(service.isOnAllowlist('123')).toBeTruthy();
+    expect(service.isOnAllowlist('test')).toBeFalsy();
+    expect(service.isOnAllowlist('test123')).toBeFalsy();
+  });
+
+  it('should match ids to the deprecated whitelist', () => {
+    mockConfig.whitelist = ['vip-id', 'vip2-id'];
+
+    expect(service.isOnAllowlist('vip-id')).toBeTruthy();
+    expect(service.isOnAllowlist('VIP2-id')).toBeTruthy();
+    expect(service.isOnAllowlist('random-id')).toBeFalsy();
+  });
+
+  it('should match ids to the deprecated regex whitelist', () => {
     mockConfig.whitelist = ['vip-[a-z]+', '^[1-9]+$'];
     mockConfig.whitelistRegex = true;
 
-    expect(service.isOnWhitelist('vip-def')).toBeTruthy();
-    expect(service.isOnWhitelist('asvip-abcd')).toBeTruthy();
-    expect(service.isOnWhitelist('123')).toBeTruthy();
-    expect(service.isOnWhitelist('test')).toBeFalsy();
-    expect(service.isOnWhitelist('test123')).toBeFalsy();
+    expect(service.isOnAllowlist('vip-def')).toBeTruthy();
+    expect(service.isOnAllowlist('asvip-abcd')).toBeTruthy();
+    expect(service.isOnAllowlist('123')).toBeTruthy();
+    expect(service.isOnAllowlist('test')).toBeFalsy();
+    expect(service.isOnAllowlist('test123')).toBeFalsy();
   });
 
-  it('should match ids to a normal blacklist', () => {
+  it('should match ids to a normal denylist', () => {
+    mockConfig.denylist = ['vip-id', 'vip2-id'];
+
+    expect(service.isOnDenylist('vip-id')).toBeTruthy();
+    expect(service.isOnDenylist('VIP2-id')).toBeTruthy();
+    expect(service.isOnDenylist('random-id')).toBeFalsy();
+  });
+
+  it('should match ids to a regex denylist', () => {
+    mockConfig.denylist = ['vip-[a-z]+', '^[1-9]+$'];
+    mockConfig.denylistRegex = true;
+
+    expect(service.isOnDenylist('vip-def')).toBeTruthy();
+    expect(service.isOnDenylist('asvip-abcd')).toBeTruthy();
+    expect(service.isOnDenylist('123')).toBeTruthy();
+    expect(service.isOnDenylist('test')).toBeFalsy();
+    expect(service.isOnDenylist('test123')).toBeFalsy();
+  });
+
+  it('should match ids to the deprecated blacklist', () => {
     mockConfig.blacklist = ['vip-id', 'vip2-id'];
 
-    expect(service.isOnBlacklist('vip-id')).toBeTruthy();
-    expect(service.isOnBlacklist('random-id')).toBeFalsy();
+    expect(service.isOnDenylist('vip-id')).toBeTruthy();
+    expect(service.isOnDenylist('VIP2-id')).toBeTruthy();
+    expect(service.isOnDenylist('random-id')).toBeFalsy();
   });
 
-  it('should match ids to a regex blacklist', () => {
+  it('should match ids to the deprecated regex blacklist', () => {
     mockConfig.blacklist = ['vip-[a-z]+', '^[1-9]+$'];
     mockConfig.blacklistRegex = true;
 
-    expect(service.isOnBlacklist('vip-def')).toBeTruthy();
-    expect(service.isOnBlacklist('asvip-abcd')).toBeTruthy();
-    expect(service.isOnBlacklist('123')).toBeTruthy();
-    expect(service.isOnBlacklist('test')).toBeFalsy();
-    expect(service.isOnBlacklist('test123')).toBeFalsy();
+    expect(service.isOnDenylist('vip-def')).toBeTruthy();
+    expect(service.isOnDenylist('asvip-abcd')).toBeTruthy();
+    expect(service.isOnDenylist('123')).toBeTruthy();
+    expect(service.isOnDenylist('test')).toBeFalsy();
+    expect(service.isOnDenylist('test123')).toBeFalsy();
   });
 
-  it('should filter the measured RSSI of the peripherals', () => {
+  it('should filter the measured RSSI of the peripherals', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
     const filterSpy = jest.spyOn(service, 'filterRssi').mockReturnValue(-50);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '12:ab:cd:12:cd',
       rssi: -45,
       advertisement: {
@@ -532,15 +588,15 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should report peripherals that are closer than the max distance normally', () => {
+  it('should report peripherals that are closer than the max distance normally', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
     mockConfig.maxDistance = 5;
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '12:ab:cd:12:cd',
       rssi: -45,
       advertisement: {
@@ -560,15 +616,15 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should mark peripherals that are further away than max distance as out of range', () => {
+  it('should mark peripherals that are further away than max distance as out of range', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
     mockConfig.maxDistance = 5;
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '12:ab:cd:12:cd',
       rssi: -89,
       advertisement: {
@@ -588,30 +644,30 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should throttle distance reporting if updateFrequency is configured', () => {
+  it('should throttle distance reporting if updateFrequency is configured', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
     mockConfig.updateFrequency = 10;
     const now = new Date();
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '12:ab:cd:12:cd',
       rssi: -89,
       advertisement: {
         localName: 'Test BLE Device',
       },
     } as Peripheral);
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'ab:ab:cd:cd:cd',
       rssi: -90,
       advertisement: {
         localName: 'Test BLE Device',
       },
     } as Peripheral);
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '12:ab:cd:12:cd',
       rssi: -91,
       advertisement: {
@@ -629,7 +685,7 @@ describe('BluetoothLowEnergyService', () => {
     jest
       .spyOn(Date, 'now')
       .mockReturnValue(now.setSeconds(now.getSeconds() + 11));
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '12:ab:cd:12:cd',
       rssi: -100,
       advertisement: {
@@ -644,28 +700,28 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
-  it('should allow immediate updates if no updateFrequency was configured', () => {
+  it('should allow immediate updates if no updateFrequency was configured', async () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '12:ab:cd:12:cd',
       rssi: -89,
       advertisement: {
         localName: 'Test BLE Device',
       },
     } as Peripheral);
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'ab:ab:cd:cd:cd',
       rssi: -90,
       advertisement: {
         localName: 'Test BLE Device',
       },
     } as Peripheral);
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: '12:ab:cd:12:cd',
       rssi: -91,
       advertisement: {
@@ -676,27 +732,27 @@ describe('BluetoothLowEnergyService', () => {
     expect(handleDistanceSpy).toHaveBeenCalledTimes(3);
   });
 
-  it('should reuse existing Kalman filters for the same id', () => {
+  it('should reuse existing Kalman filters for the same id', async () => {
     const sensor = new Sensor('testid', 'Test');
     entitiesService.has.mockReturnValue(true);
     entitiesService.get.mockReturnValue(sensor);
     jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    jest.spyOn(service, 'isWhitelistEnabled').mockReturnValue(true);
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'id1',
       rssi: -45,
       advertisement: {},
     } as Peripheral);
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'id2',
       rssi: -67,
       advertisement: {},
     } as Peripheral);
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'id1',
       rssi: -56,
       advertisement: {},
@@ -712,7 +768,16 @@ describe('BluetoothLowEnergyService', () => {
     const sensorHandleSpy = jest.spyOn(sensor, 'handleNewDistance');
 
     service.handleNewDistance(
-      new NewDistanceEvent('test-instance', 'test', 'Test', -80, -50, 2)
+      new NewDistanceEvent(
+        'test-instance',
+        'test',
+        'Test',
+        'test',
+        false,
+        -80,
+        -50,
+        2
+      )
     );
 
     expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 2, false);
@@ -726,7 +791,16 @@ describe('BluetoothLowEnergyService', () => {
     const sensorHandleSpy = jest.spyOn(sensor, 'handleNewDistance');
 
     service.handleNewDistance(
-      new NewDistanceEvent('test-instance', 'new', 'New Tag', -80, -50, 1.3)
+      new NewDistanceEvent(
+        'test-instance',
+        'new',
+        'New Tag',
+        'new',
+        false,
+        -80,
+        -50,
+        1.3
+      )
     );
 
     expect(entitiesService.add).toHaveBeenCalledWith(
@@ -769,6 +843,8 @@ describe('BluetoothLowEnergyService', () => {
         'test-instance',
         'new',
         'New Tag',
+        'new',
+        false,
         -80,
         -50,
         1.3,
@@ -801,17 +877,44 @@ describe('BluetoothLowEnergyService', () => {
     entitiesService.get.mockReturnValue(sensor);
 
     service.handleNewDistance(
-      new NewDistanceEvent('test-instance', 'test', 'Test', -80, -50, 2)
+      new NewDistanceEvent(
+        'test-instance',
+        'test',
+        'Test',
+        'test',
+        false,
+        -80,
+        -50,
+        2
+      )
     );
 
     expect(sensor.measuredValues['test-instance'].rssi).toBe(-80);
     expect(sensor.measuredValues['test-instance'].measuredPower).toBe(-50);
 
     service.handleNewDistance(
-      new NewDistanceEvent('test-instance-2', 'test', 'Test', -40, -45, 2)
+      new NewDistanceEvent(
+        'test-instance-2',
+        'test',
+        'Test',
+        'test',
+        false,
+        -40,
+        -45,
+        2
+      )
     );
     service.handleNewDistance(
-      new NewDistanceEvent('test-instance', 'test', 'Test', -70, -50, 2)
+      new NewDistanceEvent(
+        'test-instance',
+        'test',
+        'Test',
+        'test',
+        false,
+        -70,
+        -50,
+        2
+      )
     );
 
     expect(sensor.measuredValues['test-instance-2'].rssi).toBe(-40);
@@ -820,11 +923,11 @@ describe('BluetoothLowEnergyService', () => {
     expect(sensor.measuredValues['test-instance'].measuredPower).toBe(-50);
   });
 
-  it('should log the id of new peripherals that are found', () => {
+  it('should log the id of new peripherals that are found', async () => {
     mockConfig.processIBeacon = true;
-    jest.spyOn(service, 'isOnWhitelist').mockReturnValue(false);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(false);
 
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'test-ibeacon-123',
       rssi: -50,
       advertisement: {
@@ -832,12 +935,12 @@ describe('BluetoothLowEnergyService', () => {
         manufacturerData: iBeaconData,
       },
     } as Peripheral);
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'test-peripheral-456',
       rssi: -78,
       advertisement: {},
     } as Peripheral);
-    service.handleDiscovery({
+    await service.handleDiscovery({
       id: 'test-ibeacon-123',
       rssi: -54,
       advertisement: {
@@ -857,5 +960,532 @@ describe('BluetoothLowEnergyService', () => {
       BluetoothLowEnergyService.name,
       expect.anything()
     );
+  });
+
+  describe('Companion App', () => {
+    const APPLE_MANUFACTURER_DATA = Buffer.from([
+      0x4c,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0x00,
+      0x10,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+    ]);
+
+    it('should ignore non-Apple advertisements', async () => {
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      const discoverSpy = jest.spyOn(service, 'discoverCompanionAppId');
+
+      await service.handleDiscovery({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: Buffer.from(Array(11).fill(0x00)),
+        },
+      } as Peripheral);
+
+      expect(discoverSpy).not.toHaveBeenCalled();
+    });
+
+    it('should ignore non-connectable advertisements', async () => {
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      const discoverSpy = jest.spyOn(service, 'discoverCompanionAppId');
+
+      await service.handleDiscovery({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: false,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+      } as Peripheral);
+
+      expect(discoverSpy).not.toHaveBeenCalled();
+    });
+
+    it('should ignore advertisements from devices without overflow area', async () => {
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      const discoverSpy = jest.spyOn(service, 'discoverCompanionAppId');
+
+      await service.handleDiscovery({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: Buffer.from([0x4c, 0x00, 0x00]),
+        },
+      } as Peripheral);
+
+      expect(discoverSpy).not.toHaveBeenCalled();
+    });
+
+    it('should ignore advertisements from devices that do not advertise the right service in the overflow area', async () => {
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      const discoverSpy = jest.spyOn(service, 'discoverCompanionAppId');
+      const manufacturerData = Buffer.from(APPLE_MANUFACTURER_DATA);
+      manufacturerData.set([0x01], 6);
+
+      await service.handleDiscovery({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData,
+        },
+      } as Peripheral);
+
+      expect(discoverSpy).not.toHaveBeenCalled();
+    });
+
+    it('should override tag ids with companion app IDs', async () => {
+      const handleDistanceSpy = jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      jest.spyOn(service, 'discoverCompanionAppId').mockResolvedValue('app-id');
+
+      await service.handleDiscovery({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+      } as Peripheral);
+
+      expect(handleDistanceSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tagId: 'app-id',
+        })
+      );
+      expect(clusterService.publish).toHaveBeenCalledWith(
+        NEW_DISTANCE_CHANNEL,
+        expect.objectContaining({
+          tagId: 'app-id',
+        })
+      );
+    });
+
+    it('should not override tag information if no companion app found', async () => {
+      const handleDistanceSpy = jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      jest.spyOn(service, 'discoverCompanionAppId').mockResolvedValue(null);
+
+      await service.handleDiscovery({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+      } as Peripheral);
+
+      expect(handleDistanceSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tagId: 'abcd1234',
+        })
+      );
+      expect(clusterService.publish).toHaveBeenCalledWith(
+        NEW_DISTANCE_CHANNEL,
+        expect.objectContaining({
+          tagId: 'abcd1234',
+        })
+      );
+    });
+
+    it('should cache discovered companion app IDs', async () => {
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      const discoverSpy = jest
+        .spyOn(service, 'discoverCompanionAppId')
+        .mockResolvedValue('app-id');
+
+      const peripheral = {
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+      } as Peripheral;
+
+      await service.handleDiscovery(peripheral);
+      await service.handleDiscovery(peripheral);
+
+      expect(discoverSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should publish discovered companion app IDs to the cluster', async () => {
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      jest.spyOn(service, 'discoverCompanionAppId').mockResolvedValue('app-id');
+
+      await service.handleDiscovery({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+      } as Peripheral);
+
+      expect(clusterService.publish).toHaveBeenCalledWith(
+        NEW_DISTANCE_CHANNEL,
+        expect.objectContaining({
+          tagId: 'app-id',
+          peripheralId: 'abcd1234',
+          isApp: true,
+        })
+      );
+    });
+
+    it('should fill companion app cache from distance events', async () => {
+      const sensor = new BluetoothLowEnergyPresenceSensor('test', 'Test', 0);
+      entitiesService.has.mockReturnValue(true);
+      entitiesService.get.mockReturnValue(sensor);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      const discoverSpy = jest.spyOn(service, 'discoverCompanionAppId');
+
+      await service.handleNewDistance(
+        new NewDistanceEvent(
+          'test-instance',
+          'app-id',
+          'Test',
+          'peripheral-id',
+          true,
+          -80,
+          -50,
+          2
+        )
+      );
+
+      await service.handleDiscovery({
+        id: 'peripheral-id',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+      } as Peripheral);
+
+      expect(discoverSpy).not.toHaveBeenCalled();
+    });
+
+    it('should temporarily denylist devices that error out from discovery attempts', async () => {
+      jest.useFakeTimers('modern');
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+      const discoverSpy = jest
+        .spyOn(service, 'discoverCompanionAppId')
+        .mockRejectedValue(new Error('expected for this test'));
+
+      const peripheral = {
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+      } as Peripheral;
+
+      await service.handleDiscovery(peripheral);
+      await service.handleDiscovery(peripheral);
+
+      expect(discoverSpy).toHaveBeenCalledTimes(1);
+
+      jest.advanceTimersByTime(1 * 60 * 1000);
+
+      await service.handleDiscovery(peripheral);
+
+      expect(discoverSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('should reset the adapter when discovery attempts time out', async () => {
+      jest
+        .spyOn(service, 'handleNewDistance')
+        .mockImplementation(() => undefined);
+      jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+      jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+
+      const peripheral = ({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        discoverServicesAsync: jest
+          .fn()
+          .mockRejectedValue(new Error('timed out')),
+        once: jest.fn(),
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+      } as unknown) as Peripheral;
+      bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
+
+      await service.handleDiscovery(peripheral);
+
+      expect(bluetoothService.resetHciDevice).toHaveBeenCalledWith(
+        bluetoothService.lowEnergyAdapterId
+      );
+    });
+
+    it('should discover the companion app ID from the well known characteristic', async () => {
+      const gattCharacteristic = {
+        readAsync: jest.fn().mockResolvedValue(Buffer.from('app-id', 'utf-8')),
+      };
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockResolvedValue([gattCharacteristic]),
+      };
+      const peripheral = ({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        once: jest.fn(),
+        removeListener: jest.fn(),
+      } as unknown) as Peripheral;
+
+      bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
+
+      const actual = await service.discoverCompanionAppId(new Tag(peripheral));
+
+      expect(actual).toBe('app-id');
+    });
+
+    it('should return null if device does not have characteristic', async () => {
+      const gattService = {
+        discoverCharacteristicsAsync: jest.fn().mockResolvedValue([]),
+      };
+      const peripheral = ({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        removeListener: jest.fn(),
+        once: jest.fn(),
+      } as unknown) as Peripheral;
+
+      bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
+
+      const actual = await service.discoverCompanionAppId(new Tag(peripheral));
+
+      expect(actual).toBeNull();
+    });
+
+    it('should return null if device does not have service', async () => {
+      const peripheral = ({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+        discoverServicesAsync: jest.fn().mockResolvedValue([]),
+        removeListener: jest.fn(),
+        once: jest.fn(),
+      } as unknown) as Peripheral;
+
+      bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
+
+      const actual = await service.discoverCompanionAppId(new Tag(peripheral));
+
+      expect(actual).toBeNull();
+    });
+
+    it('should return null if there is an error while discovering GATT information', async () => {
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockRejectedValue(new Error('expected for this test')),
+      };
+      const peripheral = ({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        removeListener: jest.fn(),
+        once: jest.fn(),
+      } as unknown) as Peripheral;
+
+      bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
+
+      const actual = await service.discoverCompanionAppId(new Tag(peripheral));
+
+      expect(actual).toBeNull();
+    });
+
+    it('should disconnect from the peripheral after a successful discovery', async () => {
+      const gattCharacteristic = {
+        readAsync: jest.fn().mockResolvedValue(Buffer.from('app-id', 'utf-8')),
+      };
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockResolvedValue([gattCharacteristic]),
+      };
+      const peripheral = ({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        removeListener: jest.fn(),
+        once: jest.fn(),
+      } as unknown) as Peripheral;
+
+      bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
+
+      await service.discoverCompanionAppId(new Tag(peripheral));
+
+      expect(bluetoothService.disconnectLowEnergyDevice).toHaveBeenCalledWith(
+        peripheral
+      );
+    });
+
+    it('should disconnect from the peripheral after a failed discovery', async () => {
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockRejectedValue(new Error('expected for this test')),
+      };
+      const peripheral = ({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        removeListener: jest.fn(),
+        once: jest.fn(),
+      } as unknown) as Peripheral;
+
+      bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
+
+      await service.discoverCompanionAppId(new Tag(peripheral));
+
+      expect(bluetoothService.disconnectLowEnergyDevice).toHaveBeenCalledWith(
+        peripheral
+      );
+    });
+
+    it('should not disconnect from an already disconnecting peripheral', async () => {
+      const gattCharacteristic = {
+        readAsync: jest.fn().mockResolvedValue(Buffer.from('app-id', 'utf-8')),
+      };
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockResolvedValue([gattCharacteristic]),
+      };
+      const peripheral = ({
+        id: 'abcd1234',
+        rssi: -50,
+        connectable: true,
+        advertisement: {
+          localName: 'Test Beacon',
+          txPowerLevel: -72,
+          manufacturerData: APPLE_MANUFACTURER_DATA,
+        },
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        removeListener: jest.fn(),
+        once: jest.fn(),
+        state: 'disconnecting',
+      } as unknown) as Peripheral;
+
+      bluetoothService.connectLowEnergyDevice.mockResolvedValue(peripheral);
+
+      await service.discoverCompanionAppId(new Tag(peripheral));
+
+      expect(bluetoothService.disconnectLowEnergyDevice).not.toHaveBeenCalled();
+    });
   });
 });

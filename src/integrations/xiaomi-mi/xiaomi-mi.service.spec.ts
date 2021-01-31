@@ -1,12 +1,13 @@
+jest.mock('mdns', () => ({}), { virtual: true });
 jest.mock(
-  '@abandonware/noble',
+  '@mkerix/noble',
   () => {
     return {};
   },
   { virtual: true }
 );
 
-import { Peripheral } from '@abandonware/noble';
+import { Peripheral } from '@mkerix/noble';
 import { ConfigService } from '../../config/config.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { XiaomiMiService } from './xiaomi-mi.service';
@@ -70,6 +71,13 @@ describe('XiaomiMiService', () => {
     encrypted: '58585b05db184bf838c1a472c3fa42cd050000ce7b8a28',
   };
   const bindKey = 'b2d46f0cd168c18b247c0c79e9ad5b8d';
+  const deviceInfo = {
+    identifiers: '4c65a8d0ae64',
+    manufacturer: 'Xiaomi',
+    name: 'test',
+    swVersion: '2',
+    viaDevice: 'room-assistant-distributed',
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -133,15 +141,18 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish temperature', () => {
-    const sensor = new Sensor('testid', 'Test');
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.temperature));
+
+    deviceInfo['model'] = 'Mijia LYWSD02';
 
     expect(sensor.state).toBe(20.4);
     expect(entitiesService.add.mock.calls[0][1]).toContainEqual({
       for: SensorConfig,
       overrides: {
+        device: deviceInfo,
         deviceClass: 'temperature',
         unitOfMeasurement: '°C',
       },
@@ -149,15 +160,18 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish humidity', () => {
-    const sensor = new Sensor('testid', 'Test');
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.humidity));
+
+    deviceInfo['model'] = 'Mijia LYWSD02';
 
     expect(sensor.state).toBe(49);
     expect(entitiesService.add.mock.calls[0][1]).toContainEqual({
       for: SensorConfig,
       overrides: {
+        device: deviceInfo,
         deviceClass: 'humidity',
         unitOfMeasurement: '%',
       },
@@ -165,27 +179,33 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish temperature and humidity', () => {
-    const temp = new Sensor('temp', 'temp');
-    const humidity = new Sensor('humidity', 'humidity');
+    const temp = new Sensor('temp', 'temp', true, false);
+    const humidity = new Sensor('humidity', 'humidity', true, false);
     entitiesService.add.mockReturnValueOnce(temp).mockReturnValueOnce(humidity);
 
     service.handleDiscovery(
       advert(testAddress, serviceData.temperatureAndHumidity)
     );
 
+    deviceInfo['model'] = 'Miija LYWSDCGQ';
+
     expect(temp.state).toBe(21.7);
     expect(humidity.state).toBe(35.2);
     expect(entitiesService.add.mock.calls[0][1]).toContainEqual({
       for: SensorConfig,
       overrides: {
+        device: deviceInfo,
         deviceClass: 'temperature',
         unitOfMeasurement: '°C',
       },
     });
 
+    deviceInfo['model'] = 'Miija LYWSDCGQ';
+
     expect(entitiesService.add.mock.calls[1][1]).toContainEqual({
       for: SensorConfig,
       overrides: {
+        device: deviceInfo,
         deviceClass: 'humidity',
         unitOfMeasurement: '%',
       },
@@ -193,15 +213,18 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish battery', () => {
-    const sensor = new Sensor('testid', 'Test');
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.battery));
+
+    deviceInfo['model'] = 'Miija LYWSDCGQ';
 
     expect(sensor.state).toBe(93);
     expect(entitiesService.add.mock.calls[0][1]).toContainEqual({
       for: SensorConfig,
       overrides: {
+        device: deviceInfo,
         deviceClass: 'battery',
         unitOfMeasurement: '%',
       },
@@ -209,23 +232,26 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish moisture', () => {
-    const sensor = new Sensor('testid', 'Test');
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.moisture));
+
+    deviceInfo['model'] = 'Mi Flora HHCCJCY01';
 
     expect(sensor.state).toBe(18);
     expect(entitiesService.add.mock.calls[0][1]).toContainEqual({
       for: SensorConfig,
       overrides: {
-        deviceClass: 'humidity',
+        device: deviceInfo,
+        deviceClass: undefined,
         unitOfMeasurement: '%',
       },
     });
   });
 
   it('should publish even if missing mac address', () => {
-    const sensor = new Sensor('testid', 'Test');
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.moistureNoMac));
@@ -234,15 +260,18 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish illuminance', () => {
-    const sensor = new Sensor('testid', 'Test');
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.illuminance));
+
+    deviceInfo['model'] = 'Mi Flora HHCCJCY01';
 
     expect(sensor.state).toBe(14);
     expect(entitiesService.add.mock.calls[0][1]).toContainEqual({
       for: SensorConfig,
       overrides: {
+        device: deviceInfo,
         deviceClass: 'illuminance',
         unitOfMeasurement: 'lx',
       },
@@ -250,23 +279,26 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish fertility', () => {
-    const sensor = new Sensor('testid', 'Test');
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.fertility));
+
+    deviceInfo['model'] = 'Mi Flora HHCCJCY01';
 
     expect(sensor.state).toBe(184);
     expect(entitiesService.add.mock.calls[0][1]).toContainEqual({
       for: SensorConfig,
       overrides: {
-        deviceClass: null,
+        device: deviceInfo,
+        deviceClass: undefined,
         unitOfMeasurement: 'µS/cm',
       },
     });
   });
 
   it('should reuse existing entities', () => {
-    const sensor = new Sensor('testid', 'Test');
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.get.mockReturnValueOnce(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.humidity));
@@ -291,7 +323,7 @@ describe('XiaomiMiService', () => {
       },
     ];
     service.onModuleInit();
-    const sensor = new Sensor('testid', 'Test');
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.get.mockReturnValueOnce(sensor);
 
     service.handleDiscovery(advert(testAddress, serviceData.encrypted));
@@ -329,7 +361,7 @@ describe('XiaomiMiService', () => {
   });
 
   it('should publish negative temperatures', () => {
-    const sensor = new Sensor('testid', 'Test');
+    const sensor = new Sensor('testid', 'Test', true, false);
     entitiesService.add.mockReturnValue(sensor);
     service.handleDiscovery(
       advert(testAddress, serviceData.negativeTemperature)

@@ -9,9 +9,11 @@ import { GpioConfig } from '../../integrations/gpio/gpio.config';
 import { ShellConfig } from '../../integrations/shell/shell.config';
 import { XiaomiMiConfig } from '../../integrations/xiaomi-mi/xiaomi-mi.config';
 import { EntitiesConfig } from '../../entities/entities.config';
+import { LoggerConfig } from '../logger.config';
 
 export class AppConfig {
   global: GlobalConfig = new GlobalConfig();
+  logger: LoggerConfig = new LoggerConfig();
   cluster: ClusterConfig = new ClusterConfig();
   entities: EntitiesConfig = new EntitiesConfig();
   bluetoothLowEnergy: BluetoothLowEnergyConfig = new BluetoothLowEnergyConfig();

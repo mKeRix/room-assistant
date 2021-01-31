@@ -48,7 +48,10 @@ export class GridEyeService
     this.setRegister(FRAMERATE_REGISTER, 1); // set framerate to 1 FPS -> less noise
 
     this.sensor = this.createSensor();
-    this.camera = this.createHeatmapCamera();
+
+    if (this.config.heatmap.enabled) {
+      this.camera = this.createHeatmapCamera();
+    }
   }
 
   /**
@@ -72,10 +75,13 @@ export class GridEyeService
 
     this.sensor.state = coordinates.length;
     this.sensor.attributes.coordinates = coordinates;
-    this.camera.state = await this.generateHeatmap(
-      temperatures,
-      this.config.heatmap
-    );
+
+    if (this.config.heatmap.enabled) {
+      this.camera.state = await this.generateHeatmap(
+        temperatures,
+        this.config.heatmap
+      );
+    }
   }
 
   /**

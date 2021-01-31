@@ -11,7 +11,11 @@ export class DebounceProxyHandler implements ProxyHandler<Entity> {
         target.state = value;
       },
       config.wait * 1000,
-      { maxWait: config.maxWait * 1000 }
+      {
+        maxWait: config.maxWait * 1000,
+        leading: config.leading ?? false,
+        trailing: config.trailing ?? true,
+      }
     );
   }
 

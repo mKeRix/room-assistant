@@ -11,6 +11,8 @@ import { ClusterModule } from '../cluster/cluster.module';
 import { Switch } from './switch';
 import { ConfigModule } from '../config/config.module';
 
+jest.mock('mdns', () => ({}), { virtual: true });
+
 describe('EntitiesService', () => {
   let service: EntitiesService;
   const emitter: EventEmitter = new EventEmitter();
@@ -155,6 +157,32 @@ describe('EntitiesService', () => {
       'stateUpdate',
       'debounced_entity',
       1337,
+      false
+    );
+  });
+
+  it('should debounce state updates on leading edge if configured', () => {
+    jest.useFakeTimers('modern');
+    const spy = jest.spyOn(emitter, 'emit');
+
+    const entityProxy = service.add(
+      new Sensor('leading_debounced_entity', 'Debounce Test')
+    );
+    spy.mockClear();
+
+    entityProxy.state = 42;
+    entityProxy.state = 1337;
+
+    expect(entityProxy.state).toBe(42);
+
+    jest.runAllTimers();
+
+    expect(entityProxy.state).toBe(42);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(
+      'stateUpdate',
+      'leading_debounced_entity',
+      42,
       false
     );
   });
@@ -321,6 +349,33 @@ describe('EntitiesService', () => {
     );
   });
 
+  it('should emit updates for distributed sensors if state is not locked', () => {
+    const entity = new Sensor(
+      'distributed_sensor',
+      'Distribution',
+      true,
+      false
+    );
+    const spy = jest.spyOn(emitter, 'emit');
+    clusterService.isMajorityLeader.mockReturnValue(false);
+
+    const entityProxy = service.add(entity);
+    entityProxy.state = 'test';
+    entityProxy.attributes.tested = true;
+    expect(spy).toHaveBeenCalledWith(
+      'stateUpdate',
+      'distributed_sensor',
+      'test',
+      true
+    );
+    expect(spy).toHaveBeenCalledWith(
+      'attributesUpdate',
+      'distributed_sensor',
+      { tested: true },
+      true
+    );
+  });
+
   it('should send out events for all non-distributed entities when refreshing as non-leader', () => {
     clusterService.isMajorityLeader.mockReturnValue(false);
     const spy = jest.spyOn(emitter, 'emit');
@@ -334,11 +389,14 @@ describe('EntitiesService', () => {
     const sensor2 = new Sensor('sensor2', 'Sensor 2', true);
     sensor2.state = 2;
     service.add(sensor2);
+    const sensor3 = new Sensor('sensor3', 'Sensor 3', true, false);
+    sensor3.state = 3;
+    service.add(sensor3);
     spy.mockClear();
 
     service.refreshStates();
 
-    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledTimes(4);
   });
 
   it('should send out events for all entities when refreshing as majority leader', () => {

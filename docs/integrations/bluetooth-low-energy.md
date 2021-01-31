@@ -29,6 +29,7 @@ If you want to run room-assistant without root privileges (as it is recommended)
 
 ```shell
 sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
+sudo setcap cap_net_admin+eip $(eval readlink -f `which hciconfig`)
 ```
 
 ### Running with Docker
@@ -37,18 +38,37 @@ This integration requires you to run room-assistant in the `host` network.
 
 ## Determining the IDs
 
-In order to not clutter your home automation software with the many BLE devices broadcasting their status nearby, room-assistant requires you to set up a whitelist or blacklist before it will pass on any information. For regular BLE devices this is the lowercase MAC address without `:`, for example `7750fb4dab70` for a peripheral with the MAC address `77:50:FB:4D:AB:70`. When using iBeacons the ID will be in the format of `uuid-major-minor`, for example `2f234454cf6d4a0fadf2f4911ba9ffa6-1-2`.
+In order to not clutter your home automation software with the many BLE devices broadcasting their status nearby, room-assistant requires you to set up a allowlist or denylist before it will pass on any information. For regular BLE devices this is the lowercase MAC address without `:`, for example `7750fb4dab70` for a peripheral with the MAC address `77:50:FB:4D:AB:70`. When using iBeacons the ID will be in the format of `uuid-major-minor`, for example `2f234454cf6d4a0fadf2f4911ba9ffa6-1-2`.
 
-If you are unsure what ID your device has you can start room-assistant with the BLE integration enabled, but no whitelist. Devices that are seen for the first time after starting will be logged with their ID to the console.
+If you are unsure what ID your device has you can start room-assistant with the BLE integration enabled, but no allowlist. Devices that are seen for the first time after starting will be logged with their ID to the console.
+
+## Tracking iOS Devices
+
+You can track iOS devices (iPhones, iPads) with this integration using our companion app. You will need to install the app, open it, grant the requested permissions and then follow the on-screen instructions.
+
+The app is currently in beta, you can join it through TestFlight with this link: https://testflight.apple.com/join/OpCkeHf8.
+
+It is recommended to raise the `timeout` setting to at least `60` when using the companion app, as the signal may not always be constant.
+
+::: details Example Config
+
+```yaml
+bluetoothLowEnergy:
+  timeout: 60
+  allowlist:
+  - 'UUID-LIKE-IN-THE-APP'
+```
+
+:::
 
 ## Settings
 
 | Name              | Type                            | Default  | Description                                                  |
 | ----------------- | ------------------------------- | -------- | ------------------------------------------------------------ |
-| `whitelist`       | Array                           |          | A list of [BLE tag IDs](#determining-the-ids) that should be tracked. |
-| `whitelistRegex`  | Boolean                         | `false`  | Whether the whitelist should be evaluated as a list of [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) or not. |
-| `blacklist`       | Array                           |          | A list of [BLE tag IDs](#determining-the-ids) that should not be tracked. If an ID matches both whitelist and blacklist it will not be tracked. |
-| `blacklistRegex`  | Boolean                         | `false`  | Whether the blacklist should be evaluated as a list of [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) or not. |
+| `allowlist`  | Array                           |          | A list of [BLE tag IDs](#determining-the-ids) that should be tracked. |
+| `allowlistRegex` | Boolean                         | `false`  | Whether the allowlist should be evaluated as a list of [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) or not. |
+| `denylist`  | Array                           |          | A list of [BLE tag IDs](#determining-the-ids) that should not be tracked. If an ID matches both allowlist and denylist it will not be tracked. |
+| `denylistRegex` | Boolean                         | `false`  | Whether the denylist should be evaluated as a list of [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) or not. |
 | `processIBeacon`  | Boolean                         | `true`   | Whether additional data from iBeacon devices should be taken into account or not. Affects tag IDs and distance estimation. |
 | `onlyIBeacon`     | Boolean                         | `false`  | Whether only iBeacons should be considered when scanning for devices ot not. |
 | `timeout`         | Number                          | `5`      | The time after which a recorded distance is considered outdated. This value should be higher than the advertisement frequency of your peripheral. |
@@ -76,7 +96,7 @@ global:
   integrations:
     - bluetoothLowEnergy
 bluetoothLowEnergy:
-  whitelist:
+  allowlist:
     - 7750fb4dab70
     - 2f234454cf6d4a0fadf2f4911ba9ffa6-1-2
   maxDistance: 7
@@ -104,7 +124,7 @@ bluetoothClassic:
     - '77:50:fb:4d:ab:70'
 bluetoothLowEnergy:
   hciDeviceId: 1
-  whitelist:
+  allowlist:
     - 7750fb4dab70
     - 2f234454cf6d4a0fadf2f4911ba9ffa6-1-2
 ```

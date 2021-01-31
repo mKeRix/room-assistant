@@ -4,7 +4,7 @@ import {
   OnApplicationBootstrap,
   OnModuleInit,
 } from '@nestjs/common';
-import { Peripheral } from '@abandonware/noble';
+import { Peripheral } from '@mkerix/noble';
 import { EntitiesService } from '../../entities/entities.service';
 import { IBeacon } from './i-beacon';
 import { Tag } from './tag';
@@ -27,8 +27,11 @@ import { Sensor } from '../../entities/sensor';
 import { RoomPresenceProxyHandler } from '../room-presence/room-presence.proxy';
 import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presence.sensor';
 import { BluetoothService } from '../bluetooth/bluetooth.service';
+import { promiseWithTimeout } from '../../util/promises';
+import * as util from 'util';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
+const APPLE_ADVERTISEMENT_ID = Buffer.from([0x4c, 0x00]);
 
 @Injectable() // parameters determined experimentally
 export class BluetoothLowEnergyService
@@ -37,6 +40,8 @@ export class BluetoothLowEnergyService
   private readonly config: BluetoothLowEnergyConfig;
   private readonly logger: Logger;
   private readonly seenIds = new Set<string>();
+  private readonly companionAppTags = new Map<string, string>();
+  private readonly companionAppDenylist = new Set<string>();
   private tagUpdaters: {
     [tagId: string]: (event: NewDistanceEvent) => void;
   } = {};
@@ -57,9 +62,9 @@ export class BluetoothLowEnergyService
    * Lifecycle hook, called once the host module has been initialized.
    */
   onModuleInit(): void {
-    if (!this.isWhitelistEnabled() && !this.isBlacklistEnabled()) {
+    if (!this.isAllowlistEnabled() && !this.isDenylistEnabled()) {
       this.logger.warn(
-        'The whitelist and blacklist are empty, no sensors will be created! Please add some of the discovered IDs below to your configuration.'
+        'The allowlist and denylist are empty, no sensors will be created! Please add some of the discovered IDs below to your configuration.'
       );
     }
   }
@@ -81,11 +86,13 @@ export class BluetoothLowEnergyService
    *
    * @param peripheral - BLE peripheral
    */
-  handleDiscovery(peripheral: Peripheral): void {
+  async handleDiscovery(peripheral: Peripheral): Promise<void> {
     let tag = this.createTag(peripheral);
     if (this.config.onlyIBeacon && !(tag instanceof IBeacon)) {
       return;
     }
+
+    tag = await this.applyCompanionAppOverride(tag);
 
     if (!this.seenIds.has(tag.id)) {
       this.logger.log(
@@ -95,9 +102,9 @@ export class BluetoothLowEnergyService
     }
 
     if (
-      (this.isOnWhitelist(tag.id) ||
-        (!this.isWhitelistEnabled() && this.isBlacklistEnabled())) &&
-      !this.isOnBlacklist(tag.id)
+      (this.isOnAllowlist(tag.id) ||
+        (!this.isAllowlistEnabled() && this.isDenylistEnabled())) &&
+      !this.isOnDenylist(tag.id)
     ) {
       tag = this.applyOverrides(tag);
       tag.rssi = this.filterRssi(tag.id, tag.rssi);
@@ -107,6 +114,8 @@ export class BluetoothLowEnergyService
         globalSettings.instanceName,
         tag.id,
         tag.name,
+        tag.peripheral.id,
+        tag.isApp,
         tag.rssi,
         tag.measuredPower,
         tag.distance,
@@ -126,6 +135,50 @@ export class BluetoothLowEnergyService
   }
 
   /**
+   * Connects to the given peripheral and looks for the companion app.
+   * If the corresponding service and characteristic are found it will
+   * return the app ID value.
+   *
+   * @param tag - Peripheral to connect to
+   */
+  async discoverCompanionAppId(tag: Tag): Promise<string | null> {
+    const disconnectPromise = util
+      .promisify(tag.peripheral.once)
+      .bind(tag.peripheral)('disconnect');
+
+    const peripheral = await this.bluetoothService.connectLowEnergyDevice(
+      tag.peripheral
+    );
+
+    try {
+      return await promiseWithTimeout<string | null>(
+        Promise.race([
+          BluetoothLowEnergyService.readCompanionAppId(peripheral),
+          disconnectPromise,
+        ]),
+        15 * 1000
+      );
+    } catch (e) {
+      this.logger.error(
+        `Failed to search for companion app at tag ${tag.id}: ${e.message}`,
+        e.trace
+      );
+
+      if (e.message === 'timed out') {
+        this.bluetoothService.resetHciDevice(
+          this.bluetoothService.lowEnergyAdapterId
+        );
+      }
+
+      return null;
+    } finally {
+      if (!['disconnecting', 'disconnected'].includes(tag.peripheral.state)) {
+        this.bluetoothService.disconnectLowEnergyDevice(tag.peripheral);
+      }
+    }
+  }
+
+  /**
    * Passes newly found discovery information to aggregated room presence sensors.
    *
    * @param event - Event with new distance/battery data
@@ -134,6 +187,10 @@ export class BluetoothLowEnergyService
     const sensorId = makeId(`ble ${event.tagId}`);
     let sensor: BluetoothLowEnergyPresenceSensor;
     const hasBattery = event.batteryLevel !== undefined;
+
+    if (event.isApp) {
+      this.handleAppDiscovery(event.peripheralId, event.tagId);
+    }
 
     if (this.entitiesService.has(sensorId)) {
       sensor = this.entitiesService.get(
@@ -175,55 +232,65 @@ export class BluetoothLowEnergyService
   }
 
   /**
-   * Determines whether a whitelist has been configured or not.
+   * Determines whether an allowlist has been configured or not.
    *
-   * @returns Whitelist status
+   * @returns Allowlist status
    */
-  isWhitelistEnabled(): boolean {
-    return this.config.whitelist?.length > 0;
+  isAllowlistEnabled(): boolean {
+    return (
+      this.config.allowlist?.length > 0 || this.config.whitelist?.length > 0
+    );
   }
 
   /**
-   * Determines whether a blacklist has been configured or not.
+   * Determines whether a denylist has been configured or not.
    *
-   * @returns Blacklist status
+   * @returns Denylist status
    */
-  isBlacklistEnabled(): boolean {
-    return this.config.blacklist?.length > 0;
+  isDenylistEnabled(): boolean {
+    return (
+      this.config.denylist?.length > 0 || this.config.blacklist?.length > 0
+    );
   }
 
   /**
-   * Checks if an id is on the whitelist of this component.
+   * Checks if an id is on the allowlist of this component.
    *
    * @param id - Device id
-   * @return Whether the id is on the whitelist or not
+   * @return Whether the id is on the allowlist or not
    */
-  isOnWhitelist(id: string): boolean {
-    const whitelist = this.config.whitelist;
-    if (whitelist === undefined || whitelist.length === 0) {
+  isOnAllowlist(id: string): boolean {
+    const allowlist = [
+      ...(this.config.allowlist || []),
+      ...(this.config.whitelist || []),
+    ];
+    if (allowlist.length === 0) {
       return false;
     }
 
-    return this.config.whitelistRegex
-      ? whitelist.some((regex) => id.match(regex))
-      : whitelist.includes(id);
+    return this.config.allowlistRegex || this.config.whitelistRegex
+      ? allowlist.some((regex) => id.match(regex))
+      : allowlist.map((x) => x.toLowerCase()).includes(id.toLowerCase());
   }
 
   /**
-   * Checks if an id is on the blacklist of this component.
+   * Checks if an id is on the denylist of this component.
    *
    * @param id - Device id
-   * @return Whether the id is on the blacklist or not
+   * @return Whether the id is on the denylist or not
    */
-  isOnBlacklist(id: string): boolean {
-    const blacklist = this.config.blacklist;
-    if (blacklist === undefined || blacklist.length === 0) {
+  isOnDenylist(id: string): boolean {
+    const denylist = [
+      ...(this.config.denylist || []),
+      ...(this.config.blacklist || []),
+    ];
+    if (denylist.length === 0) {
       return false;
     }
 
-    return this.config.blacklistRegex
-      ? blacklist.some((regex) => id.match(regex))
-      : blacklist.includes(id);
+    return this.config.denylistRegex || this.config.blacklistRegex
+      ? denylist.some((regex) => id.match(regex))
+      : denylist.map((x) => x.toLowerCase()).includes(id.toLowerCase());
   }
 
   /**
@@ -405,5 +472,177 @@ export class BluetoothLowEnergyService
     }
 
     return tag;
+  }
+
+  /**
+   * Overrides tag data with a companion app ID if found.
+   * Only performs discovery process for relevant devices.
+   *
+   * @param tag - Tag that should be overridden
+   */
+  protected async applyCompanionAppOverride(tag: Tag): Promise<Tag> {
+    const manufacturerData = tag.peripheral?.advertisement?.manufacturerData;
+
+    // only Apple devices are supported for the companion app
+    // a more sophisticated detection could be possible by looking at the overflow area
+    // more info: http://www.davidgyoungtech.com/2020/05/07/hacking-the-overflow-area
+    // manufacturer data seems broken in noble though
+    if (
+      !this.companionAppTags.has(tag.id) &&
+      !this.companionAppDenylist.has(tag.id) &&
+      tag.peripheral.connectable &&
+      BluetoothLowEnergyService.isAppleDevice(manufacturerData) &&
+      BluetoothLowEnergyService.overflowContainsCompanionApp(
+        BluetoothLowEnergyService.extractOverflowArea(manufacturerData)
+      )
+    ) {
+      let appId: string;
+
+      this.logger.log(`Attempting app discovery for tag ${tag.id}`);
+      this.logger.debug(
+        `Tag ${
+          tag.id
+        } seems to broadcast the app with manufacturer data ${tag.peripheral.advertisement.manufacturerData.toString(
+          'hex'
+        )}`
+      );
+
+      try {
+        appId = await this.discoverCompanionAppId(tag);
+      } catch (e) {
+        this.logger.warn(
+          `Failed to discover companion app ID due to error: ${e.message}`
+        );
+      }
+
+      if (appId != null) {
+        this.logger.log(
+          `Discovered companion app with ID ${appId} for tag ${tag.id}`
+        );
+        this.handleAppDiscovery(tag.id, appId);
+      } else {
+        this.logger.debug(
+          `Tag ${tag.id} should have the companion app, retrying in a minute`
+        );
+        this.banDeviceFromDiscovery(tag.id, 60 * 1000);
+      }
+    }
+
+    const appId = this.companionAppTags.get(tag.id);
+    if (appId != null) {
+      tag.id = appId;
+      tag.isApp = true;
+    }
+
+    return tag;
+  }
+
+  /**
+   * Adds discovered app information to the local cache.
+   * Does not override already existing values to null.
+   *
+   * @param tagId - ID of the actual peripheral (e.g. MAC)
+   * @param appId - ID of the discovered app
+   */
+  protected handleAppDiscovery(tagId: string, appId: string): void {
+    const oldId = this.companionAppTags.get(tagId);
+
+    if (!(oldId != null && appId == null)) {
+      this.companionAppTags.set(tagId, appId);
+      this.companionAppDenylist.delete(tagId);
+    }
+  }
+
+  /**
+   * Temporarily bans a device from the app discovery process.
+   *
+   * @param tagId - ID of the tag that should be banned
+   * @param duration - Time in milliseconds that the ban should be active for
+   */
+  private banDeviceFromDiscovery(tagId: string, duration: number) {
+    this.companionAppDenylist.add(tagId);
+    setTimeout(() => this.companionAppDenylist.delete(tagId), duration);
+  }
+
+  /**
+   * Checks if an advertisements is from an Apple device.
+   *
+   * @param manufacturerData - Manufacturer Data sent within in BLE advertisement
+   */
+  private static isAppleDevice(manufacturerData: Buffer): boolean {
+    return manufacturerData?.slice(0, 2).equals(APPLE_ADVERTISEMENT_ID);
+  }
+
+  /**
+   * Extracts the overflow area from the manufacturer data if present.
+   * If not present it will return null.
+   * More info: http://www.davidgyoungtech.com/2020/05/07/hacking-the-overflow-area
+   *
+   * @param manufacturerData - Manufacturer Data sent within in BLE advertisement
+   */
+  private static extractOverflowArea(manufacturerData: Buffer): Buffer | null {
+    if (
+      manufacturerData == null ||
+      manufacturerData.length < 19 ||
+      manufacturerData.readUInt8(manufacturerData.length - 17) != 0x01
+    ) {
+      return null;
+    }
+
+    return manufacturerData.slice(manufacturerData.length - 16);
+  }
+
+  /**
+   * Checks if the advertisement contains an overflow area.
+   * Determined by the 4th bit of the 3rd byte.
+   *
+   * @param overflowArea - Overflow Area part of the Manufacturer Data
+   */
+  private static overflowContainsCompanionApp(overflowArea: Buffer): boolean {
+    return overflowArea != null && ((overflowArea.readUInt8(3) >> 4) & 1) === 1;
+  }
+
+  /**
+   * Reads a characteristic value of a BLE peripheral as string.
+   *
+   * @param peripheral - peripheral to read from
+   * @param serviceUuid - UUID of the service that contains the characteristic
+   * @param characteristicUuid - UUID of the characteristic to read
+   */
+  private static async readCharacteristic(
+    peripheral: Peripheral,
+    serviceUuid: string,
+    characteristicUuid: string
+  ): Promise<string | null> {
+    const services = await peripheral.discoverServicesAsync([serviceUuid]);
+
+    if (services.length > 0) {
+      const characteristics = await services[0].discoverCharacteristicsAsync([
+        characteristicUuid,
+      ]);
+
+      if (characteristics.length > 0) {
+        const data = await characteristics[0].readAsync();
+        return data.toString('utf-8');
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Reads the companion app ID from the pre-defined characteristic.
+   * May return null, which means no ID was found.
+   *
+   * @param peripheral - BLE peripheral to read from
+   */
+  private static readCompanionAppId(
+    peripheral: Peripheral
+  ): Promise<string | null> {
+    return this.readCharacteristic(
+      peripheral,
+      '5403c8a75c9647e99ab859e373d875a7',
+      '21c46f33e813440786012ad281030052'
+    );
   }
 }
