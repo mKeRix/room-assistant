@@ -21,6 +21,10 @@ This integration has been tested with these devices:
 
 - LYWSD02
 
+  (rectangular body, E-Ink with clock display. broadcasts temperature and humidity when it changes)
+
+- LYWSD02
+
   (rectangular body, E-Ink, broadcasts temperature and humidity, about 20 readings per minute, no battery info)
 
 - LYWSDCGQ
