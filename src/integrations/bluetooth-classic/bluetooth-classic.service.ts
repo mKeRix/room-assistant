@@ -16,6 +16,7 @@ import _ from 'lodash';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { SensorConfig } from '../home-assistant/sensor-config';
+import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import {
   NEW_RSSI_CHANNEL,
   REQUEST_RSSI_CHANNEL,
@@ -25,6 +26,7 @@ import { KalmanFilterable } from '../../util/filters';
 import { makeId } from '../../util/id';
 import { Device } from './device';
 import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
+import { Device as DeviceInfo } from '../home-assistant/device';
 import { Switch } from '../../entities/switch';
 import { SwitchConfig } from '../home-assistant/switch-config';
 import { DeviceTracker } from '../../entities/device-tracker';
@@ -328,9 +330,18 @@ export class BluetoothClassicService
     sensorId: string,
     device: Device
   ): Promise<RoomPresenceDistanceSensor> {
+    const deviceInfo: DeviceInfo = {
+      identifiers: device.address,
+      name: device.name,
+      manufacturer: device.manufacturer,
+      connections: [['mac', device.address]],
+      viaDevice: DISTRIBUTED_DEVICE_ID,
+    };
+
     const deviceTracker = this.createDeviceTracker(
       makeId(`${sensorId}-tracker`),
-      device.name
+      `${device.name} Tracker`,
+      deviceInfo
     );
 
     const customizations: Array<EntityCustomization<any>> = [
@@ -338,13 +349,7 @@ export class BluetoothClassicService
         for: SensorConfig,
         overrides: {
           icon: 'mdi:bluetooth',
-          device: {
-            identifiers: device.address,
-            name: device.name,
-            manufacturer: device.manufacturer,
-            connections: [['mac', device.address]],
-            viaDevice: DISTRIBUTED_DEVICE_ID,
-          },
+          device: deviceInfo,
         },
       },
     ];
@@ -377,11 +382,26 @@ export class BluetoothClassicService
    *
    * @param id - Entity ID for the new device tracker
    * @param name - Name for the new device tracker
+   * @param deviceInfo - Reference information about the BT Classic device
    * @returns Registered device tracker
    */
-  protected createDeviceTracker(id: string, name: string): DeviceTracker {
+  protected createDeviceTracker(
+    id: string,
+    name: string,
+    deviceInfo: DeviceInfo
+  ): DeviceTracker {
+    const trackerCustomizations: Array<EntityCustomization<any>> = [
+      {
+        for: DeviceTrackerConfig,
+        overrides: {
+          sourceType: 'bluetooth',
+          device: deviceInfo,
+        },
+      },
+    ];
     return this.entitiesService.add(
-      new DeviceTracker(id, name, true)
+      new DeviceTracker(id, name, true),
+      trackerCustomizations
     ) as DeviceTracker;
   }
 

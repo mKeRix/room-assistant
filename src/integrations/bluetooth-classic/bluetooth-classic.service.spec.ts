@@ -30,6 +30,7 @@ import c from 'config';
 import { ConfigService } from '../../config/config.service';
 import { Device } from './device';
 import { DeviceTracker } from '../../entities/device-tracker';
+import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import * as util from 'util';
 
 jest.mock('mdns', () => ({}), { virtual: true });
@@ -407,7 +408,7 @@ describe('BluetoothClassicService', () => {
     expect(handleRssiMock).not.toHaveBeenCalled();
   });
 
-  it('should register a new sensor for a previously unknown device', async () => {
+  it('should register a new sensor and device tracker for a previously unknown device', async () => {
     entitiesService.has.mockReturnValue(false);
     entitiesService.add.mockImplementation((entity) => entity);
     clusterService.nodes.mockReturnValue({
@@ -429,9 +430,24 @@ describe('BluetoothClassicService', () => {
     expect(entitiesService.add).toHaveBeenCalledWith(
       new DeviceTracker(
         'bluetooth-classic-10-36-cf-ca-9a-18-tracker',
-        'Test Device',
+        'Test Device Tracker',
         true
-      )
+      ),
+      [
+        {
+          for: DeviceTrackerConfig,
+          overrides: {
+            sourceType: 'bluetooth',
+            device: {
+              identifiers: '10:36:cf:ca:9a:18',
+              name: 'Test Device',
+              connections: [['mac', '10:36:cf:ca:9a:18']],
+              manufacturer: undefined,
+              viaDevice: 'room-assistant-distributed',
+            },
+          },
+        },
+      ]
     );
     expect(entitiesService.add).toHaveBeenCalledWith(
       expect.any(RoomPresenceDistanceSensor),
