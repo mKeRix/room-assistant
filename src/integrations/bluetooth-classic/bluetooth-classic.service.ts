@@ -26,19 +26,12 @@ import { KalmanFilterable } from '../../util/filters';
 import { makeId } from '../../util/id';
 import { Device } from './device';
 import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
+import { Device as DeviceInfo } from '../home-assistant/device';
 import { Switch } from '../../entities/switch';
 import { SwitchConfig } from '../home-assistant/switch-config';
 import { DeviceTracker } from '../../entities/device-tracker';
 import { RoomPresenceProxyHandler } from '../room-presence/room-presence.proxy';
 import { BluetoothService } from '../bluetooth/bluetooth.service';
-
-interface DeviceInfo {
-  identifiers: string | string[];
-  name: string;
-  manufacturer?: string;
-  connections?: string[][];
-  viaDevice?: string;
-}
 
 const execPromise = util.promisify(exec);
 
