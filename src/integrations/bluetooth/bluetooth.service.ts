@@ -117,25 +117,13 @@ export class BluetoothService {
       );
     }
 
-    this.logger.debug(
-      `Connecting to BLE device at address ${peripheral.address}`
-    );
     this.lockAdapter(this._lowEnergyAdapterId);
 
-    peripheral.once('disconnect', (e) => {
-      if (e) {
-        this.logger.error(e);
-      } else {
-        this.logger.debug(
-          `Disconnected from BLE device at address ${peripheral.address}`
-        );
-      }
-
-      this.unlockAdapter(this._lowEnergyAdapterId);
-    });
-
     try {
-      await promiseWithTimeout(peripheral.connectAsync(), 10 * 1000);
+      await promiseWithTimeout(
+        this.connectLowEnergyDeviceWithRetry(peripheral, 5),
+        10 * 1000
+      );
       return peripheral;
     } catch (e) {
       this.logger.error(
@@ -491,6 +479,49 @@ export class BluetoothService {
         `Adapter ${this._lowEnergyAdapterId} is set to inactive`
       );
       this.adapters.setState(this._lowEnergyAdapterId, 'inactive');
+    }
+  }
+
+  /**
+   * Connect to a peripheral and retry if it immediately disconnects.
+   *
+   * @param peripheral - BLE peripheral to connect to
+   * @param tries - Amount of connection attempts before failing
+   */
+  private async connectLowEnergyDeviceWithRetry(
+    peripheral: Peripheral,
+    tries: number
+  ): Promise<Peripheral> {
+    if (tries <= 0) {
+      this.unlockAdapter(this._lowEnergyAdapterId);
+      throw new Error(
+        `Maximum retries reached while connecting to ${peripheral.address}`
+      );
+    }
+
+    this.logger.debug(
+      `Connecting to BLE device at address ${peripheral.address}`
+    );
+
+    await peripheral.connectAsync();
+    await sleep(500); // https://github.com/mKeRix/room-assistant/issues/508
+
+    if (peripheral.state != 'connected') {
+      return this.connectLowEnergyDeviceWithRetry(peripheral, tries - 1);
+    } else {
+      peripheral.once('disconnect', (e) => {
+        if (e) {
+          this.logger.error(e);
+        } else {
+          this.logger.debug(
+            `Disconnected from BLE device at address ${peripheral.address}`
+          );
+        }
+
+        this.unlockAdapter(this._lowEnergyAdapterId);
+      });
+
+      return peripheral;
     }
   }
 }

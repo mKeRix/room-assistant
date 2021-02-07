@@ -7,6 +7,7 @@ const mockNoble = {
   startScanning: jest.fn(),
   stopScanning: jest.fn(),
   reset: jest.fn(),
+  resetBindings: jest.fn(),
 };
 jest.mock(
   '@mkerix/noble',
@@ -354,6 +355,7 @@ Requesting information ...
         connectable: true,
         connectAsync: jest.fn().mockReturnValue(connectPromise),
         once: jest.fn(),
+        state: 'disconnected',
       };
 
       service.connectLowEnergyDevice((peripheral as unknown) as Peripheral);
@@ -362,14 +364,20 @@ Requesting information ...
         service.connectLowEnergyDevice((peripheral as unknown) as Peripheral)
       ).rejects.toThrow();
 
+      peripheral.state = 'connected';
       connectResolve();
     });
 
     it('should unlock the adapter on disconnect', async () => {
+      jest.spyOn(Promises, 'sleep').mockResolvedValue();
       const peripheral = {
         connectable: true,
-        connectAsync: jest.fn().mockResolvedValue(undefined),
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
         once: jest.fn(),
+        state: 'disconnected',
       };
 
       await service.connectLowEnergyDevice(
@@ -431,10 +439,15 @@ Requesting information ...
     });
 
     it('should return the peripheral after connecting', async () => {
+      jest.spyOn(Promises, 'sleep').mockResolvedValue();
       const peripheral = {
         connectable: true,
-        connectAsync: jest.fn().mockResolvedValue(undefined),
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
         once: jest.fn(),
+        state: 'disconnected',
       };
 
       const actual = await service.connectLowEnergyDevice(
@@ -442,6 +455,46 @@ Requesting information ...
       );
 
       expect(actual).toBe(peripheral);
+    });
+
+    it('should retry connection attempts after immediate disconnects', async () => {
+      const peripheral = {
+        connectable: true,
+        connectAsync: jest
+          .fn()
+          .mockResolvedValueOnce(undefined)
+          .mockImplementation(() => {
+            peripheral.state = 'connected';
+            return Promise.resolve();
+          }),
+        once: jest.fn(),
+        state: 'disconnected',
+      };
+
+      const actual = await service.connectLowEnergyDevice(
+        (peripheral as unknown) as Peripheral
+      );
+      expect(actual).toBe(peripheral);
+      expect(peripheral.connectAsync).toHaveBeenCalledTimes(2);
+    });
+
+    it('should throw after multiple connection attempts', async () => {
+      jest.spyOn(Promises, 'sleep').mockResolvedValue();
+      const peripheral = {
+        connectable: true,
+        connectAsync: jest.fn().mockResolvedValue(undefined),
+        disconnect: jest.fn(),
+        once: jest.fn(),
+        removeAllListeners: jest.fn(),
+        state: 'disconnected',
+      };
+
+      await expect(async () => {
+        await service.connectLowEnergyDevice(
+          (peripheral as unknown) as Peripheral
+        );
+      }).rejects.toThrow();
+      expect(peripheral.connectAsync).toHaveBeenCalledTimes(5);
     });
 
     it('should disconnect from a peripheral', async () => {

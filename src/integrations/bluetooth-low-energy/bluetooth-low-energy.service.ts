@@ -522,9 +522,9 @@ export class BluetoothLowEnergyService
         this.handleAppDiscovery(tag.id, appId);
       } else {
         this.logger.debug(
-          `Tag ${tag.id} should have the companion app, retrying in a minute`
+          `Tag ${tag.id} should have the companion app, retrying in 15s`
         );
-        this.banDeviceFromDiscovery(tag.id, 60 * 1000);
+        this.banDeviceFromDiscovery(tag.id, 15 * 1000);
       }
     }
 
