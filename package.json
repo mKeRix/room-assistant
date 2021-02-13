@@ -124,7 +124,7 @@
     "winston-elasticsearch": "^0.12.3"
   },
   "engines": {
-    "node": ">= 10 < 15"
+    "node": ">= 12 < 15"
   },
   "husky": {
     "hooks": {
