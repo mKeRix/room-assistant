@@ -50,7 +50,11 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 
 1. Open a new SSH session, this time using the hostname (e.g. `bedroom.local`) and password you set above.
 
-2. Now we install NodeJS by running `wget -O - https://raw.githubusercontent.com/sdesalas/node-pi-zero/master/install-node-v.lts.sh | bash`.
+2. Now we install NodeJS by running
+
+   ```bash
+   wget -O - https://gist.githubusercontent.com/mKeRix/88b7b81e9bca044f74de1dc51696efb2/raw/799a20bca44cc61d8f8ae93878f2f28af8365a69/getNodeLTS.sh | bash
+   ```
 
 3. To make the commands we install with npm available the $PATH environment variable needs to be extended as well. Edit the file `~/.profile` (e.g. with `nano ~/.profile`) and add the `PATH="$PATH:/opt/nodejs/bin"` to the end of the file. Save, then run `source ~/.profile`.
 

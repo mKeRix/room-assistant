@@ -11,7 +11,7 @@ Also checkout the quickstart guides in the menu on the left! If you are planning
 ### Requirements
 
 Please make sure you have either NodeJS 10.x or NodeJS 12.x installed. The version provided by Raspbian by default is outdated.
-Installation guides for NodeJS can be found [here](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions). For Pi Zero devices you will need to use a [different installation process](https://github.com/sdesalas/node-pi-zero#vlts).
+Installation guides for NodeJS can be found [here](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions). For Pi Zero devices you will need to use a [different installation process](./quickstart-pi-zero-w.md#installing-room-assistant).
 
 room-assistant instances discover each other in the local network using mDNS. You will require two additional system packages to get this working:
 
