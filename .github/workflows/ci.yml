@@ -19,17 +19,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 12.x
+      - name: Use Node.js 14.x
         uses: actions/setup-node@v2.1.4
         with:
-          node-version: 12.x
+          node-version: 14.x
       - name: Cache Node.js modules
         uses: actions/cache@v2.1.4
         with:
           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.OS }}-node-12.x-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.OS }}-node-14.x-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-node-12.x
+            ${{ runner.OS }}-node-14.x
             ${{ runner.OS }}-
       - name: Install dependencies
         run: npm ci
@@ -41,7 +41,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x]
+        node-version: [12.x, 14.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -67,7 +67,7 @@ jobs:
           CI: true
       - name: Upload code coverage
         uses: codecov/codecov-action@v1.2.1
-        if: matrix.node-version == '12.x'
+        if: matrix.node-version == '14.x'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           name: Node.js ${{ matrix.node-version }}
