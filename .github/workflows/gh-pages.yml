@@ -1,13 +1,10 @@
 name: Documentation
 
 on:
-  push:
-    paths:
-      - 'docs/**'
-      - 'package.json'
-      - 'package-lock.json'
-    branches:
-      - master
+  workflow_dispatch: {}
+  release:
+    types:
+      - released
 
 jobs:
   deploy:
