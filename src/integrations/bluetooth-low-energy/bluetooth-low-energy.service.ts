@@ -270,7 +270,9 @@ export class BluetoothLowEnergyService
 
     return this.config.allowlistRegex || this.config.whitelistRegex
       ? allowlist.some((regex) => id.match(regex))
-      : allowlist.map((x) => x.toLowerCase()).includes(id.toLowerCase());
+      : allowlist
+          .map((x) => String(x).toLowerCase())
+          .includes(id.toLowerCase());
   }
 
   /**
@@ -290,7 +292,7 @@ export class BluetoothLowEnergyService
 
     return this.config.denylistRegex || this.config.blacklistRegex
       ? denylist.some((regex) => id.match(regex))
-      : denylist.map((x) => x.toLowerCase()).includes(id.toLowerCase());
+      : denylist.map((x) => String(x).toLowerCase()).includes(id.toLowerCase());
   }
 
   /**
