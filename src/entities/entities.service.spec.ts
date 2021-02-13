@@ -396,10 +396,10 @@ describe('EntitiesService', () => {
 
     service.refreshStates();
 
-    expect(spy).toHaveBeenCalledTimes(4);
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 
-  it('should send out events for all entities when refreshing as majority leader', () => {
+  it('should send out events for all non-distributed or locked entities when refreshing as majority leader', () => {
     clusterService.isMajorityLeader.mockReturnValue(true);
     const spy = jest.spyOn(emitter, 'emit');
 
@@ -412,6 +412,9 @@ describe('EntitiesService', () => {
     const sensor2 = new Sensor('sensor2', 'Sensor 2', true);
     sensor2.state = 2;
     service.add(sensor2);
+    const sensor3 = new Sensor('sensor3', 'Sensor 3', true, false);
+    sensor3.state = 3;
+    service.add(sensor3);
     spy.mockClear();
 
     service.refreshStates();

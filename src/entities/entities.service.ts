@@ -127,8 +127,7 @@ export class EntitiesService implements OnApplicationBootstrap {
     this.entities.forEach((entity) => {
       if (
         !entity.distributed ||
-        !entity.stateLocked ||
-        this.clusterService.isMajorityLeader()
+        (entity.stateLocked && this.clusterService.isMajorityLeader())
       ) {
         this.emitter.emit(
           'stateUpdate',
