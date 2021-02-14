@@ -87,10 +87,19 @@ Try to pair your Apple Watch to a Bluetooth device such as headphones/speakers f
 | `timeoutCycles`    | Number                                       | `2`     | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
 | `preserveState`    | Boolean                                      | `false` | Whether the last recorded distance should be preserved when the inquiries switch is turned off or not. |
 | `inquireFromStart` | Boolean                                      | `true`  | Whether the [Inquiries Switch](#inquiries-switch) is turned on when room-assistant is started or not. |
+| `entityOverrides`  | [Entity Overrides](#entity-overrides)        |         | Allows you to override some properties of the created entities. |
 
 ### Minimum RSSI
 
 `minRssi` can either be specified as a number that is applied to all devices like shown in the simple example config, or as a map of addresses and `minRssi` values as shown in the advanced example config. The latter allows you to configure different cutoffs for the devices you are using, as they may end up showing different RSSI levels even when placed at the same distance. The `minRssi.default` setting will be applied to all addresses that have not been configured specifically. If it is not set, all devices that don't have a specific value will always be considered to be in range.
+
+### Entity Overrides
+
+The entity overrides object can be considered as a map with the device MAC as key and an object with some of the following settings as value.
+
+| Name | Type   | Default | Description                                                  |
+| ---- | ------ | ------- | ------------------------------------------------------------ |
+| `id` | String |         | Changes the ID of the device entities. Useful to hide device addresses from publicly shared home automation configurations. |
 
 ::: details Simple Example Config
 
@@ -122,6 +131,9 @@ bluetoothClassic:
   addresses:
     - '08:05:90:ed:3b:60'
     - '77:50:fb:4d:ab:70'
+  entityOverrides:
+    '08:05:90:ed:3b:60':
+    	id: my-phone
 ```
 
 :::

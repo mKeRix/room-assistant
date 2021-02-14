@@ -163,7 +163,8 @@ export class BluetoothClassicService
       `Received RSSI of ${event.rssi} for ${event.device.address} from ${event.instanceName}`
     );
 
-    const sensorId = makeId(`bluetooth-classic ${event.device.address}`);
+    const baseId = this.config.entityOverrides[event.device.address]?.id || event.device.address;
+    const sensorId = makeId(`bluetooth-classic ${baseId}`);
     let sensor: RoomPresenceDistanceSensor;
     if (this.entitiesService.has(sensorId)) {
       sensor = this.entitiesService.get(sensorId) as RoomPresenceDistanceSensor;

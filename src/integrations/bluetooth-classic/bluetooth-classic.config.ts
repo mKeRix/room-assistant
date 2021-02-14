@@ -7,4 +7,9 @@ export class BluetoothClassicConfig {
   timeoutCycles = 2;
   preserveState = false;
   inquireFromStart = true;
+  entityOverrides: { [key: string]: BluetoothClassicEntityOverride } = {};
+}
+
+class BluetoothClassicEntityOverride {
+  id?: string;
 }
