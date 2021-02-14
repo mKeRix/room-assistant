@@ -93,6 +93,7 @@ export class BluetoothLowEnergyService
     }
 
     tag = await this.applyCompanionAppOverride(tag);
+    tag = this.applyOverrides(tag);
 
     if (!this.seenIds.has(tag.id)) {
       this.logger.log(
@@ -106,7 +107,6 @@ export class BluetoothLowEnergyService
         (!this.isAllowlistEnabled() && this.isDenylistEnabled())) &&
       !this.isOnDenylist(tag.id)
     ) {
-      tag = this.applyOverrides(tag);
       tag.rssi = this.filterRssi(tag.id, tag.rssi);
 
       const globalSettings = this.configService.get('global');
@@ -462,6 +462,9 @@ export class BluetoothLowEnergyService
   protected applyOverrides(tag: Tag): Tag {
     if (this.config.tagOverrides.hasOwnProperty(tag.id)) {
       const overrides = this.config.tagOverrides[tag.id];
+      if (overrides.id !== undefined) {
+        tag.id = overrides.id;
+      }
       if (overrides.name !== undefined) {
         tag.name = overrides.name;
       }
