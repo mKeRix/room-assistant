@@ -73,7 +73,7 @@
     "slugify": "^1.4.6",
     "stream-buffers": "^3.0.2",
     "swagger-ui-express": "^4.1.6",
-    "systeminformation": "^5.3.0",
+    "systeminformation": "^5.3.1",
     "update-notifier": "^5.1.0",
     "winston": "^3.3.3"
   },
