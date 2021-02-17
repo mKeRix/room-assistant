@@ -140,10 +140,14 @@ export class HomeAssistantService
       config instanceof CameraConfig ? _.omit(config, ['stateTopic']) : config
     );
 
+    // concatenate discoveryPrefix to configTopic
+    const discoveryTopic =
+      this.config.discoveryPrefix + '/' + config.configTopic;
+
     this.logger.debug(
-      `Registering entity ${config.uniqueId} under ${config.configTopic}`
+      `Registering entity ${config.uniqueId} under ${discoveryTopic}`
     );
-    this.mqttClient.publish(config.configTopic, JSON.stringify(message), {
+    this.mqttClient.publish(discoveryTopic, JSON.stringify(message), {
       qos: 0,
       retain: true,
     });
