@@ -25,7 +25,7 @@ export abstract class EntityConfig {
     this.device = device;
 
     this.uniqueId = `room-assistant-${id}`;
-    this.configTopic = `homeassistant/${this.component}/room-assistant/${id}/config`;
+    this.configTopic = `${this.component}/room-assistant/${id}/config`;
     this.stateTopic = `room-assistant/${this.component}/${id}/state`;
     this.jsonAttributesTopic = `room-assistant/${this.component}/${id}/attributes`;
     this.availabilityTopic = `room-assistant/${this.component}/${id}/status`;
