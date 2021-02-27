@@ -9,17 +9,22 @@ interface EntitiesEvents {
     customizations?: Array<EntityCustomization<any>>
   ) => void;
 
-  stateUpdate: (
-    id: string,
-    state: boolean | string | number | Buffer,
-    distributed?: boolean
+  entityUpdate: (
+    entity: Entity,
+    diff: Array<PropertyDiff>,
+    hasAuthority: boolean
   ) => void;
 
-  attributesUpdate: (
-    entityId: string,
-    attributes: { [key: string]: any },
-    distributed?: boolean
+  entityRefresh: (
+    entity: Entity,
+    hasAuthority: boolean
   ) => void;
+}
+
+export interface PropertyDiff {
+  path: string;
+  oldValue: any;
+  newValue: any;
 }
 
 export type EntitiesEventEmitter = StrictEventEmitter<

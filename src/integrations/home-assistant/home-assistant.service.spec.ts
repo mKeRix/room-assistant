@@ -96,11 +96,11 @@ describe('HomeAssistantService', () => {
       expect.any(Function)
     );
     expect(emitterOnSpy).toHaveBeenCalledWith(
-      'stateUpdate',
+      'entityUpdate',
       expect.any(Function)
     );
     expect(emitterOnSpy).toHaveBeenCalledWith(
-      'attributesUpdate',
+      'entityRefresh',
       expect.any(Function)
     );
   });
@@ -474,8 +474,15 @@ describe('HomeAssistantService', () => {
 
   it('should publish state updates for entities', async () => {
     await service.onModuleInit();
-    service.handleNewEntity(new Sensor('test', 'Test'));
-    service.handleNewState('test', 2);
+    const sensor = new Sensor('test', 'Test');
+    service.handleNewEntity(sensor);
+
+    sensor.state = 2
+    service.handleEntityUpdate(sensor, [{
+      newValue: 2,
+      oldValue: undefined,
+      path: '/state'
+    }], true)
 
     expect(mockMqttClient.publish).toHaveBeenCalledWith(
       'room-assistant/sensor/test-instance-test/state',
@@ -488,11 +495,18 @@ describe('HomeAssistantService', () => {
   });
 
   it('should publish Buffer states in binary form', async () => {
-    const imageData = new Buffer('abc');
+    const imageData = Buffer.from('abc');
 
     await service.onModuleInit();
-    service.handleNewEntity(new Camera('test', 'Test'));
-    service.handleNewState('test', imageData);
+    const camera = new Camera('test', 'Test');
+    service.handleNewEntity(camera);
+
+    camera.state = imageData
+    service.handleEntityUpdate(camera, [{
+      newValue: imageData,
+      oldValue: undefined,
+      path: '/state'
+    }], true)
 
     expect(mockMqttClient.publish).toHaveBeenCalledWith(
       'room-assistant/camera/test-instance-test/state',
@@ -505,15 +519,27 @@ describe('HomeAssistantService', () => {
   });
 
   it('should ignore state updates if the entity is not registered with Home Assistant', () => {
-    service.handleNewState('does-not-exist', 'not_home');
+    service.handleEntityUpdate(new Sensor('does-not-exist', 'Ghost'), [{
+      newValue: 42,
+      oldValue: undefined,
+      path: '/state'
+    }], true)
+
     expect(mockMqttClient.publish).not.toHaveBeenCalled();
   });
 
   it('should publish attribute updates for entities', async () => {
     jest.useFakeTimers();
     await service.onModuleInit();
-    service.handleNewEntity(new Sensor('test', 'Test'));
-    service.handleNewAttributes('test', { stateUpdated: true });
+    const sensor = new Sensor('test', 'Test');
+    service.handleNewEntity(sensor);
+
+    sensor.attributes.stateUpdated = true
+    service.handleEntityUpdate(sensor, [{
+      newValue: true,
+      oldValue: undefined,
+      path: '/attributes/stateUpdated'
+    }], true)
     jest.runAllTimers();
 
     expect(mockMqttClient.publish).toHaveBeenCalledWith(
@@ -525,11 +551,24 @@ describe('HomeAssistantService', () => {
   it('should debounce the attribute updates', async () => {
     jest.useFakeTimers();
     await service.onModuleInit();
-    service.handleNewEntity(new Sensor('test', 'Test'));
+    const sensor = new Sensor('test', 'Test');
+    service.handleNewEntity(sensor);
     mockMqttClient.publish.mockClear();
 
-    service.handleNewAttributes('test', { stateUpdated: true });
-    service.handleNewAttributes('test', { stateUpdated: true, test: 1234 });
+    sensor.attributes.stateUpdated = true
+    service.handleEntityUpdate(sensor, [{
+      newValue: true,
+      oldValue: undefined,
+      path: '/attributes/stateUpdated'
+    }], true)
+
+    sensor.attributes.test = 1234
+    service.handleEntityUpdate(sensor, [{
+      newValue: 1234,
+      oldValue: undefined,
+      path: '/attributes/test'
+    }], true)
+
     jest.runAllTimers();
 
     expect(mockMqttClient.publish).toHaveBeenCalledWith(
@@ -544,8 +583,15 @@ describe('HomeAssistantService', () => {
     mockConfig.sendAttributes = false;
 
     await service.onModuleInit();
-    service.handleNewEntity(new Sensor('test', 'Test'));
-    service.handleNewAttributes('test', { stateUpdated: true });
+    const sensor = new Sensor('test', 'Test');
+    service.handleNewEntity(sensor);
+
+    sensor.attributes.stateUpdated = true
+    service.handleEntityUpdate(sensor, [{
+      newValue: true,
+      oldValue: undefined,
+      path: '/attributes/stateUpdated'
+    }], true)
     jest.runAllTimers();
 
     expect(mockMqttClient.publish).not.toHaveBeenCalledWith(
@@ -556,11 +602,69 @@ describe('HomeAssistantService', () => {
 
   it('should ignore attribute updates if the entity is not registered with Home Assistant', () => {
     jest.useFakeTimers();
-    service.handleNewAttributes('test', { stateUpdated: true });
+    service.handleEntityUpdate(new Sensor('does-not-exist', 'Ghost'), [{
+      newValue: 42,
+      oldValue: undefined,
+      path: '/attributes/test'
+    }], true)
     jest.runAllTimers();
 
     expect(mockMqttClient.publish).not.toHaveBeenCalled();
   });
+
+  it('should ignore entity updates that do not change state or attributes', async () => {
+    await service.onModuleInit();
+    const sensor = new Sensor('test', 'Test');
+    service.handleNewEntity(sensor);
+    mockMqttClient.publish.mockClear();
+
+    service.handleEntityUpdate(sensor, [{
+      newValue: 2,
+      oldValue: undefined,
+      path: '/distances/room/distance'
+    }], true)
+
+    expect(mockMqttClient.publish).not.toHaveBeenCalled();
+  });
+
+  it('should send state and attribute messages on refresh for entities that we have authority over', async () => {
+    jest.useFakeTimers();
+    await service.onModuleInit();
+    const sensor = new Sensor('test', 'Test');
+    service.handleNewEntity(sensor);
+
+    sensor.state = 2
+    sensor.attributes.test = 123;
+
+    service.handleEntityRefresh(sensor, true);
+    jest.runAllTimers();
+
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'room-assistant/sensor/test-instance-test/state',
+      '2',
+      {
+        qos: 0,
+        retain: true,
+      }
+    );
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'room-assistant/sensor/test-instance-test/attributes',
+      JSON.stringify({ test: 123 })
+    );
+  })
+
+  it('should send no messages on refresh for entities that we have no authority over', async () => {
+    jest.useFakeTimers();
+    await service.onModuleInit();
+    const sensor = new Sensor('test', 'Test');
+    service.handleNewEntity(sensor);
+    mockMqttClient.publish.mockClear();
+
+    service.handleEntityRefresh(sensor, false);
+    jest.runAllTimers();
+
+    expect(mockMqttClient.publish).not.toHaveBeenCalled();
+  })
 
   it('should match incoming messages to the correct entity', async () => {
     await service.onModuleInit();

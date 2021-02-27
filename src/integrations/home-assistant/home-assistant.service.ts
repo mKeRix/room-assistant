@@ -16,7 +16,7 @@ import { HomeAssistantConfig } from './home-assistant.config';
 import { Device } from './device';
 import { system } from 'systeminformation';
 import { InjectEventEmitter } from 'nest-emitter';
-import { EntitiesEventEmitter } from '../../entities/entities.events';
+import { EntitiesEventEmitter, PropertyDiff } from "../../entities/entities.events";
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { makeId } from '../../util/id';
 import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
@@ -75,8 +75,8 @@ export class HomeAssistantService
       );
 
       this.emitter.on('newEntity', this.handleNewEntity.bind(this));
-      this.emitter.on('stateUpdate', this.handleNewState.bind(this));
-      this.emitter.on('attributesUpdate', this.handleNewAttributes.bind(this));
+      this.emitter.on('entityUpdate', this.handleEntityUpdate.bind(this));
+      this.emitter.on('entityRefresh', this.handleEntityRefresh.bind(this));
     } catch (e) {
       this.logger.error(e, e.stack);
     }
@@ -159,71 +159,49 @@ export class HomeAssistantService
   }
 
   /**
-   * Sends information about entity state changes to Home Assistant.
+   * Checks for relevant changes in the entity and informs Home Assistant
+   * about them by sending new states and/or attributes to MQTT.
    *
-   * @param id - ID of the entity that had its state updated
-   * @param state - New state of the entity
-   * @param distributed - Whether the entity is a distributed one or not
+   * @param entity - Updated entity
+   * @param diff - Diff between old and new entity
+   * @param hasAuthority - Whether this instance has control of the entity or not
    */
-  handleNewState(
-    id: string,
-    state: number | string | boolean | Buffer,
-    distributed = false
-  ): void {
-    const config = this.entityConfigs.get(this.getCombinedId(id, distributed));
+  handleEntityUpdate(entity: Entity, diff: Array<PropertyDiff>, hasAuthority: boolean): void {
+    const config = this.entityConfigs.get(this.getCombinedId(entity.id, entity.distributed));
     if (config === undefined) {
       return;
     }
 
-    const logState = state instanceof Buffer ? '<binary>' : state;
-    this.logger.debug(`Sending new state ${logState} for ${config.uniqueId}`);
-
-    this.mqttClient.publish(
-      config.stateTopic,
-      state instanceof Buffer ? state : String(state),
-      {
-        qos: 0,
-        retain: true,
+    if (hasAuthority) {
+      if (diff.some(diff => diff.path.startsWith('/state'))) {
+        this.sendNewState(entity, config)
       }
-    );
+
+      if (this.config.sendAttributes && diff.some(diff => diff.path.startsWith('/attributes'))) {
+        this.sendNewAttributes(entity, config)
+      }
+    }
   }
 
   /**
-   * Sends information about attribute state changes to Home Assistant.
-   * Updates are debounced and will only be sent on the next tick.
+   * Re-publishes entity information that this instance has authority over
+   * on a refresh (e.g. after MQTT re-connect).
    *
-   * @param entityId - ID of the entity that had its attributes updated
-   * @param attributes - All current attributes of the entity
-   * @param distributed - Whether the entity is a distributed one or not
+   * @param entity - Entity in its current state
+   * @param hasAuthority - Whether this instance has control of the entity or not
    */
-  handleNewAttributes(
-    entityId: string,
-    attributes: { [key: string]: any },
-    distributed = false
-  ): void {
-    const config = this.entityConfigs.get(
-      this.getCombinedId(entityId, distributed)
-    );
-    if (config === undefined || !this.config.sendAttributes) {
+  handleEntityRefresh(entity: Entity, hasAuthority: boolean): void {
+    const config = this.entityConfigs.get(this.getCombinedId(entity.id, entity.distributed));
+    if (config === undefined) {
       return;
     }
 
-    if (this.debounceFunctions.has(entityId)) {
-      this.debounceFunctions.get(entityId)(attributes);
-    } else {
-      const debouncedFunc = _.debounce((attributes) => {
-        this.logger.debug(
-          `Sending new attributes ${JSON.stringify(attributes)} for ${
-            config.uniqueId
-          }`
-        );
-        this.mqttClient.publish(
-          config.jsonAttributesTopic,
-          JSON.stringify(this.formatMessage(attributes))
-        );
-      });
-      this.debounceFunctions.set(entityId, debouncedFunc);
-      debouncedFunc(attributes);
+    if (hasAuthority) {
+      this.sendNewState(entity, config);
+
+      if (this.config.sendAttributes) {
+        this.sendNewAttributes(entity, config)
+      }
     }
   }
 
@@ -368,6 +346,53 @@ export class HomeAssistantService
         return _.snakeCase(k);
       });
     });
+  }
+
+  /**
+   * Sends information about entity state changes to Home Assistant.
+   *
+   * @param entity - Entity with a new state
+   * @param config - Entity config of the passed entity
+   */
+  private sendNewState(entity: Entity, config: EntityConfig): void {
+    const logState = entity.state instanceof Buffer ? '<binary>' : entity.state;
+    this.logger.debug(`Sending new state ${logState} for ${config.uniqueId}`);
+
+    this.mqttClient.publish(
+      config.stateTopic,
+      entity.state instanceof Buffer ? entity.state : String(entity.state),
+      {
+        qos: 0,
+        retain: true,
+      }
+    );
+  }
+
+  /**
+   * Sends information about attribute state changes to Home Assistant.
+   * Updates are debounced and will only be sent on the next tick.
+   *
+   * @param entity - Entity with new attributes
+   * @param config - Entity config of the passed entity
+   */
+  private sendNewAttributes(entity: Entity, config: EntityConfig): void {
+    if (this.debounceFunctions.has(entity.id)) {
+      this.debounceFunctions.get(entity.id)(entity.attributes);
+    } else {
+      const debouncedFunc = _.debounce((attributes) => {
+        this.logger.debug(
+          `Sending new attributes ${JSON.stringify(attributes)} for ${
+            config.uniqueId
+          }`
+        );
+        this.mqttClient.publish(
+          config.jsonAttributesTopic,
+          JSON.stringify(this.formatMessage(attributes))
+        );
+      });
+      this.debounceFunctions.set(entity.id, debouncedFunc);
+      debouncedFunc(entity.attributes);
+    }
   }
 
   /**

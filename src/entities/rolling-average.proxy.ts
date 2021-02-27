@@ -59,7 +59,7 @@ export class RollingAverageProxyHandler implements ProxyHandler<Entity> {
           },
           [0, 0]
         );
-        target.state = weightedValueSum / weightSum;
+        target.state = weightSum > 0 ? weightedValueSum / weightSum : undefined;
       } else {
         // state with max weight wins
         const winner = Array.from(weights.entries()).reduce<[any, number]>(

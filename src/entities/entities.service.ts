@@ -125,23 +125,13 @@ export class EntitiesService implements OnApplicationBootstrap {
   refreshStates(): void {
     this.logger.log('Refreshing entity states');
     this.entities.forEach((entity) => {
-      if (
-        !entity.distributed ||
-        (entity.stateLocked && this.clusterService.isMajorityLeader())
-      ) {
-        this.emitter.emit(
-          'stateUpdate',
-          entity.id,
-          entity.state,
-          entity.distributed
-        );
-        this.emitter.emit(
-          'attributesUpdate',
-          entity.id,
-          entity.attributes,
-          entity.distributed
-        );
-      }
+      const hasAuthority = !entity.distributed || !entity.stateLocked || this.clusterService.isMajorityLeader()
+
+      this.emitter.emit(
+        'entityRefresh',
+        entity,
+        hasAuthority
+      )
     });
   }
 }
