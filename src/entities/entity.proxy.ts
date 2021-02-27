@@ -1,7 +1,12 @@
 import { Entity } from "./entity.dto";
 import { EntitiesEventEmitter, PropertyDiff } from "./entities.events";
+import Timeout = NodeJS.Timeout;
 
 export class EntityProxyHandler implements ProxyHandler<Entity> {
+  private diff: Array<PropertyDiff> = [];
+  private target?: Entity;
+  private flushTimeout?: Timeout;
+
   constructor(private readonly emitter: EntitiesEventEmitter, private readonly isLeader: () => boolean) {
   }
 
@@ -26,9 +31,20 @@ export class EntityProxyHandler implements ProxyHandler<Entity> {
   }
 
   private emitEntityUpdate(entity: Entity, diff: Array<PropertyDiff>): void {
-    const hasAuthority = !entity.distributed || !entity.stateLocked || this.isLeader();
+    this.target = entity;
+    this.diff.push(...diff)
 
-    this.emitter.emit('entityUpdate', entity, diff, hasAuthority)
+    if (!this.flushTimeout) {
+      this.flushTimeout = setTimeout(this.flushEntityUpdates.bind(this), 100)
+    }
+  }
+
+  private flushEntityUpdates(): void {
+    const hasAuthority = !this.target.distributed || !this.target.stateLocked || this.isLeader();
+    this.emitter.emit('entityUpdate', this.target, this.diff, hasAuthority)
+
+    this.diff = []
+    this.flushTimeout = undefined;
   }
 }
 
