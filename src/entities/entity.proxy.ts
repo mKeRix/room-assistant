@@ -6,7 +6,7 @@ export class EntityProxyHandler implements ProxyHandler<Entity> {
   }
 
   get(target: Entity, p: PropertyKey): any {
-    if (typeof target[p] === 'object' && target[p] !== null) {
+    if (typeof target[p] === 'object' && target[p] !== null && !(target[p] instanceof Date)) {
       return new Proxy(target[p], new EntityPropertyProxyHandler(`/${p.toString()}`, (diff) => this.emitEntityUpdate(target, diff)));
     } else {
       return target[p]
@@ -40,7 +40,7 @@ class EntityPropertyProxyHandler<T extends object> implements ProxyHandler<T> {
   }
 
   get(target: T, p: PropertyKey): any {
-    if (typeof target[p] === 'object' && target[p] !== null) {
+    if (typeof target[p] === 'object' && target[p] !== null && !(target[p] instanceof Date)) {
       return new Proxy(target[p], new EntityPropertyProxyHandler(`${this.path}/${p.toString()}`, this.emitterFunc));
     } else {
       return target[p]

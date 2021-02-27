@@ -56,6 +56,24 @@ describe('EntitiesService', () => {
       expect(util.types.isProxy(returnedEntity)).toBeTruthy();
     });
 
+    it("should proxify object properties", () => {
+      const entity = new Sensor('example', 'Example Sensor');
+      const returnedEntity = service.add(entity);
+
+      returnedEntity.attributes.object = {};
+
+      expect(util.types.isProxy(returnedEntity.attributes.object)).toBeTruthy();
+    });
+
+    it("should not proxify Date properties", () => {
+      const entity = new Sensor('example', 'Example Sensor');
+      const returnedEntity = service.add(entity);
+
+      returnedEntity.attributes.date = new Date();
+
+      expect(util.types.isProxy(returnedEntity.attributes.date)).toBeFalsy();
+    });
+
     it('should return all registered entities', () => {
       const entities = [];
       entities.push(service.add(new Sensor('sensor', 'Test')));
