@@ -13,6 +13,7 @@ Looking for a way to integrate OpenHAB? You can use the [Home Assistant Core](ho
 | Integration                                | Supported entities |
 | ------------------------------------------ | ------------------ |
 | [Home Assistant Core](./home-assistant.md) | All                |
+| [MQTT](./mqtt.md)                          | All                |
 
 ## Presence Detection
 

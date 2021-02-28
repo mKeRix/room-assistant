@@ -10,6 +10,7 @@ import { ShellConfig } from '../../integrations/shell/shell.config';
 import { XiaomiMiConfig } from '../../integrations/xiaomi-mi/xiaomi-mi.config';
 import { EntitiesConfig } from '../../entities/entities.config';
 import { LoggerConfig } from '../logger.config';
+import { MqttConfig } from "../../integrations/mqtt/mqtt.config";
 
 export class AppConfig {
   global: GlobalConfig = new GlobalConfig();
@@ -24,6 +25,7 @@ export class AppConfig {
   shell: ShellConfig = new ShellConfig();
   xiaomiMi: XiaomiMiConfig = new XiaomiMiConfig();
   homeAssistant: HomeAssistantConfig = new HomeAssistantConfig();
+  mqtt: MqttConfig = new MqttConfig();
 }
 
 module.exports = new AppConfig();

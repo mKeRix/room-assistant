@@ -81,6 +81,7 @@ module.exports = {
           children: [
             '/integrations/',
             '/integrations/home-assistant',
+            '/integrations/mqtt',
             '/integrations/bluetooth-low-energy',
             '/integrations/bluetooth-classic',
             '/integrations/xiaomi-mi',
