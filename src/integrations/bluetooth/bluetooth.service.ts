@@ -506,7 +506,7 @@ export class BluetoothService {
     await peripheral.connectAsync();
     await sleep(500); // https://github.com/mKeRix/room-assistant/issues/508
 
-    if (peripheral.state != 'connected') {
+    if (!['connected', 'connecting'].includes(peripheral.state)) {
       return this.connectLowEnergyDeviceWithRetry(peripheral, tries - 1);
     } else {
       peripheral.once('disconnect', (e) => {
