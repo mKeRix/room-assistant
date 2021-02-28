@@ -71,7 +71,7 @@ bluetoothLowEnergy:
 | `denylistRegex` | Boolean                         | `false`  | Whether the denylist should be evaluated as a list of [regular expressions](https://en.wikipedia.org/wiki/Regular_expression) or not. |
 | `processIBeacon`  | Boolean                         | `true`   | Whether additional data from iBeacon devices should be taken into account or not. Affects tag IDs and distance estimation. |
 | `onlyIBeacon`     | Boolean                         | `false`  | Whether only iBeacons should be considered when scanning for devices ot not. |
-| `timeout`         | Number                          | `5`      | The time after which a recorded distance is considered outdated. This value should be higher than the advertisement frequency of your peripheral. |
+| `timeout`         | Number                          | `60`    | The time after which a recorded distance is considered outdated. This value should be higher than the advertisement frequency of your peripheral. |
 | `updateFrequency` | Number                          | `0`      | Minimum amount of seconds that should be waited between distance updates for each tag. The default value disables the throttling. |
 | `maxDistance`     | Number                          |          | Limits the distance at which a received BLE advertisement is still reported if configured. Value is in meters. |
 | `majorMask`       | Number                          | `0xffff` | Filter out bits of the major ID to make dynamic tag IDs with encoded information consistent for filtering. |

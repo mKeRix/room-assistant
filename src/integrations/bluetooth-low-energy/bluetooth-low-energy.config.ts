@@ -15,7 +15,7 @@ export class BluetoothLowEnergyConfig {
   batteryMask = 0x00000000;
   tagOverrides: { [key: string]: TagOverride } = {};
 
-  timeout = 5;
+  timeout = 60;
   updateFrequency = 0;
   maxDistance?: number;
 }
