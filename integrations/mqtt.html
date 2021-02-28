@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>MQTT | room-assistant</title>
+    <meta name="generator" content="VuePress 1.8.1">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#2d89ef">
+    <meta name="description" content="A companion software to bring your home automation to the room-level for presence detection and more.">
+    <meta property="article:modified_time" content="2021-02-28T18:29:44.000Z">
+    <meta property="og:site_name" content="room-assistant">
+    <meta property="og:title" content="MQTT">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="www.room-assistant.io/integrations/mqtt.html">
+    <meta name="twitter:title" content="MQTT">
+    <meta name="twitter:url" content="www.room-assistant.io/integrations/mqtt.html">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:label1" content="Written by">
+    <meta name="twitter:data1" content="Heiko Rothe">
+    <meta name="twitter:creator" content="@mKeRix">
+    <meta name="msapplication-TileColor" content="#2d89ef">
+    <meta name="theme-color" content="#ffffff">
+    
+    <link rel="preload" href="/assets/css/0.styles.4544e1c1.css" as="style"><link rel="preload" href="/assets/js/app.d67c9df6.js" as="script"><link rel="preload" href="/assets/js/3.1fd81150.js" as="script"><link rel="preload" href="/assets/js/30.f9e20266.js" as="script"><link rel="preload" href="/assets/js/4.e7a8ccd2.js" as="script"><link rel="prefetch" href="/assets/js/10.f9758ef0.js"><link rel="prefetch" href="/assets/js/11.4e4d947b.js"><link rel="prefetch" href="/assets/js/12.1a725e32.js"><link rel="prefetch" href="/assets/js/13.a00d7a1b.js"><link rel="prefetch" href="/assets/js/14.b7609b93.js"><link rel="prefetch" href="/assets/js/15.45d48145.js"><link rel="prefetch" href="/assets/js/16.3965d308.js"><link rel="prefetch" href="/assets/js/17.c7ce162a.js"><link rel="prefetch" href="/assets/js/18.aae104db.js"><link rel="prefetch" href="/assets/js/19.68a1f84d.js"><link rel="prefetch" href="/assets/js/20.77a4ea5b.js"><link rel="prefetch" href="/assets/js/21.aa13f177.js"><link rel="prefetch" href="/assets/js/22.7381030f.js"><link rel="prefetch" href="/assets/js/23.dae13008.js"><link rel="prefetch" href="/assets/js/24.b1108c28.js"><link rel="prefetch" href="/assets/js/25.69fe8821.js"><link rel="prefetch" href="/assets/js/26.0ba2d465.js"><link rel="prefetch" href="/assets/js/27.483705e1.js"><link rel="prefetch" href="/assets/js/28.43dfa07a.js"><link rel="prefetch" href="/assets/js/29.8ac4adff.js"><link rel="prefetch" href="/assets/js/31.50f91f32.js"><link rel="prefetch" href="/assets/js/32.d3a54443.js"><link rel="prefetch" href="/assets/js/33.a7db9174.js"><link rel="prefetch" href="/assets/js/5.d9380f48.js"><link rel="prefetch" href="/assets/js/6.553f5edc.js"><link rel="prefetch" href="/assets/js/7.af975ce7.js"><link rel="prefetch" href="/assets/js/8.0df2817a.js"><link rel="prefetch" href="/assets/js/9.d383bb73.js"><link rel="prefetch" href="/assets/js/vendors~docsearch.eec9cc92.js">
+    <link rel="stylesheet" href="/assets/css/0.styles.4544e1c1.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/" class="home-link router-link-active"><!----> <span class="site-name">room-assistant</span></a> <div class="links"><form id="search-form" role="search" class="algolia-search-wrapper search-box"><input id="algolia-search-input" class="search-query"></form> <nav class="nav-links can-hide"><div class="nav-item"><a href="/guide/" class="nav-link">
+  Guide
+</a></div><div class="nav-item"><a href="/integrations/" class="nav-link router-link-active">
+  Integrations
+</a></div><div class="nav-item"><a href="https://github.com/mKeRix/room-assistant/discussions" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Forum
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div><div class="nav-item"><a href="https://github.com/mKeRix/room-assistant?sponsor=1" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Sponsor
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div> <a href="https://github.com/mKeRix/room-assistant" target="_blank" rel="noopener noreferrer" class="repo-link">
+    GitHub
+    <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></nav></div></header> <div class="sidebar-mask"></div> <aside class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="/guide/" class="nav-link">
+  Guide
+</a></div><div class="nav-item"><a href="/integrations/" class="nav-link router-link-active">
+  Integrations
+</a></div><div class="nav-item"><a href="https://github.com/mKeRix/room-assistant/discussions" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Forum
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div><div class="nav-item"><a href="https://github.com/mKeRix/room-assistant?sponsor=1" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  Sponsor
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div> <a href="https://github.com/mKeRix/room-assistant" target="_blank" rel="noopener noreferrer" class="repo-link">
+    GitHub
+    <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></nav>  <ul class="sidebar-links"><li><section class="sidebar-group depth-0"><p class="sidebar-heading open"><span>Integrations</span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/integrations/" aria-current="page" class="sidebar-link">Overview</a></li><li><a href="/integrations/home-assistant.html" class="sidebar-link">Home Assistant Core</a></li><li><a href="/integrations/mqtt.html" aria-current="page" class="active sidebar-link">MQTT</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/integrations/mqtt.html#message-format" class="sidebar-link">Message Format</a></li><li class="sidebar-sub-header"><a href="/integrations/mqtt.html#settings" class="sidebar-link">Settings</a></li></ul></li><li><a href="/integrations/bluetooth-low-energy.html" class="sidebar-link">Bluetooth Low Energy</a></li><li><a href="/integrations/bluetooth-classic.html" class="sidebar-link">Bluetooth Classic</a></li><li><a href="/integrations/xiaomi-mi.html" class="sidebar-link">Xiaomi Mi Sensors</a></li><li><a href="/integrations/omron-d6t.html" class="sidebar-link">Omron D6T</a></li><li><a href="/integrations/grid-eye.html" class="sidebar-link">Grid-EYE</a></li><li><a href="/integrations/gpio.html" class="sidebar-link">GPIO</a></li><li><a href="/integrations/shell.html" class="sidebar-link">Shell Commands</a></li></ul></section></li></ul> </aside> <main class="page"> <div class="theme-default-content content__default"><h1 id="mqtt"><a href="#mqtt" class="header-anchor">#</a> MQTT</h1> <p><strong>Integration Key:</strong> <code>mqtt</code></p> <div class="custom-block tip"><p class="custom-block-title">TIP</p> <p>If you are looking to integrate with <a href="https://www.home-assistant.io" target="_blank" rel="noopener noreferrer">Home Assistant Core<span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a> via MQTT take a look at the <a href="/integrations/home-assistant.html">Home Assistant integration</a> instead.</p></div> <p>The MQTT integration will send messages with room-assistant entity update information to an <a href="https://mqtt.org" target="_blank" rel="noopener noreferrer">MQTT broker<span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a>.</p> <h2 id="message-format"><a href="#message-format" class="header-anchor">#</a> Message Format</h2> <p>Entity updates are sent into unique topics for each entity, grouped by instance name and entity type. The topic format is <code>baseTopic/instanceName/entityType/entityId</code>.</p> <p>Each message will have the following properties:</p> <ul><li><strong>entity</strong> - This includes the whole current entity state, like you would see it in the <a href="/guide/api.html">API</a>.</li> <li><strong>hasAuthority</strong> - This boolean value shows whether this update message comes from an entity that has authority over the entity. It will be <code>false</code> for distributed entity updates that are emitted from non-leader instances. You may use this to respect the room-assistant leader in your own automations, but you can of course also just pick a single instance to work off.</li></ul> <p>Optionally the message will also include the following properties:</p> <ul><li><strong>diff</strong> - This is an array of changes to the previous entity state. Each array item includes a <code>path</code> to the changed property based off the entity JSON root, the <code>oldValue</code> and the <code>newValue</code>. Could be used to monitor for specific changes only. This property will not be included when instances emit an entity refresh (e.g. after re-connecting to the MQTT broker).</li></ul> <details class="custom-block details"><summary>Example Message</summary> <p>This message could have been posted to <code>room-assistant/entity/living-room/bluetooth-low-energy-presence-sensor/ble-some-id</code>:</p> <div class="language-json extra-class"><pre class="language-json"><code><span class="token punctuation">{</span>
+  <span class="token property">&quot;entity&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+    <span class="token property">&quot;attributes&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token property">&quot;distance&quot;</span><span class="token operator">:</span> <span class="token number">3.6</span><span class="token punctuation">,</span>
+      <span class="token property">&quot;lastUpdatedAt&quot;</span><span class="token operator">:</span> <span class="token string">&quot;2021-02-28T14:17:33.141Z&quot;</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;id&quot;</span><span class="token operator">:</span> <span class="token string">&quot;ble-some-id&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;name&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Something Room Presence&quot;</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;distributed&quot;</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;stateLocked&quot;</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;distances&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token property">&quot;bedroom&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;lastUpdatedAt&quot;</span><span class="token operator">:</span> <span class="token string">&quot;2021-02-28T14:17:32.605Z&quot;</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;distance&quot;</span><span class="token operator">:</span> <span class="token number">9.4</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;outOfRange&quot;</span><span class="token operator">:</span> <span class="token boolean">false</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">&quot;living-room&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;lastUpdatedAt&quot;</span><span class="token operator">:</span> <span class="token string">&quot;2021-02-28T14:17:33.141Z&quot;</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;distance&quot;</span><span class="token operator">:</span> <span class="token number">3.6</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;outOfRange&quot;</span><span class="token operator">:</span> <span class="token boolean">false</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;timeout&quot;</span><span class="token operator">:</span> <span class="token number">180</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;measuredValues&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+      <span class="token property">&quot;bedroom&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;rssi&quot;</span><span class="token operator">:</span> <span class="token number">-79.81192947697268</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;measuredPower&quot;</span><span class="token operator">:</span> <span class="token number">-59</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">&quot;living-room&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;rssi&quot;</span><span class="token operator">:</span> <span class="token number">-70.40174705168248</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;measuredPower&quot;</span><span class="token operator">:</span> <span class="token number">-59</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token property">&quot;state&quot;</span><span class="token operator">:</span> <span class="token string">&quot;living-room&quot;</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token property">&quot;diff&quot;</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+    <span class="token punctuation">{</span>
+      <span class="token property">&quot;path&quot;</span><span class="token operator">:</span> <span class="token string">&quot;/measuredValues/living-room&quot;</span><span class="token punctuation">,</span>
+      <span class="token property">&quot;oldValue&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;rssi&quot;</span><span class="token operator">:</span> <span class="token number">-73.37709762753302</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;measuredPower&quot;</span><span class="token operator">:</span> <span class="token number">-59</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">&quot;newValue&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;rssi&quot;</span><span class="token operator">:</span> <span class="token number">-70.40174705168248</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;measuredPower&quot;</span><span class="token operator">:</span> <span class="token number">-59</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token punctuation">{</span>
+      <span class="token property">&quot;path&quot;</span><span class="token operator">:</span> <span class="token string">&quot;/distances/living-room&quot;</span><span class="token punctuation">,</span>
+      <span class="token property">&quot;oldValue&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;lastUpdatedAt&quot;</span><span class="token operator">:</span> <span class="token string">&quot;2021-02-28T14:17:32.308Z&quot;</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;distance&quot;</span><span class="token operator">:</span> <span class="token number">3.8</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;outOfRange&quot;</span><span class="token operator">:</span> <span class="token boolean">false</span>
+      <span class="token punctuation">}</span><span class="token punctuation">,</span>
+      <span class="token property">&quot;newValue&quot;</span><span class="token operator">:</span> <span class="token punctuation">{</span>
+        <span class="token property">&quot;lastUpdatedAt&quot;</span><span class="token operator">:</span> <span class="token string">&quot;2021-02-28T14:17:33.141Z&quot;</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;distance&quot;</span><span class="token operator">:</span> <span class="token number">3.6</span><span class="token punctuation">,</span>
+        <span class="token property">&quot;outOfRange&quot;</span><span class="token operator">:</span> <span class="token boolean">false</span>
+      <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">]</span><span class="token punctuation">,</span>
+  <span class="token property">&quot;hasAuthority&quot;</span><span class="token operator">:</span> <span class="token boolean">true</span>
+<span class="token punctuation">}</span>
+</code></pre></div></details> <p>To get started with your automations based on these topics it is recommended to just explore the data provided in the topics using e.g. a GUI MQTT tool.</p> <h2 id="settings"><a href="#settings" class="header-anchor">#</a> Settings</h2> <table><thead><tr><th>Name</th> <th>Type</th> <th>Default</th> <th>Description</th></tr></thead> <tbody><tr><td><code>mqttUrl</code></td> <td>String</td> <td><code>mqtt://localhost:1883</code></td> <td>Connection string for your MQTT broker.</td></tr> <tr><td><code>mqttOptions</code></td> <td><a href="#mqtt-options">MQTT Options</a></td> <td></td> <td>Additional options for the MQTT connection.</td></tr> <tr><td><code>baseTopic</code></td> <td>String</td> <td><code>room-assistant/entity</code></td> <td>Base for the entity update topics.</td></tr> <tr><td><code>qos</code></td> <td>Number</td> <td><code>0</code></td> <td>Quality of Service level that the messages will be sent with.</td></tr> <tr><td><code>retain</code></td> <td>Boolean</td> <td><code>false</code></td> <td>Whether to mark the messages as to retain or not.</td></tr></tbody></table> <h3 id="mqtt-options"><a href="#mqtt-options" class="header-anchor">#</a> MQTT Options</h3> <table><thead><tr><th>Name</th> <th>Type</th> <th>Default</th> <th>Description</th></tr></thead> <tbody><tr><td><code>username</code></td> <td>String</td> <td></td> <td>Username for authentication</td></tr> <tr><td><code>password</code></td> <td>String</td> <td></td> <td>Password for authentication</td></tr> <tr><td><code>rejectUnauthorized</code></td> <td>Boolean</td> <td><code>true</code></td> <td>Whether MQTTS connections should fail for invalid certificates or not. Set this to <code>false</code> if you are using a self-signed certificate and connect via TLS.</td></tr></tbody></table> <details class="custom-block details"><summary>Example Config</summary> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">global</span><span class="token punctuation">:</span>
+  <span class="token key atrule">integrations</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> mqtt
+<span class="token key atrule">mqtt</span><span class="token punctuation">:</span>
+  <span class="token key atrule">mqttUrl</span><span class="token punctuation">:</span> mqtt<span class="token punctuation">:</span>//localhost<span class="token punctuation">:</span><span class="token number">1883</span>
+  <span class="token key atrule">mqttOptions</span><span class="token punctuation">:</span>
+    <span class="token key atrule">username</span><span class="token punctuation">:</span> youruser
+    <span class="token key atrule">password</span><span class="token punctuation">:</span> yourpass
+  <span class="token key atrule">retain</span><span class="token punctuation">:</span> <span class="token boolean important">false</span>
+</code></pre></div></details></div> <footer class="page-edit"><div class="edit-link"><a href="https://github.com/mKeRix/room-assistant/edit/master/docs/integrations/mqtt.md" target="_blank" rel="noopener noreferrer">Edit this page</a> <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></div> <div class="last-updated"><span class="prefix">Last Updated:</span> <span class="time">2/28/2021, 6:29:44 PM</span></div></footer> <div class="page-nav"><p class="inner"><span class="prev">
+      ←
+      <a href="/integrations/home-assistant.html" class="prev">
+        Home Assistant Core
+      </a></span> <span class="next"><a href="/integrations/bluetooth-low-energy.html">
+        Bluetooth Low Energy
+      </a>
+      →
+    </span></p></div> </main></div><div class="global-ui"><!----></div></div>
+    <script src="/assets/js/app.d67c9df6.js" defer></script><script src="/assets/js/3.1fd81150.js" defer></script><script src="/assets/js/30.f9e20266.js" defer></script><script src="/assets/js/4.e7a8ccd2.js" defer></script>
+  </body>
+</html>
