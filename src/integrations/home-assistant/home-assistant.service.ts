@@ -69,6 +69,7 @@ export class HomeAssistantService
         false
       );
       this.mqttClient.on('message', this.handleIncomingMessage.bind(this));
+      this.mqttClient.on('error', e => this.logger.error(e.message, e.stack))
       this.mqttClient.on('connect', this.handleReconnect.bind(this));
       this.logger.log(
         `Successfully connected to MQTT broker at ${this.config.mqttUrl}`
@@ -78,7 +79,7 @@ export class HomeAssistantService
       this.emitter.on('entityUpdate', this.handleEntityUpdate.bind(this));
       this.emitter.on('entityRefresh', this.handleEntityRefresh.bind(this));
     } catch (e) {
-      this.logger.error(e, e.stack);
+      this.logger.error(e.message, e.stack);
     }
   }
 
