@@ -13,7 +13,7 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 ### Software
 
 - [balenaEtcher](https://www.balena.io/etcher/)
-- Download of the latest [Raspbian Buster Lite image](https://www.raspberrypi.org/downloads/raspbian/)
+- Download of the latest [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/)
 
 ## Installing Raspbian
 
@@ -50,21 +50,15 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 
 1. Open a new SSH session, this time using the hostname (e.g. `bedroom.local`) and password you set above.
 
-2. Now we install NodeJS by running
+2. To make the commands we install with npm available the $PATH environment variable needs to be extended as well. Edit the file `~/.profile` (e.g. with `nano ~/.profile`) and add the `PATH="$PATH:/opt/nodejs/bin"` to the end of the file. Save, then run `source ~/.profile`.
 
-   ```bash
-   wget -O - https://gist.githubusercontent.com/mKeRix/88b7b81e9bca044f74de1dc51696efb2/raw/799a20bca44cc61d8f8ae93878f2f28af8365a69/getNodeLTS.sh | bash
-   ```
+3. We need to install some other dependencies as well, do so by running `sudo apt-get update && sudo apt-get install build-essential libavahi-compat-libdnssd-dev bluetooth libbluetooth-dev libudev-dev`.
 
-3. To make the commands we install with npm available the $PATH environment variable needs to be extended as well. Edit the file `~/.profile` (e.g. with `nano ~/.profile`) and add the `PATH="$PATH:/opt/nodejs/bin"` to the end of the file. Save, then run `source ~/.profile`.
-
-4. We need to install some other dependencies as well, do so by running `sudo apt-get update && sudo apt-get install build-essential libavahi-compat-libdnssd-dev bluetooth libbluetooth-dev libudev-dev`.
-
-5. Now let's get install room-assistant! Run `sudo npm i --global --unsafe-perm room-assistant`. You will see messages like the one shown below during the installation process. Don't worry about them - they're not errors!
+4. Now let's get install room-assistant! Run `sudo npm i --global --unsafe-perm room-assistant`. You will see messages like the one shown below during the installation process. Don't worry about them - they're not errors!
 
    ![compilation messages](./compilation-msgs.png)
 
-6. *Optional:* If you want to run Bluetooth related integrations, you should also grant some additional permissions by executing the commands below.
+5. *Optional:* If you want to run Bluetooth related integrations, you should also grant some additional permissions by executing the commands below.
 
    ```shell
    sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
