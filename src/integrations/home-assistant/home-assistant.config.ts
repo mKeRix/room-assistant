@@ -1,14 +1,17 @@
 import { IClientOptions } from 'async-mqtt';
-import { IsString, IsBoolean, Allow } from 'class-validator';
+import * as jf from 'joiful';
 
 export class HomeAssistantConfig {
-  @IsString()
+  @(jf.string().required())
   mqttUrl = 'mqtt://localhost:1883';
-  @Allow() // TODO: Need to look into nesting
-  mqttOptions: IClientOptions = {};
-  @IsBoolean()
+  @(jf.object().required())
+  mqttOptions: IClientOptions = {}; // TODO Not Validated
+  @(jf.boolean().required())
   sendAttributes = true;
+
   sendMqttRoom = false;
+
+  @(jf.string().required())
   discoveryPrefix = 'homeassistant';
   mqttRoomPrefix = 'room-assistant/mqtt-room';
 }

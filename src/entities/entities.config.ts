@@ -1,42 +1,39 @@
-import {
-  IsBoolean,
-  IsInt,
-  IsOptional,
-  Min,
-  ValidateNested,
-} from 'class-validator';
+import * as Joi from 'joi';
+import * as jf from 'joiful';
+
 export class RollingAverageOptions {
-  @IsInt()
-  @Min(0)
-  @IsOptional()
+  @(jf.number().integer().min(0).optional())
   window?: number;
 }
 export class DebounceOptions {
-  @IsInt()
-  @Min(0)
-  @IsOptional()
+  @(jf.number().min(0).optional())
   wait?: number;
-  @IsInt()
-  @Min(0)
-  @IsOptional()
+  @(jf.number().min(0).optional())
   maxWait?: number;
-  @IsBoolean()
+  @(jf.boolean().required()) // TODO Confirm if required as docs have as optional
   leading: boolean;
-  @IsBoolean()
-  @IsOptional()
+  @(jf.boolean().optional())
   trailing?: boolean;
 }
 
 export class EntityBehavior {
-  @ValidateNested()
-  @IsOptional()
+  @(jf.object({ objectClass: DebounceOptions }).optional())
   debounce?: DebounceOptions;
-  @ValidateNested()
-  @IsOptional()
+  @(jf.object({ objectClass: RollingAverageOptions }).optional())
   rollingAverage?: RollingAverageOptions;
 }
 
 export class EntitiesConfig {
-  @ValidateNested() // TODO need to revisit
+  @(jf.object().custom(validateBehaviours).required())
   behaviors: { [entityId: string]: EntityBehavior } = {};
+}
+
+// Custom validators as no decorator for "[key: string]: Type"
+function validateBehaviours(options: {
+  schema: Joi.Schema;
+  joi: typeof Joi;
+}): Joi.Schema {
+  return options.joi
+    .object()
+    .pattern(options.joi.string(), jf.getSchema(EntityBehavior));
 }

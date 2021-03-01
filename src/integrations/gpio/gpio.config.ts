@@ -1,30 +1,27 @@
-import { IsDefined, IsInt, IsString, IsOptional } from 'class-validator';
 import { BinarySensorDeviceClass } from '../home-assistant/binary-sensor-config';
+import * as jf from 'joiful';
 
 class GpioBinarySensorOptions {
-  @IsString()
+  @(jf.string().required())
   name: string;
-  @IsInt()
+  @(jf.number().integer().required())
   pin: number;
-  // TODO @IsInstance(BinarySensorDeviceClass)
-  @IsOptional()
+  @(jf.string().valid(Object.values(BinarySensorDeviceClass)).optional())
   deviceClass?: BinarySensorDeviceClass;
 }
 
 class GpioSwitchOptions {
-  @IsString()
+  @(jf.string().required())
   name: string;
-  @IsInt()
+  @(jf.number().integer())
   pin: number;
-  @IsString()
-  @IsOptional()
+  @(jf.string().optional())
   icon?: string;
 }
 
 export class GpioConfig {
-  // TODO need to revisit
-  @IsDefined()
+  @(jf.array({ elementClass: GpioBinarySensorOptions }).required())
   binarySensors: GpioBinarySensorOptions[] = [];
-  @IsDefined()
+  @(jf.array({ elementClass: GpioSwitchOptions }).required())
   switches: GpioSwitchOptions[] = [];
 }

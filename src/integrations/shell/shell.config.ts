@@ -1,41 +1,35 @@
-import { IsOptional, IsString, ValidateNested } from 'class-validator';
+import * as jf from 'joiful';
 
 class ShellSwitchOptions {
-  @IsString()
+  @(jf.string().required())
   name: string;
-  @IsString()
+  @(jf.string().required())
   onCommand: string;
-  @IsString()
+  @(jf.string().required())
   offCommand: string;
-  @IsString()
-  @IsOptional()
+  @(jf.string().optional())
   icon?: string;
 }
 
 class ShellSensorOptions {
-  @IsString()
+  @(jf.string().required())
   name: string;
-  @IsString()
+  @(jf.string().required())
   command: string;
-  @IsString()
-  @IsOptional()
+  @(jf.string().optional())
   regex?: string;
-  @IsString()
+  @(jf.string().required())
   cron: string;
-  @IsString()
-  @IsOptional()
+  @(jf.string().optional())
   icon?: string;
-  @IsString()
-  @IsOptional()
+  @(jf.string().optional())
   unitOfMeasurement?: string;
-  @IsString()
-  @IsOptional()
+  @(jf.string().optional())
   deviceClass?: string;
 }
 export class ShellConfig {
-  // TODO need to revist
-  @ValidateNested()
+  @(jf.array({ elementClass: ShellSensorOptions }).required())
   sensors: ShellSensorOptions[] = [];
-  @ValidateNested()
+  @(jf.array({ elementClass: ShellSwitchOptions }).required())
   switches: ShellSwitchOptions[] = [];
 }

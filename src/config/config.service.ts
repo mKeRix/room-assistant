@@ -1,10 +1,8 @@
-/* eslint @typescript-eslint/no-var-requires: "off" */
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import c from 'config';
-const appConfigDefaults = require('./definitions/default');
-import { AppConfig } from './definitions/default';
+import { AppConfig } from '../app.config';
 import { delimiter } from 'path';
-import { validateSync, ValidationError } from 'class-validator';
+import * as jf from 'joiful';
 
 @Injectable()
 export class ConfigService implements OnModuleInit {
@@ -35,57 +33,27 @@ export class ConfigService implements OnModuleInit {
       this.logger.warn(`No configuration found in ${folders.join(', ')}`);
     }
 
-    // Validate config for each of the integrations / services
-    const appConfig = (c as unknown) as AppConfig;
-    let errors: ValidationError[];
-    for (const [integration, intConfig] of Object.entries(appConfig)) {
-      if (integration in appConfigDefaults)
-        errors = validateSync(intConfig, {
-          whitelist: true,
-          forbidNonWhitelisted: true,
-        });
-      else
-        errors = [
-          {
-            property: integration,
-            constraints: {
-              unknownProperty:
-                'Property is not defined in the configuration schema',
-            },
-            children: [],
-          },
-        ];
-
-      for (const error of errors) this.logValidationError(integration, error);
-
-      // if (errors) process.exit(1);
-    }
+    // TODO Needs refactor, as config being used by modules before validation
+    this.validateConfig();
   }
 
   /**
-   * Format and log configuration errors.
+   * Validates the union of default and user configuration parameters. The parser will
+   * not abort on first error but will highlight all errors detected. Validation is done
+   * strictly without conversion of types. An exception is raised on validation failure.
    *
-   * @param integration - Top-level key of the app config
-   * @param errors - Array of validation errors
    */
-  private logValidationError(
-    integration: string,
-    error: ValidationError
-  ): void {
-    let message = `Error in ${integration} with property "${error.property}"`;
+  validateConfig(): void {
+    const results = jf.validateAsClass(c, AppConfig, {
+      abortEarly: false,
+      convert: false,
+    });
 
-    if (error.constraints)
-      message += ` failing validation ${JSON.stringify(error.constraints)}.`;
-
-    if (error?.children?.[0]) {
-      message += ` due to child properties.`;
-      for (const child of error.children)
-        message += ` Error due to property "${
-          child.property
-        }" failing validation ${JSON.stringify(child.constraints)}.`;
-    }
-
-    this.logger.error(message);
+    results?.error?.details?.forEach((detail) => {
+      this.logger.error(
+        `${detail.message} [Value: ${JSON.stringify(detail?.context?.value)}]`
+      );
+    });
   }
 
   /**

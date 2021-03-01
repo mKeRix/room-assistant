@@ -1,32 +1,18 @@
-import {
-  IsBoolean,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import * as jf from 'joiful';
+
 export class ClusterConfig {
-  @IsString()
-  @IsOptional()
+  @(jf.string().optional())
   networkInterface?: string;
-  @IsInt()
-  @Min(0)
-  @Max(65353)
+  @(jf.number().integer().min(0).max(65353).required())
   port = 6425;
-  @IsInt()
-  @Min(0)
+  @(jf.number().integer().min(0).required())
   timeout = 60;
-  @IsInt()
-  @Min(0)
-  @IsOptional()
+  @(jf.number().integer().min(0).optional())
   weight?: number;
-  @IsInt()
-  @Min(0)
-  @IsOptional()
+  @(jf.number().integer().min(0).optional())
   quorum?: number;
-  @IsBoolean()
+  @(jf.boolean().required())
   autoDiscovery = true;
-  @IsString({ each: true })
+  @(jf.array({ elementClass: String }).required())
   peerAddresses: string[] = [];
 }

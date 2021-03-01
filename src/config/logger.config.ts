@@ -1,24 +1,59 @@
 import { ApiKeyAuth, BasicAuth } from '@elastic/elasticsearch/lib/pool';
-import {
-  IsBoolean,
-  IsObject,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+import * as Joi from 'joi';
+import * as jf from 'joiful';
+
+class IdKeyPair {
+  @(jf.string().required())
+  id: string;
+  @(jf.string().required())
+  api_key: string;
+}
+
+// TODO Better way to decorate external class
+class ApiKeyAuthConfig implements ApiKeyAuth {
+  @(jf.any().custom(validateApiKey).required())
+  apiKey: string | IdKeyPair;
+}
+
+// TODO Better way to decorate external class
+class BasicAuthConfig implements BasicAuth {
+  @(jf.string().required())
+  username: string;
+  @(jf.string().required())
+  password: string;
+}
 
 class ElasticsearchConfig {
-  @IsBoolean()
+  @(jf.boolean().required())
   enabled = false;
-  @IsString() // TODO: URL validator does not include port
+  @(jf.string().required())
   node = 'http://localhost:9200';
-  @IsObject() // TODO: Explore "OR" capability
-  @IsOptional()
-  auth?: BasicAuth | ApiKeyAuth;
-  @IsString()
+  @(jf.any().custom(validateAuthType).optional())
+  auth?: BasicAuthConfig | ApiKeyAuthConfig;
+  @(jf.string().required())
   indexPrefix = 'room-assistant';
 }
+
 export class LoggerConfig {
-  @ValidateNested()
+  @(jf.object({ objectClass: ElasticsearchConfig }).required())
   elasticsearch = new ElasticsearchConfig();
+}
+
+// Custom validators as no decorator for "key: Type1|Type2"
+function validateAuthType(options: {
+  schema: Joi.Schema;
+  joi: typeof Joi;
+}): Joi.Schema {
+  return options.joi
+    .alternatives()
+    .try(jf.getSchema(BasicAuthConfig), jf.getSchema(ApiKeyAuthConfig));
+}
+
+function validateApiKey(options: {
+  schema: Joi.Schema;
+  joi: typeof Joi;
+}): Joi.Schema {
+  return options.joi
+    .alternatives()
+    .try(options.joi.string(), jf.getSchema(IdKeyPair));
 }

@@ -1,76 +1,73 @@
 import { randomInt } from "../../util/numbers";
-import {
-  IsOptional,
-  IsInt,
-  IsBoolean,
-  IsString,
-  Min,
-  Max,
-  IsPositive,
-  IsNegative,
-} from 'class-validator';
+import * as Joi from 'joi';
+import * as jf from 'joiful';
+
+class TagOverride {
+  @(jf.string().optional())
+  id?: string;
+  @(jf.string().optional())
+  name?: string;
+  @(jf.number().negative().optional())
+  measuredPower?: number;
+  @(jf.number().integer().optional())
+  batteryMask?: number;
+}
 
 export class BluetoothLowEnergyConfig {
-  @IsInt()
-  @Min(0)
+  @(jf.number().integer().min(0))
   hciDeviceId = 0;
-
-  @IsString({ each: true })
+  @(jf.array({ elementClass: String }).optional())
   whitelist: string[] = [];
-  @IsBoolean()
+  @(jf.boolean().optional())
   whitelistRegex = false;
-  @IsString({ each: true })
+  @(jf.array({ elementClass: String }).optional())
   allowlist: string[] = [];
-  @IsBoolean()
+  @(jf.boolean().optional())
   allowlistRegex = false;
-  @IsString({ each: true })
+  @(jf.array({ elementClass: String }).optional())
   blacklist: string[] = [];
-  @IsBoolean()
+  @(jf.boolean().optional())
   blacklistRegex = false;
-  @IsString({ each: true })
+  @(jf.array({ elementClass: String }).optional())
   denylist: string[] = [];
-  @IsBoolean()
+  @(jf.boolean().required())
   denylistRegex = false;
-  @IsBoolean()
+  @(jf.boolean().required())
   processIBeacon = true;
-  @IsBoolean()
+  @(jf.boolean().required())
   onlyIBeacon = false;
-  @Min(0)
-  @Max(0xffff)
+  @(jf.number().integer().min(0).max(0xffff).required())
   majorMask = 0xffff;
-  @Min(0)
-  @Max(0xffff)
+  @(jf.number().integer().min(0).max(0xffff).required())
   minorMask = 0xffff;
-  @IsInt()
+  @(jf.number().integer().required())
   batteryMask = 0x00000000;
-  @IsOptional()
-  tagOverrides: { [key: string]: TagOverride } = {};
 
   instanceBeaconEnabled = true;
   instanceBeaconMajor = 1;
   instanceBeaconMinor = randomInt(0, 65535);
 
-  @IsPositive()
+  @(jf.object().custom(validateTagOverrides).required())
+  tagOverrides: { [entityId: string]: TagOverride } = {};
+  @(jf.number().integer().min(0))
   timeout = 60;
-  @Min(0)
+  @(jf.number().integer().min(0))
   updateFrequency = 0;
-  @IsInt()
-  @IsPositive()
-  @IsOptional()
+  @(jf.number().positive().optional())
   maxDistance?: number;
 }
+// TODO OR Properties(whitelist|allowlist)
 
-class TagOverride {
-  @IsOptional()
-  @IsString()
-  id?: string;
-  @IsOptional()
-  @IsString()
-  name?: string;
-  @IsOptional()
-  @IsNegative()
-  measuredPower?: number;
-  @IsOptional()
-  @IsInt()
-  batteryMask?: number;
+const BluetoothLowEnergyScheme = jf
+  .getSchema(BluetoothLowEnergyConfig)
+  .without('whitelist', 'allowlist')
+  .without('whitelistRegEx', 'allowlistRegEx');
+
+function validateTagOverrides(options: {
+  schema: Joi.Schema;
+  joi: typeof Joi;
+}): Joi.Schema {
+  return options.joi
+    .object()
+    .pattern(options.joi.string(), jf.getSchema(TagOverride));
 }

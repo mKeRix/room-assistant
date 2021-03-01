@@ -1,16 +1,13 @@
-import { IsInstance, IsInt, IsNumber, Min } from 'class-validator';
 import { HeatmapOptions } from '../thermopile/thermopile-occupancy.config';
+import * as jf from 'joiful';
 
 export class OmronD6tConfig {
-  @IsInt()
-  @Min(0)
+  @(jf.number().integer().min(0).required())
   busNumber = 1;
-  @IsInt()
-  @Min(0)
+  @(jf.number().integer().min(0).required())
   address = 0x0a;
-  @IsNumber()
-  @Min(0)
+  @(jf.number().min(0).required())
   deltaThreshold = 1.5;
-  @IsInstance(HeatmapOptions)
+  @(jf.object({ objectClass: HeatmapOptions }).required())
   heatmap = new HeatmapOptions();
 }

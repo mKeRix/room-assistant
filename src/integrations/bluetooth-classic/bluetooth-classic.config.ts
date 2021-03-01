@@ -1,34 +1,72 @@
-import {
-  IsBoolean,
-  IsInt,
-  IsMACAddress,
-  IsOptional,
-  Min,
-} from 'class-validator';
-export class BluetoothClassicConfig {
-  @IsMACAddress({ each: true })
-  addresses: string[] = [];
-  @IsOptional() // TODO: Need to see if we can better match this one
-  minRssi?: number | { [address: string]: number };
-  @IsInt()
-  @Min(0)
-  hciDeviceId = 0;
-  @IsInt()
-  @Min(0)
-  interval = 10;
-  @IsInt()
-  @Min(0)
-  scanTimeLimit = 6;
-  @IsInt()
-  @Min(0)
-  timeoutCycles = 2;
-  @IsBoolean()
-  preserveState = false;
-  @IsBoolean()
-  inquireFromStart = true;
-  entityOverrides: { [key: string]: BluetoothClassicEntityOverride } = {};
-}
+import * as Joi from 'joi';
+import * as jf from 'joiful';
+
+const MAC_REGEXP = new RegExp('^([0-9a-fA-F]{2}[:]){5}([0-9a-fA-F]{2})$');
+const MAC2_REGEXP = new RegExp(
+  '^([0-9a-fA-F]{2}[:]){5}([0-9a-fA-F]{2})|default$'
+);
+const MAC_ERROR = '{#label} does not match the required MAC address format';
 
 class BluetoothClassicEntityOverride {
+  @(jf.string().optional())
   id?: string;
+}
+
+export class BluetoothClassicConfig {
+  @(jf.array({ elementClass: String }).custom(validateMACAddress).required())
+  addresses: string[] = [];
+  @(jf.any().custom(validateMinRSSI).optional())
+  minRssi?: number | { [macAddress: string]: number };
+  @(jf.number().integer().min(0).required())
+  hciDeviceId = 0;
+  @(jf.number().integer().min(0).required())
+  interval = 10;
+  @(jf.number().integer().min(0).required())
+  scanTimeLimit = 6;
+  @(jf.number().integer().min(0).required())
+  timeoutCycles = 2;
+  @(jf.boolean().required())
+  preserveState = false;
+  @(jf.boolean().required())
+  inquireFromStart = true;
+  @(jf.object().custom(validateEntityOverrides).required())
+  entityOverrides: { [entityId: string]: BluetoothClassicEntityOverride } = {};
+}
+
+function validateMACAddress(options: {
+  schema: Joi.Schema;
+  joi: typeof Joi;
+}): Joi.Schema {
+  return options.joi
+    .array()
+    .items(options.joi.string().pattern(MAC_REGEXP).message(MAC_ERROR));
+}
+
+function validateMinRSSI(options: {
+  schema: Joi.Schema;
+  joi: typeof Joi;
+}): Joi.Schema {
+  return options.joi
+    .alternatives()
+    .try(
+      options.joi.number().max(0),
+      options.joi
+        .object()
+        .pattern(
+          options.joi.string().pattern(MAC2_REGEXP),
+          options.joi.number().max(0)
+        )
+    );
+}
+
+function validateEntityOverrides(options: {
+  schema: Joi.Schema;
+  joi: typeof Joi;
+}): Joi.Schema {
+  return options.joi
+    .object()
+    .pattern(
+      options.joi.string(),
+      jf.getSchema(BluetoothClassicEntityOverride)
+    );
 }
