@@ -10,6 +10,7 @@ import { ShellConfig } from './integrations/shell/shell.config';
 import { XiaomiMiConfig } from './integrations/xiaomi-mi/xiaomi-mi.config';
 import { EntitiesConfig } from './entities/entities.config';
 import { LoggerConfig } from './config/logger.config';
+import { MqttConfig } from './integrations/mqtt/mqtt.config';
 import * as jf from 'joiful';
 
 export class AppConfig {
@@ -37,4 +38,6 @@ export class AppConfig {
   xiaomiMi: XiaomiMiConfig = new XiaomiMiConfig();
   @(jf.object().required())
   homeAssistant: HomeAssistantConfig = new HomeAssistantConfig();
+  @(jf.object().required())
+  mqtt: MqttConfig = new MqttConfig();
 }
