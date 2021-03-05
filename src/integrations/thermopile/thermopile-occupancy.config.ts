@@ -8,8 +8,8 @@ export class HeatmapOptions {
   minTemperature = 16;
   @(jf.number().required())
   maxTemperature = 30;
-  @(jf.number().valid(RotationOption).required())
-  rotation: number = RotationOption[0];
+  @(jf.number().valid([0, 90, 180, 270]).required())
+  rotation: RotationOption = 0;
   @(jf.boolean().required())
   drawTemperatures = true;
 }

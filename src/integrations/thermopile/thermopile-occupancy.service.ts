@@ -8,7 +8,7 @@ import { WritableStreamBuffer } from 'stream-buffers';
 import * as path from 'path';
 import { rotate } from '2d-array-rotation';
 
-export const RotationOption = [0, 90, 180, 270];
+export type RotationOption = 0 | 90 | 180 | 270;
 
 const OPEN_SANS = PImg.registerFont(
   path.resolve(__dirname, 'OpenSans-Regular.ttf'),
