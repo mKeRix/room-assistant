@@ -6,6 +6,13 @@ jest.mock(
   },
   { virtual: true }
 );
+jest.mock(
+  'bleno',
+  () => {
+    return {};
+  },
+  { virtual: true }
+);
 
 import { Peripheral } from '@mkerix/noble';
 import { ConfigService } from '../../config/config.service';

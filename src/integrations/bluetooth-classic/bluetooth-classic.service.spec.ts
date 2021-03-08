@@ -6,6 +6,13 @@ jest.mock(
   },
   { virtual: true }
 );
+jest.mock(
+  'bleno',
+  () => {
+    return {};
+  },
+  { virtual: true }
+);
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { BluetoothClassicService } from './bluetooth-classic.service';
