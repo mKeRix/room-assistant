@@ -18,12 +18,14 @@ room-assistant makes use of the [MQTT auto discovery](https://www.home-assistant
 
 ## Settings
 
-| Name             | Type                          | Default                 | Description                                                  |
-| ---------------- | ----------------------------- | ----------------------- | ------------------------------------------------------------ |
-| `mqttUrl`        | String                        | `mqtt://localhost:1883` | Connection string for your MQTT broker.                      |
-| `mqttOptions`    | [MQTT Options](#mqtt-options) |                         | Additional options for the MQTT connection.                  |
-| `sendAttributes` | Boolean                       | `true`                  | Whether entity attributes should be forwarded to Home Assistant or not. May be disabled to reduce the number of messages that Home Assistant needs to process. |
-| `discoveryPrefix`| String                        | `homeassistant`         | The prefix for the discovery topic that Home Assistant will watch. |
+| Name              | Type                          | Default                    | Description                                                  |
+| ----------------- | ----------------------------- | -------------------------- | ------------------------------------------------------------ |
+| `mqttUrl`         | String                        | `mqtt://localhost:1883`    | Connection string for your MQTT broker.                      |
+| `mqttOptions`     | [MQTT Options](#mqtt-options) |                            | Additional options for the MQTT connection.                  |
+| `sendAttributes`  | Boolean                       | `true`                     | Whether entity attributes should be forwarded to Home Assistant or not. May be disabled to reduce the number of messages that Home Assistant needs to process. |
+| `sendMqttRoom`    | Boolean                       | `false`                    | Whether entities with distances should publish them in the [MQTT Room integration](https://www.home-assistant.io/integrations/mqtt_room/) format or not. |
+| `discoveryPrefix` | String                        | `homeassistant`            | The prefix for the discovery topic that Home Assistant will watch. |
+| `mqttRoomPrefix`  | String                        | `room-assistant/mqtt-room` | The topic prefix that will be used for the [MQTT Room](https://www.home-assistant.io/integrations/mqtt_room/) messages, should match `state_topic` in Home Assistant. |
 
 ### MQTT Options
 

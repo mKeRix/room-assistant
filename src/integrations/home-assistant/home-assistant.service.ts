@@ -181,6 +181,10 @@ export class HomeAssistantService
       if (this.config.sendAttributes && diff.some(diff => diff.path.startsWith('/attributes'))) {
         this.sendNewAttributes(entity, config)
       }
+
+      if (this.config.sendMqttRoom && diff.some(diff => diff.path.startsWith('/distances/'))) {
+        this.sendNewMqttRoomDistances(entity.id, entity.name, diff)
+      }
     }
   }
 
@@ -394,6 +398,28 @@ export class HomeAssistantService
       this.debounceFunctions.set(entity.id, debouncedFunc);
       debouncedFunc(entity.attributes);
     }
+  }
+
+  /**
+   * Sends information about distances included in the diff to
+   * Home Assistant in the MQTT Room format. Useful for
+   * combining room-assistant tracking with other projects,
+   * e.g. ESPHome.
+   *
+   * @param id - ID of device to be sent
+   * @param name - Name of the device to be sent
+   * @param diff - Diff including changes to the /distances/* paths
+   */
+  private sendNewMqttRoomDistances(id: string, name: string, diff: PropertyDiff[]) {
+    diff.filter(value => value.path.startsWith('/distances/'))
+      .forEach(value => {
+        const room = value.path.split('/')[2];
+        this.mqttClient.publish(`${this.config.mqttRoomPrefix}/${room}`, JSON.stringify({
+          id,
+          name,
+          distance: value.newValue.distance
+        }))
+      })
   }
 
   /**

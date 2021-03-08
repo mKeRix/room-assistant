@@ -600,6 +600,78 @@ describe('HomeAssistantService', () => {
     );
   });
 
+  it('should publish mqtt room updates for entities with distances', async () => {
+    mockConfig.sendMqttRoom = true;
+
+    await service.onModuleInit();
+    const sensor = new Sensor('test', 'Test');
+    service.handleNewEntity(sensor);
+
+    service.handleEntityUpdate(sensor, [
+        {
+          newValue: { distance: 4.2 },
+          oldValue: undefined,
+          path: '/distances/living-room'
+        },
+        {
+          newValue: { distance: 13.37 },
+          oldValue: undefined,
+          path: '/distances/bedroom'
+        },
+        {
+          newValue: 'living-room',
+          oldValue: undefined,
+          path: '/state'
+        }
+      ], true)
+
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'room-assistant/mqtt-room/living-room',
+      '{"id":"test","name":"Test","distance":4.2}'
+    );
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'room-assistant/mqtt-room/bedroom',
+      '{"id":"test","name":"Test","distance":13.37}'
+    );
+  });
+
+  it('should publish mqtt room updates with configured topic prefix', async () => {
+    mockConfig.sendMqttRoom = true;
+    mockConfig.mqttRoomPrefix = 'custom/prefix';
+
+    await service.onModuleInit();
+    const sensor = new Sensor('test', 'Test');
+    service.handleNewEntity(sensor);
+
+    service.handleEntityUpdate(sensor, [{
+      newValue: { distance: 4.2 },
+      oldValue: undefined,
+      path: '/distances/living-room'
+    }], true)
+
+    expect(mockMqttClient.publish).toHaveBeenCalledWith(
+      'custom/prefix/living-room',
+      expect.any(String)
+    );
+  });
+
+  it('should not publish mqtt room updates if the feature is disabled', async () => {
+    mockConfig.sendMqttRoom = false;
+
+    await service.onModuleInit();
+    const sensor = new Sensor('test', 'Test');
+    service.handleNewEntity(sensor);
+    mockMqttClient.publish.mockClear()
+
+    service.handleEntityUpdate(sensor, [{
+      newValue: { distance: 4.2 },
+      oldValue: undefined,
+      path: '/distances/living-room'
+    }], true)
+
+    expect(mockMqttClient.publish).not.toHaveBeenCalled();
+  });
+
   it('should ignore attribute updates if the entity is not registered with Home Assistant', () => {
     jest.useFakeTimers();
     service.handleEntityUpdate(new Sensor('does-not-exist', 'Ghost'), [{
@@ -621,7 +693,7 @@ describe('HomeAssistantService', () => {
     service.handleEntityUpdate(sensor, [{
       newValue: 2,
       oldValue: undefined,
-      path: '/distances/room/distance'
+      path: '/something-unrelated/abc/def'
     }], true)
 
     expect(mockMqttClient.publish).not.toHaveBeenCalled();
