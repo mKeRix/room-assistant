@@ -33,8 +33,7 @@ export class ConfigService implements OnModuleInit {
       this.logger.warn(`No configuration found in ${folders.join(', ')}`);
     }
 
-    // TODO Needs refactor, as config being used by modules before validation
-    this.validateConfig();
+    this.validateConfig(c);
   }
 
   /**
@@ -42,17 +41,24 @@ export class ConfigService implements OnModuleInit {
    * not abort on first error but will highlight all errors detected. Validation is done
    * strictly without conversion of types. An exception is raised on validation failure.
    *
+   * @param cfg - configuration object to validate
    */
-  validateConfig(): void {
-    const results = jf.validateAsClass(c, AppConfig, {
+  // TODO Remove need for lint skip
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  validateConfig(cfg: Object): void {
+    const results = jf.validateAsClass(cfg, AppConfig, {
       abortEarly: false,
       convert: false,
     });
 
     results?.error?.details?.forEach((detail) => {
-      this.logger.error(
-        `${detail.message} [Value: ${JSON.stringify(detail?.context?.value)}]`
-      );
+      let msg = `${detail.message} [Value: ${JSON.stringify(
+        detail?.context?.value
+      )}].`;
+      msg += detail?.context?.message
+        ? ` Additional Context: ${JSON.stringify(detail.context.message)}`
+        : '';
+      this.logger.error(msg);
     });
   }
 

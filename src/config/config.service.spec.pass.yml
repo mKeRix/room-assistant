@@ -1,0 +1,183 @@
+# Full config to validate validation rules and provide a baseline for regression.
+# Where multiple config variants exist (e.g. Authentication - Basic. API)
+# then validation is provided through specific tests in config.service.spec.ts
+
+global:
+  instanceName: test-instance
+  integrations:
+    - bluetoothLowEnergy
+    - bluetoothClassic
+    - omronD6t
+    - gridEye
+    - gpio
+    - shell
+    - xiaomiMi
+    - homeAssistant
+    - mqtt
+logger:
+    elasticsearch:
+        enabled: true
+        node: http://192.168.0.20:33333
+        auth:
+          username: user
+          password: password
+# Alternate variants covered through specific tests
+#          apiKey: "mykey"
+#          apikey:
+#            id: "my id"
+#            api_key: "my api key"
+        indexPrefix: <indexPrefix>-<date>
+cluster:
+  networkInterface: eth0
+  port: 6425
+  timeout: 3
+  weight: 50
+  quorum: 1
+  autoDiscovery: false
+  peerAddresses:
+    - 192.168.1.10:6425
+    - 192.168.1.11:6425
+entities:
+  behaviors:
+    debounced_entity:
+      debounce:
+        wait: 0.75
+        maxWait: 2
+        leading: false
+        trailing: false
+    leading_debounced_entity:
+      debounce:
+        wait: 0.75
+        maxWait: 2
+        leading: true
+        trailing: false
+    rolling_average_entity:
+      rollingAverage:
+        window: 60
+    chained_entity:
+      debounce:
+        wait: 0.75
+        maxWait: 2
+        leading: true
+        trailing: true
+      rollingAverage:
+        window: 60
+bluetoothLowEnergy:
+  hciDeviceId: 0
+  whitelist:
+    - 123456
+    - 7750fb4dab70
+    - "ebef1234567890-55555-333"
+    - "ebef1234567890-55555-444"
+    - "ebef1234567890-55555-555"
+  whitelistRegex: false
+  blacklist: []
+  blacklistRegex: false
+  allowlist: []
+  allowlistRegex: false
+  denylist: []
+  denylistRegex: false
+  processIBeacon: true
+  onlyIBeacon: false
+  majorMask: 0xFFFF
+  minorMask: 0xFF00
+  batteryMask: 0x0000FF00
+  timeout: 30
+  updateFrequency: 55
+  maxDistance: 44.4
+  tagOverrides:
+    ebef1234567890-55555-333:
+      name: iBeacon 1
+      measuredPower: -33
+      batteryMask: 0xFFFFFFFF
+    ebef1234567890-55555-444:
+      name: iBeacon 2
+bluetoothClassic:
+  hciDeviceId: 1
+  interval: 20
+  scanTimeLimit: 21
+  timeoutCycles: 2
+  preserveState: true
+  inquireFromStart: true
+  minRssi:
+    '08:05:90:ed:3f:60': -10
+    '08:05:90:ed:32:12': -20
+    default: -20
+  addresses:
+    - '08:05:90:ED:3B:60'
+    - '77:50:fb:4d:ab:70'
+  entityOverrides:
+    ebef1234567890-55555-333:
+      id: "My Id"
+omronD6t:
+  busNumber: 3
+  address: 0x1d
+  deltaThreshold: 2
+  heatmap:
+    enabled: true
+    minTemperature: 16
+    maxTemperature: 30
+    rotation: 90
+    drawTemperatures: false
+gridEye:
+  busNumber: 1
+  address: 0x69
+  deltaThreshold: 2
+  heatmap:
+    enabled: true
+    minTemperature: 23
+    maxTemperature: 30
+    rotation: 180
+    drawTemperatures: true
+gpio:
+  binarySensors:
+    - name: PIR Sensor
+      pin: 23
+    - name: Radar
+      pin: 24
+      deviceClass: motion
+  switches:
+    - name: Test Switch
+      pin: 17
+      icon: my_icon.png
+shell:
+  sensors:
+    - name: Simple Test
+      command: echo test
+      cron: '* * * * *'
+    - name: Regex Test
+      command: echo 'test 123'
+      cron: '* * * * */2'
+      regex: '[1-9]+'
+      deviceClass: 'timestamp'
+      icon: 'mdi:test'
+      unitOfMeasurement: 'tests'
+  switches:
+    - name: Test Switch
+      onCommand: echo on
+      offCommand: echo off
+xiaomiMi:
+  hciDeviceId: 0
+  sensors:
+    - address: a4c1383212f9
+      name: Xiaomi 1
+    - address: a4c138131f9e
+      name: Xiaomi 2
+      bindKey: 2456789ABCDEF
+homeAssistant:
+  mqttUrl: mqtt://server.domain.com:18834
+  discoveryPrefix: homeassistant
+  mqttOptions:
+    username: mqtt
+    password: mqtt
+    rejectUnauthorized: false
+  sendAttributes: false
+mqtt:
+  mqttUrl: mqtt://server.domain.com:18834
+  mqttOptions:
+    username: mqtt
+    password: mqtt
+    rejectUnauthorized: false
+  baseTopic: ra/entity
+  qos: 1
+  retain: false
