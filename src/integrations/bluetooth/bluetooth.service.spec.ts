@@ -9,10 +9,23 @@ const mockNoble = {
   reset: jest.fn(),
   resetBindings: jest.fn(),
 };
+const mockBleno = {
+  state: 'poweredOn',
+  on: jest.fn(),
+  startAdvertisingIBeacon: jest.fn(),
+  stopAdvertising: jest.fn()
+}
 jest.mock(
   '@mkerix/noble',
   () => {
     return mockNoble;
+  },
+  { virtual: true }
+);
+jest.mock(
+  'bleno',
+  () => {
+    return mockBleno;
   },
   { virtual: true }
 );
@@ -111,7 +124,7 @@ describe('BluetoothService', () => {
       );
     });
 
-    it('should stop scanning on an adapter while performing an inquiry', async () => {
+    it('should stop scanning and advertising on an adapter while performing an inquiry', async () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
       await stateChangeHandler('poweredOn');
@@ -128,6 +141,7 @@ describe('BluetoothService', () => {
       });
 
       expect(mockNoble.stopScanning).toHaveBeenCalledTimes(1);
+      expect(mockBleno.stopAdvertising).toHaveBeenCalledTimes(1)
 
       execResolve({ stdout: '-1' });
 
@@ -145,7 +159,7 @@ describe('BluetoothService', () => {
       expect(mockNoble.startScanning).toHaveBeenCalledTimes(2);
     });
 
-    it('should stop scanning on an adapter while getting Classic device info', async () => {
+    it('should stop scanning and advertising on an adapter while getting Classic device info', async () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
       await stateChangeHandler('poweredOn');
@@ -164,6 +178,7 @@ describe('BluetoothService', () => {
         });
 
       expect(mockNoble.stopScanning).toHaveBeenCalledTimes(1);
+      expect(mockBleno.stopAdvertising).toHaveBeenCalledTimes(1)
 
       execResolve({ stdout: '' });
 
@@ -265,12 +280,17 @@ Requesting information ...
         expect.any(Function)
       );
       expect(mockNoble.on).toHaveBeenCalledWith('discover', callback);
+      expect(mockBleno.on).toHaveBeenCalledWith(
+        'stateChange',
+        expect.any(Function)
+      );
     });
 
     it('should only setup noble listeners once', () => {
       service.onLowEnergyDiscovery(() => undefined);
       service.onLowEnergyDiscovery(() => undefined);
       expect(mockNoble.on).toHaveBeenCalledTimes(10);
+      expect(mockBleno.on).toHaveBeenCalledTimes(3);
     });
 
     it('should enable scanning when the adapter is inactive', () => {
@@ -302,7 +322,7 @@ Requesting information ...
       return inquirePromise;
     });
 
-    it('should continue scanning if Classic inquiries are performed on another adapter', async () => {
+    it('should continue scanning and advertising if Classic inquiries are performed on another adapter', async () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
       stateChangeHandler('poweredOn');
@@ -313,6 +333,7 @@ Requesting information ...
 
       expect(mockNoble.startScanning).toHaveBeenCalledTimes(1);
       expect(mockNoble.stopScanning).not.toHaveBeenCalled();
+      expect(mockBleno.stopAdvertising).not.toHaveBeenCalled()
     });
 
     it('should throw an exception if trying to connect to a non-connectable peripheral', async () => {
@@ -565,6 +586,36 @@ Requesting information ...
         'hciconfig hci0 reset',
         expect.anything()
       );
+    });
+
+    it("should start advertising instance iBeacon after the scan started", () => {
+      service.onLowEnergyDiscovery(() => undefined)
+      const scanStartHandler = mockNoble.on.mock.calls[5][1];
+      scanStartHandler();
+
+      expect(mockBleno.startAdvertisingIBeacon).toHaveBeenCalledWith('D1338ACE-002D-44AF-88D1-E57C12484966', 1, expect.any(Number), -59)
+    });
+
+    it("should start advertising if bleno state goes into poweredOn and adapter is scanning", () => {
+      mockBleno.state = 'poweredOff'
+
+      service.onLowEnergyDiscovery(() => undefined)
+      const scanStartHandler = mockNoble.on.mock.calls[5][1];
+      scanStartHandler();
+
+      const blenoStateChangeHandler = mockBleno.on.mock.calls[0][1];
+      mockBleno.state = 'poweredOn'
+      blenoStateChangeHandler('poweredOn');
+
+      expect(mockBleno.startAdvertisingIBeacon).toHaveBeenCalledTimes(1)
+    });
+
+    it("should stop BLE operations on shutdown", () => {
+      service.onLowEnergyDiscovery(() => undefined)
+      service.onApplicationShutdown()
+
+      expect(mockNoble.stopScanning).toHaveBeenCalledTimes(1)
+      expect(mockBleno.stopAdvertising).toHaveBeenCalledTimes(1)
     });
   });
 });

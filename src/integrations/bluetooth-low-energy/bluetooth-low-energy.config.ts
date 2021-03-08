@@ -1,3 +1,5 @@
+import { randomInt } from "../../util/numbers";
+
 export class BluetoothLowEnergyConfig {
   hciDeviceId = 0;
   whitelist: string[] = [];
@@ -14,6 +16,10 @@ export class BluetoothLowEnergyConfig {
   minorMask = 0xffff;
   batteryMask = 0x00000000;
   tagOverrides: { [key: string]: TagOverride } = {};
+
+  instanceBeaconEnabled = true;
+  instanceBeaconMajor = 1;
+  instanceBeaconMinor = randomInt(0, 65535);
 
   timeout = 60;
   updateFrequency = 0;
