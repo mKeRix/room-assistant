@@ -19,11 +19,11 @@ export class BluetoothClassicConfig {
   minRssi?: number | { [macAddress: string]: number };
   @(jf.number().integer().min(0).required())
   hciDeviceId = 0;
-  @(jf.number().integer().min(0).required())
+  @(jf.number().min(1).required())
   interval = 10;
-  @(jf.number().integer().min(0).required())
+  @(jf.number().min(1).required())
   scanTimeLimit = 6;
-  @(jf.number().integer().min(0).required())
+  @(jf.number().min(1).required())
   timeoutCycles = 2;
   @(jf.boolean().required())
   preserveState = false;

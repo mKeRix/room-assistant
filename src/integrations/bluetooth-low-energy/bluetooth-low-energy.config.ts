@@ -9,26 +9,26 @@ class TagOverride {
   name?: string;
   @(jf.number().negative().optional())
   measuredPower?: number;
-  @(jf.number().integer().optional())
+  @(jf.number().integer().max(0xffffffff).optional())
   batteryMask?: number;
 }
 
 export class BluetoothLowEnergyConfig {
-  @(jf.number().integer().min(0))
+  @(jf.number().integer().min(0).required())
   hciDeviceId = 0;
-  @(jf.array({ elementClass: String }).optional())
+  @(jf.array({ elementClass: String }).required())
   whitelist: string[] = [];
-  @(jf.boolean().optional())
+  @(jf.boolean().required())
   whitelistRegex = false;
-  @(jf.array({ elementClass: String }).optional())
+  @(jf.array({ elementClass: String }).required())
   allowlist: string[] = [];
-  @(jf.boolean().optional())
+  @(jf.boolean().required())
   allowlistRegex = false;
-  @(jf.array({ elementClass: String }).optional())
+  @(jf.array({ elementClass: String }).required())
   blacklist: string[] = [];
-  @(jf.boolean().optional())
+  @(jf.boolean().required())
   blacklistRegex = false;
-  @(jf.array({ elementClass: String }).optional())
+  @(jf.array({ elementClass: String }).required())
   denylist: string[] = [];
   @(jf.boolean().required())
   denylistRegex = false;
@@ -40,7 +40,7 @@ export class BluetoothLowEnergyConfig {
   majorMask = 0xffff;
   @(jf.number().integer().min(0).max(0xffff).required())
   minorMask = 0xffff;
-  @(jf.number().integer().required())
+  @(jf.number().integer().max(0xffffffff).required())
   batteryMask = 0x00000000;
 
   instanceBeaconEnabled = true;
@@ -49,19 +49,13 @@ export class BluetoothLowEnergyConfig {
 
   @(jf.object().custom(validateTagOverrides).required())
   tagOverrides: { [entityId: string]: TagOverride } = {};
-  @(jf.number().integer().min(0))
+  @(jf.number().min(0).required())
   timeout = 60;
-  @(jf.number().integer().min(0))
+  @(jf.number().min(0).required())
   updateFrequency = 0;
   @(jf.number().positive().optional())
   maxDistance?: number;
 }
-// TODO OR Properties(whitelist|allowlist)
-
-const BluetoothLowEnergyScheme = jf
-  .getSchema(BluetoothLowEnergyConfig)
-  .without('whitelist', 'allowlist')
-  .without('whitelistRegEx', 'allowlistRegEx');
 
 function validateTagOverrides(options: {
   schema: Joi.Schema;

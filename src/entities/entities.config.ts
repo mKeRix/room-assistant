@@ -2,16 +2,16 @@ import * as Joi from 'joi';
 import * as jf from 'joiful';
 
 export class RollingAverageOptions {
-  @(jf.number().integer().min(0).optional())
-  window?: number;
+  @(jf.number().integer().min(1).required())
+  window: number;
 }
 export class DebounceOptions {
   @(jf.number().min(0).optional())
   wait?: number;
   @(jf.number().min(0).optional())
   maxWait?: number;
-  @(jf.boolean().required()) // TODO Confirm if required as docs have as optional
-  leading: boolean;
+  @(jf.boolean().optional())
+  leading?: boolean;
   @(jf.boolean().optional())
   trailing?: boolean;
 }

@@ -4,7 +4,7 @@ import * as jf from 'joiful';
 class GpioBinarySensorOptions {
   @(jf.string().required())
   name: string;
-  @(jf.number().integer().required())
+  @(jf.number().integer().min(0).required())
   pin: number;
   @(jf.string().valid(Object.values(BinarySensorDeviceClass)).optional())
   deviceClass?: BinarySensorDeviceClass;
@@ -13,7 +13,7 @@ class GpioBinarySensorOptions {
 class GpioSwitchOptions {
   @(jf.string().required())
   name: string;
-  @(jf.number().integer())
+  @(jf.number().integer().min(0).required())
   pin: number;
   @(jf.string().optional())
   icon?: string;

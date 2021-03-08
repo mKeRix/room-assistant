@@ -9,13 +9,11 @@ class IdKeyPair {
   api_key: string;
 }
 
-// TODO Better way to decorate external class
 class ApiKeyAuthConfig implements ApiKeyAuth {
   @(jf.any().custom(validateApiKey).required())
   apiKey: string | IdKeyPair;
 }
 
-// TODO Better way to decorate external class
 class BasicAuthConfig implements BasicAuth {
   @(jf.string().required())
   username: string;

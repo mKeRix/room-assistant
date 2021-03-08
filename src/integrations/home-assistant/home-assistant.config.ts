@@ -1,11 +1,11 @@
-import { IClientOptions } from 'async-mqtt';
+import { mqttScheme, MQTTOptionConfig } from '../mqtt/mqtt.config';
 import * as jf from 'joiful';
 
 export class HomeAssistantConfig {
-  @(jf.string().required())
+  @(jf.string().uri(mqttScheme).required())
   mqttUrl = 'mqtt://localhost:1883';
   @(jf.object().required())
-  mqttOptions: IClientOptions = {}; // TODO Not Validated
+  mqttOptions: MQTTOptionConfig = new MQTTOptionConfig();
   @(jf.boolean().required())
   sendAttributes = true;
 
