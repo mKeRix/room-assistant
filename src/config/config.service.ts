@@ -43,7 +43,7 @@ export class ConfigService implements OnModuleInit {
    *
    * @param cfg - configuration object to validate
    */
-  // TODO Remove need for lint skip
+  // TODO Remove need for lint skip - need inspiration from the type gods
   // eslint-disable-next-line @typescript-eslint/ban-types
   validateConfig(cfg: Object): void {
     const results = jf.validateAsClass(cfg, AppConfig, {

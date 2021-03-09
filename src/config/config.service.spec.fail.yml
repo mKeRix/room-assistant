@@ -86,6 +86,9 @@ bluetoothLowEnergy:
   majorMask: 0xFFFF
   minorMask: 0xGHIG                   # CONSTRAINT ERROR: Hex Required (checked)
   batteryMask: 0x0000FF00
+  instanceBeaconEnabled: true
+  instanceBeaconMajor: 1
+  instanceBeaconMinor: 555
   timeout: 30
   updateFrequence: 55                 # FORMAT ERROR: Key Misspelt (checked)
 #  updateFrequency: 55                # FORMAT ERROR: Missing Key (checked)
@@ -182,6 +185,8 @@ homeAssistant:
     password: mqtt
     rejectUnauthorized: false
   sendAttributes: false
+  sendMqttRoom: false
+  mqttRoomPrefix: 'room-assistant/mqtt-room'
 mqtt:
   mqttUrl: mttq://server.domain.com:18834   # FORMAT ERROR: Scheme Required
   mqttOptions:

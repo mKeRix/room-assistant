@@ -8,10 +8,10 @@ export class HomeAssistantConfig {
   mqttOptions: MQTTOptionConfig = new MQTTOptionConfig();
   @(jf.boolean().required())
   sendAttributes = true;
-
+  @(jf.boolean().required())
   sendMqttRoom = false;
-
   @(jf.string().required())
   discoveryPrefix = 'homeassistant';
+  @(jf.string().required())
   mqttRoomPrefix = 'room-assistant/mqtt-room';
 }

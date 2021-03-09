@@ -82,6 +82,9 @@ bluetoothLowEnergy:
   majorMask: 0xFFFF
   minorMask: 0xFF00
   batteryMask: 0x0000FF00
+  instanceBeaconEnabled: true
+  instanceBeaconMajor: 1
+  instanceBeaconMinor: 555
   timeout: 30
   updateFrequency: 55
   maxDistance: 44.4
@@ -172,6 +175,8 @@ homeAssistant:
     password: mqtt
     rejectUnauthorized: false
   sendAttributes: false
+  sendMqttRoom: false
+  mqttRoomPrefix: 'room-assistant/mqtt-room'
 mqtt:
   mqttUrl: mqtt://server.domain.com:18834
   mqttOptions:
