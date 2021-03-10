@@ -1,12 +1,57 @@
 import { ApiKeyAuth, BasicAuth } from '@elastic/elasticsearch/lib/pool';
+import * as Joi from 'joi';
+import * as jf from 'joiful';
 
-export class LoggerConfig {
-  elasticsearch = new ElasticsearchConfig();
+class IdKeyPair {
+  @(jf.string().required())
+  id: string;
+  @(jf.string().required())
+  api_key: string;
+}
+
+class ApiKeyAuthConfig implements ApiKeyAuth {
+  @(jf.any().custom(validateApiKey).required())
+  apiKey: string | IdKeyPair;
+}
+
+class BasicAuthConfig implements BasicAuth {
+  @(jf.string().required())
+  username: string;
+  @(jf.string().required())
+  password: string;
 }
 
 class ElasticsearchConfig {
+  @(jf.boolean().required())
   enabled = false;
+  @(jf.string().required())
   node = 'http://localhost:9200';
-  auth?: BasicAuth | ApiKeyAuth;
+  @(jf.any().custom(validateAuthType).optional())
+  auth?: BasicAuthConfig | ApiKeyAuthConfig;
+  @(jf.string().required())
   indexPrefix = 'room-assistant';
+}
+
+export class LoggerConfig {
+  @(jf.object({ objectClass: ElasticsearchConfig }).required())
+  elasticsearch = new ElasticsearchConfig();
+}
+
+// Custom validators as no decorator for "key: Type1|Type2"
+function validateAuthType(options: {
+  schema: Joi.Schema;
+  joi: typeof Joi;
+}): Joi.Schema {
+  return options.joi
+    .alternatives()
+    .try(jf.getSchema(BasicAuthConfig), jf.getSchema(ApiKeyAuthConfig));
+}
+
+function validateApiKey(options: {
+  schema: Joi.Schema;
+  joi: typeof Joi;
+}): Joi.Schema {
+  return options.joi
+    .alternatives()
+    .try(options.joi.string(), jf.getSchema(IdKeyPair));
 }

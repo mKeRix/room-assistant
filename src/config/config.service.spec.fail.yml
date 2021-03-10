@@ -1,0 +1,198 @@
+# Basic error cheking across standard Joiful/Joi functionality
+#
+# Errors coverd:
+#   - Type Errors: Boolean, Number, String, Class
+#   - Constraint Errors: Positive, Negative, Minimum, Maximum, Length, Whitelist
+#   - Format Errors: Incorrect Indentation, Misspelt Property, Missplaced Key, Bad Format (e.g. MAC Address)
+
+
+global:
+  instanceName: test-instance
+  integrations:
+    - bluetoothLowEnergy
+    - bluetoothClassic
+    - omronD6t
+    - gridEye
+    - gpio
+    - shell
+    - xiaomiMi
+    - homeAssistant
+    - mqtt
+    - blueoothClassic                 # FORMAT ERROR: Missspelt Property
+logger:
+    elasticsearch:
+        enabled: yes                  # TYPE ERROR: Boolean Required
+        auth:                         # TYPE ERROR: Auth Class Required
+#          username: user
+          password: password
+          apiKey: "mykey"
+#          apiKey:
+#            id: "my id"
+#            api_key: "my api key"
+        node: http://192.168.0.20:33333
+        indexPrefix: <indexPrefix>-<date>
+cluster:
+  networkInterface: eth0
+  port: 6425
+  timeout: -3                         # CONSTRAINT ERROR: Positive Required
+  weight: 50
+  quorum: 1
+  autoDiscovery: false
+  peerAddresses:
+    - 192.168.1.10:6425
+    - 192.168.1.11:6425
+entities:
+  behaviors:
+    debounced_entity:
+      debounce:
+        wait: 0.75
+        maxWait: 2
+        leading: null                 # TYPE ERROR: Boolean Required
+        trailing: false
+    leading_debounced_entity:
+      debounce:
+        wait: 0.75
+        maxWait: 2
+        leading: true
+        trailing: false
+    rolling_average_entity:
+      rollingAverage:
+        window: 60
+    chained_entity:
+      debounce:
+        wait: 0.75
+        maxWait: 2
+        leading: true
+        trailing: true
+      rollingAverage:
+        window: 60
+bluetoothLowEnergy:
+  hciDeviceId: 0
+  whitelist:
+    - 123456
+    - 7750fb4dab70
+    - "ebef1234567890-55555-333"
+    - "ebef1234567890-55555-444"
+    - "ebef1234567890-55555-555"
+  whitelistRegex: false
+  blacklist: []
+  blacklistRegex: false
+  allowlist: []
+  allowlistRegex: false
+  denylist: []
+  denylistRegex: false
+  processIBeacon: true
+  onlyIBeacon: false
+  majorMask: 0xFFFF
+  minorMask: 0xGHIG                   # CONSTRAINT ERROR: Hex Required
+  batteryMask: 0x0000FF00
+  instanceBeaconEnabled: true
+  instanceBeaconMajor: 1
+  instanceBeaconMinor: 555
+  timeout: 30
+  updateFrequence: 55                 # FORMAT ERROR: Key Misspelt
+#  updateFrequency: 55                # FORMAT ERROR: Missing Key
+  maxDistance: 44.4
+  tagOverrides:
+    ebef1234567890-55555-333:
+      name: iBeacon 1
+      measuredPower: 33               # CONSTRAINT ERROR: Positive Required
+      batteryMask: 0xFFFFFFFFFFFF     # CONSTRAINT ERROR: Maximum (0xFFFFFFFF) Exceeded
+    ebef1234567890-55555-444:
+      name: iBeacon 2
+      timeout: 120                    # FORMAT ERROR: Missplaced Property
+bluetoothClassic:
+  hciDeviceId: 1
+  interval: 20
+  scanTimeLimit: 21
+  timeoutCycles: -2.5                 # CONSTRAINT ERROR: Minimum (1) Exceeded
+  preserveState: true
+  inquireFromStart: true
+  minRssi:                            # TYPE ERROR: Unrecognised Type
+    '08:05:90:ed:3b:60': 10               # CONTEXT: Negative Required
+    '08:05:90:ed:32:1Z': -10              # CONTEXT: MAC Required
+    default: -20
+  addresses:
+    - '08:05:90:ED:3B:60'
+    - '77:50:fb:4d:ab:7G'             # TYPE ERROR: MAC Required
+    - '77:50'                         # TYPE ERROR: MAC Required
+    - '77::fb:4d:ab:70'               # TYPE ERROR: MAC Required
+    - '77:50:fb:4d:ab:70'
+  entityOverrides:
+    ebef1234567890-55555-333:
+      id: 333                          # TYPE ERROR: String Required
+omronD6t:
+  busNumber: 3
+  address: 0x1d
+  deltaThreshold: 2
+  heatmap:
+    enabled: 123                      # TYPE ERROR: Boolean Required
+    minTemperature: 16
+    maxTemperature: 30
+    rotation: 90
+    drawTemperatures: false
+gridEye:
+  busNumber: 1
+  address: 0x69
+  deltaThreshold: 2
+  heatmap:
+    enabled: true
+    minTemperature: "23"              # TYPE ERROR: Number Required
+    maxTemperature: 30
+    rotation: 179                     # CONSTRAINT ERROR: Whitelist Required
+    drawTemperatures: true
+gpio:
+  binarySensors:
+    - name: PIR Sensor
+      pin: 23
+    - name: Radar
+      pin: 24
+      deviceClass: fake-device-class   # TYPE ERROR: Whitelist Required
+  switches:
+    - name: Test Switch
+      pin: 17
+      icon: my_icon.png
+shell:
+  sensors:
+    - name: Simple Test
+      command: echo test
+      cron: '* * * * *'
+    - name: Regex Test
+      command: echo 'test 123'
+      cron: '* * * * */2'
+      regex: '[1-9]+'
+      deviceClass: 'timestamp'
+      icon: 'mdi:test'
+      unitOfMeasurement: 'tests'
+      switches:                        # FORMAT ERROR: Incorrect Indentation -> Bad Key & Missing Key Errors
+        - name: Test Switch
+          onCommand: echo on
+          offCommand: echo off
+xiaomiMi:
+  hciDeviceId: 0
+  sensors:
+    - address: a4:c1:38:32:12:f9       # FORMAT ERROR: -> Hex Required / Length Exceeded Errors
+      name: Xiaomi 1
+    - address: a4c138131f9e
+      name: Xiaomi 2
+      bindKey: 2dda568adf78
+homeAssistant:
+  mqttUrl: mqtt://server.domain.com:18834
+#  discoveryPrefix: homeassistant      # FORMAT ERROR: Missing Key
+  discoveryPrefi: homeassistant        # FORMAT ERROR: Unrecognised Key
+  mqttOptions:
+    username: mqtt
+    password: mqtt
+    rejectUnauthorized: false
+  sendAttributes: false
+  sendMqttRoom: false
+  mqttRoomPrefix: 'room-assistant/mqtt-room'
+mqtt:
+  mqttUrl: mttq://server.domain.com:18834   # FORMAT ERROR: Scheme Required
+  mqttOptions:
+    username: mqtt
+    password: mqtt
+    rejectUnauthorized: false
+  baseTopic: ra/entity
+  qos: 100                             # CONSTRAINT ERROR: Whitelist Required
+  retain: false

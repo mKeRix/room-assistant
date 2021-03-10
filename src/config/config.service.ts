@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import c from 'config';
-import { AppConfig } from './definitions/default';
+import { AppConfig } from '../app.config';
 import { delimiter } from 'path';
+import * as jf from 'joiful';
 
 @Injectable()
 export class ConfigService implements OnModuleInit {
@@ -16,7 +17,11 @@ export class ConfigService implements OnModuleInit {
    */
   onModuleInit(): void {
     const sources = c.util.getConfigSources().map((source) => source.name);
-    this.logger.log(`Loading configuration from ${sources.join(', ')}`);
+    this.logger.log(
+      `Loading configuration from ${sources.join(
+        ', '
+      )} (Current: ${process.cwd()})`
+    );
 
     if (sources.length == 1) {
       const folders = process.env.NODE_CONFIG_DIR.split(
@@ -27,6 +32,32 @@ export class ConfigService implements OnModuleInit {
       folders.shift();
       this.logger.warn(`No configuration found in ${folders.join(', ')}`);
     }
+
+    this.validateConfig(c);
+  }
+
+  /**
+   * Validates the union of default and user configuration parameters. The parser will
+   * not abort on first error but will highlight all errors detected. Validation is done
+   * strictly without conversion of types. An error message is generated on validation failure.
+   *
+   * @param cfg - configuration object to validate
+   */
+  validateConfig(cfg: c.IConfig): void {
+    const results = jf.validateAsClass(cfg, AppConfig, {
+      abortEarly: false,
+      convert: false,
+    });
+
+    results?.error?.details.forEach((detail) => {
+      let msg = `${detail.message} [Value: ${JSON.stringify(
+        detail?.context?.value
+      )}].`;
+      msg += detail?.context?.message
+        ? ` Additional Context: ${JSON.stringify(detail.context.message)}`
+        : '';
+      this.logger.error(msg);
+    });
   }
 
   /**
