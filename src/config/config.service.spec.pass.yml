@@ -1,6 +1,6 @@
-# Full config to validate validation rules and provide a baseline for regression.
-# Where multiple config variants exist (e.g. Authentication - Basic. API)
-# then validation is provided through specific tests in config.service.spec.ts
+# Full config to check validation rules and provide a baseline for regression.
+# Where multiple config variants exist (e.g. Authentication can by type Basic or ApiKey)
+# then additional variants are validated through specific tests in config.service.spec.ts
 
 global:
   instanceName: test-instance

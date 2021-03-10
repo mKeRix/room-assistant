@@ -1,10 +1,9 @@
 import * as Joi from 'joi';
 import * as jf from 'joiful';
 
-const MAC_REGEXP = new RegExp('^([0-9a-fA-F]{2}[:]){5}([0-9a-fA-F]{2})$');
-const MAC2_REGEXP = new RegExp(
-  '^([0-9a-fA-F]{2}[:]){5}([0-9a-fA-F]{2})|default$'
-);
+const MAC_REXEP_STRING = '^([0-9a-fA-F]{2}[:]){5}([0-9a-fA-F]{2})$';
+const MAC_REGEXP = new RegExp(MAC_REXEP_STRING);
+const MAC_DEFAULT_REGEXP = new RegExp(MAC_REXEP_STRING + '|default');
 const MAC_ERROR = '{#label} does not match the required MAC address format';
 
 class BluetoothClassicEntityOverride {
@@ -53,7 +52,7 @@ function validateMinRSSI(options: {
       options.joi
         .object()
         .pattern(
-          options.joi.string().pattern(MAC2_REGEXP),
+          options.joi.string().pattern(MAC_DEFAULT_REGEXP),
           options.joi.number().max(0)
         )
     );

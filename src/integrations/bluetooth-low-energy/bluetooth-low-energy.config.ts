@@ -44,9 +44,9 @@ export class BluetoothLowEnergyConfig {
   batteryMask = 0x00000000;
   @(jf.boolean().required())
   instanceBeaconEnabled = true;
-  @(jf.number().integer().min(0).max(0xffff).required())
+  @(jf.number().integer().min(0).max(65535).required())
   instanceBeaconMajor = 1;
-  @(jf.number().integer().min(0).max(0xffff).required())
+  @(jf.number().integer().min(0).max(65535).required())
   instanceBeaconMinor = randomInt(0, 65535);
   @(jf.object().custom(validateTagOverrides).required())
   tagOverrides: { [entityId: string]: TagOverride } = {};

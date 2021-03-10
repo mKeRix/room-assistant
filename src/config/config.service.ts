@@ -33,25 +33,23 @@ export class ConfigService implements OnModuleInit {
       this.logger.warn(`No configuration found in ${folders.join(', ')}`);
     }
 
-    this.validateConfig(c);
+    this.validateConfig(c as Partial<AppConfig>);
   }
 
   /**
    * Validates the union of default and user configuration parameters. The parser will
    * not abort on first error but will highlight all errors detected. Validation is done
-   * strictly without conversion of types. An exception is raised on validation failure.
+   * strictly without conversion of types. An error message is generated on validation failure.
    *
    * @param cfg - configuration object to validate
    */
-  // TODO Remove need for lint skip - need inspiration from the type gods
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  validateConfig(cfg: Object): void {
+  validateConfig(cfg: Partial<AppConfig>): void {
     const results = jf.validateAsClass(cfg, AppConfig, {
       abortEarly: false,
       convert: false,
     });
 
-    results?.error?.details?.forEach((detail) => {
+    results?.error?.details.forEach((detail) => {
       let msg = `${detail.message} [Value: ${JSON.stringify(
         detail?.context?.value
       )}].`;
