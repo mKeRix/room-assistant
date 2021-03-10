@@ -33,7 +33,7 @@ export class ConfigService implements OnModuleInit {
       this.logger.warn(`No configuration found in ${folders.join(', ')}`);
     }
 
-    this.validateConfig(c as Partial<AppConfig>);
+    this.validateConfig(c);
   }
 
   /**
@@ -43,7 +43,7 @@ export class ConfigService implements OnModuleInit {
    *
    * @param cfg - configuration object to validate
    */
-  validateConfig(cfg: Partial<AppConfig>): void {
+  validateConfig(cfg: c.IConfig): void {
     const results = jf.validateAsClass(cfg, AppConfig, {
       abortEarly: false,
       convert: false,
