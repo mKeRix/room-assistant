@@ -8,6 +8,10 @@ Also checkout the quickstart guides in the menu on the left! If you are planning
 
 ## Running with NodeJS
 
+### Recommended for...
+
+Dedicated or resource-limited computers, like Raspberry Pis.  Has least overhead but may conflict with other services, particularly those based on different versions of Node.js.
+
 ### Requirements
 
 Please make sure you have either NodeJS 14.x or NodeJS 12.x installed. The version provided by Raspbian by default is outdated.
@@ -67,6 +71,12 @@ sudo systemctl start room-assistant.service
 ```
 
 ## Running with Docker
+
+### Recommended for...
+
+Computers being used as general servers.  Slightly more overhead but avoids possible conflicts with other services.
+
+### Installation
 
 This project provides official Docker images on [Docker Hub](https://hub.docker.com/r/mkerix/room-assistant/). You can either use the latest or a specific version by using the correct tag. It is strongly recommended to run this image with the `host` network, otherwise you may run into problems with many parts of the software. For auto-discovery functionality on Linux you will need to map the `/var/run/dbus` volume.
 
