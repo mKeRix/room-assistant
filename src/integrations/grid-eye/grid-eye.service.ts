@@ -10,7 +10,7 @@ import { EntitiesService } from '../../entities/entities.service';
 import { Sensor } from '../../entities/sensor';
 import * as math from 'mathjs';
 import { Interval } from '@nestjs/schedule';
-import { ThermopileOccupancyService } from '../thermopile/thermopile-occupancy.service';
+import { ThermopileOccupancyService } from '../../integration-support/thermopile/thermopile-occupancy.service';
 import { GridEyeConfig } from './grid-eye.config';
 import { ConfigService } from '../../config/config.service';
 import { SensorConfig } from '../home-assistant/sensor-config';

@@ -1,4 +1,4 @@
-import { HeatmapOptions } from '../thermopile/thermopile-occupancy.config';
+import { HeatmapOptions } from '../../integration-support/thermopile/thermopile-occupancy.config';
 import * as jf from 'joiful';
 
 export class OmronD6tConfig {

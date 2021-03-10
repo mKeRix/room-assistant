@@ -1,4 +1,4 @@
-import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
+import { RoomPresenceDistanceSensor } from '../../integration-support/room-presence/room-presence-distance.sensor';
 
 class BluetoothLowEnergyMeasurement {
   rssi: number;

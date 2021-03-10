@@ -15,7 +15,7 @@ import { SERVICE_DATA_UUID, ServiceData, Parser, EventTypes } from './parser';
 import { Sensor } from '../../entities/sensor';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { SensorConfig } from '../home-assistant/sensor-config';
-import { BluetoothService } from '../bluetooth/bluetooth.service';
+import { BluetoothService } from '../../integration-support/bluetooth/bluetooth.service';
 
 @Injectable()
 export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {

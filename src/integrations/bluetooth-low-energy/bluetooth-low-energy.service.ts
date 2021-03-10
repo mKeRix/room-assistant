@@ -16,7 +16,7 @@ import { EntityCustomization } from '../../entities/entity-customization.interfa
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import { Device } from '../home-assistant/device';
-import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
+import { RoomPresenceDistanceSensor } from '../../integration-support/room-presence/room-presence-distance.sensor';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { KalmanFilterable } from '../../util/filters';
 import { makeId } from '../../util/id';
@@ -24,9 +24,9 @@ import { DISTRIBUTED_DEVICE_ID } from '../home-assistant/home-assistant.const';
 import * as _ from 'lodash';
 import { DeviceTracker } from '../../entities/device-tracker';
 import { Sensor } from '../../entities/sensor';
-import { RoomPresenceProxyHandler } from '../room-presence/room-presence.proxy';
+import { RoomPresenceProxyHandler } from '../../integration-support/room-presence/room-presence.proxy';
 import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presence.sensor';
-import { BluetoothService } from '../bluetooth/bluetooth.service';
+import { BluetoothService } from '../../integration-support/bluetooth/bluetooth.service';
 import { promiseWithTimeout } from '../../util/promises';
 import * as util from 'util';
 

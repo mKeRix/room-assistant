@@ -43,8 +43,8 @@ import KalmanFilter from 'kalmanjs';
 import { DeviceTracker } from '../../entities/device-tracker';
 import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import * as util from 'util';
-import { BluetoothService } from '../bluetooth/bluetooth.service';
-import { BluetoothModule } from '../bluetooth/bluetooth.module';
+import { BluetoothService } from '../../integration-support/bluetooth/bluetooth.service';
+import { BluetoothModule } from '../../integration-support/bluetooth/bluetooth.module';
 import { Tag } from './tag';
 
 jest.useFakeTimers();

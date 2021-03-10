@@ -26,8 +26,8 @@ import { XiaomiMiConfig } from './xiaomi-mi.config';
 import { Sensor } from '../../entities/sensor';
 import { SensorConfig } from '../home-assistant/sensor-config';
 import c from 'config';
-import { BluetoothService } from '../bluetooth/bluetooth.service';
-import { BluetoothModule } from '../bluetooth/bluetooth.module';
+import { BluetoothService } from '../../integration-support/bluetooth/bluetooth.service';
+import { BluetoothModule } from '../../integration-support/bluetooth/bluetooth.module';
 
 describe('XiaomiMiService', () => {
   let service: XiaomiMiService;

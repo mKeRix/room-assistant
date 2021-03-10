@@ -27,12 +27,12 @@ import {
   REQUEST_RSSI_CHANNEL,
 } from './bluetooth-classic.const';
 import { NewRssiEvent } from './new-rssi.event';
-import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
+import { RoomPresenceDistanceSensor } from '../../integration-support/room-presence/room-presence-distance.sensor';
 import KalmanFilter from 'kalmanjs';
 import { Switch } from '../../entities/switch';
 import { BluetoothClassicConfig } from './bluetooth-classic.config';
-import { BluetoothModule } from '../bluetooth/bluetooth.module';
-import { BluetoothService } from '../bluetooth/bluetooth.service';
+import { BluetoothModule } from '../../integration-support/bluetooth/bluetooth.module';
+import { BluetoothService } from '../../integration-support/bluetooth/bluetooth.service';
 import c from 'config';
 import { ConfigService } from '../../config/config.service';
 import { Device } from './device';
@@ -41,7 +41,7 @@ import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import * as util from 'util';
 
 jest.mock('mdns', () => ({}), { virtual: true });
-jest.mock('../room-presence/room-presence-distance.sensor');
+jest.mock('../../integration-support/room-presence/room-presence-distance.sensor');
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {
     return {

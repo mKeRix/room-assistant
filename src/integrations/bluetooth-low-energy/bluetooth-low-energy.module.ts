@@ -5,7 +5,7 @@ import { EntitiesModule } from '../../entities/entities.module';
 import { ConfigModule } from '../../config/config.module';
 import { ClusterModule } from '../../cluster/cluster.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { BluetoothModule } from '../bluetooth/bluetooth.module';
+import { BluetoothModule } from '../../integration-support/bluetooth/bluetooth.module';
 
 @Module({})
 export default class BluetoothLowEnergyModule {

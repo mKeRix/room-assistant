@@ -3,7 +3,7 @@ import { BluetoothClassicService } from './bluetooth-classic.service';
 import { ConfigModule } from '../../config/config.module';
 import { EntitiesModule } from '../../entities/entities.module';
 import { ClusterModule } from '../../cluster/cluster.module';
-import { BluetoothModule } from '../bluetooth/bluetooth.module';
+import { BluetoothModule } from '../../integration-support/bluetooth/bluetooth.module';
 
 @Module({})
 export default class BluetoothClassicModule {

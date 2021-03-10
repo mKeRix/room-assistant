@@ -21,7 +21,7 @@ import {
   NEW_RSSI_CHANNEL,
   REQUEST_RSSI_CHANNEL,
 } from './bluetooth-classic.const';
-import { RoomPresenceDistanceSensor } from '../room-presence/room-presence-distance.sensor';
+import { RoomPresenceDistanceSensor } from '../../integration-support/room-presence/room-presence-distance.sensor';
 import { KalmanFilterable } from '../../util/filters';
 import { makeId } from '../../util/id';
 import { Device } from './device';
@@ -30,8 +30,8 @@ import { Device as DeviceInfo } from '../home-assistant/device';
 import { Switch } from '../../entities/switch';
 import { SwitchConfig } from '../home-assistant/switch-config';
 import { DeviceTracker } from '../../entities/device-tracker';
-import { RoomPresenceProxyHandler } from '../room-presence/room-presence.proxy';
-import { BluetoothService } from '../bluetooth/bluetooth.service';
+import { RoomPresenceProxyHandler } from '../../integration-support/room-presence/room-presence.proxy';
+import { BluetoothService } from '../../integration-support/bluetooth/bluetooth.service';
 
 const execPromise = util.promisify(exec);
 
