@@ -28,6 +28,7 @@
     "prepack": "npm run build",
     "prebuild": "rimraf dist",
     "build": "nest build",
+    "prepare": "husky install",
     "postinstall": "github-sponsors",
     "format": "prettier --write \"src/**/*.ts\" \"bin/*.js\"",
     "start": "nest start",
@@ -43,7 +44,6 @@
     "docs:build": "vuepress build docs"
   },
   "dependencies": {
-    "2d-array-rotation": "^2.1.1",
     "@nestjs/common": "^7.6.12",
     "@nestjs/core": "^7.6.12",
     "@nestjs/platform-express": "^7.6.12",
@@ -51,6 +51,7 @@
     "@nestjs/swagger": "^4.7.13",
     "@nestjs/terminus": "^7.1.0",
     "@willsoto/nestjs-prometheus": "^3.0.0",
+    "2d-array-rotation": "^2.1.1",
     "async-mqtt": "^2.6.1",
     "bleno": "npm:@abandonware/bleno@^0.5.1-3",
     "chalk": "^4.1.0",
@@ -101,7 +102,7 @@
     "eslint-config-prettier": "^7.2.0",
     "eslint-plugin-import": "^2.22.1",
     "esm": "^3.2.25",
-    "husky": "^4.3.8",
+    "husky": "^5.1.3",
     "jest": "^26.6.3",
     "lint-staged": "^10.5.4",
     "prettier": "^2.2.1",
@@ -127,12 +128,6 @@
   },
   "engines": {
     "node": ">= 12 < 15"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged --pattern \"src/**/*.ts\" --pattern \"bin/*.js\" && lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
   },
   "lint-staged": {
     "*.{ts,js}": "eslint"
