@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable @typescript-eslint/no-var-requires */
 const pkg = require('../package.json');
+require('please-upgrade-node')(pkg);
 const updateNotifier = require('update-notifier');
 const chalk = require('chalk');
 const commandLineUsage = require('command-line-usage');
