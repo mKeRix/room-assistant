@@ -37,7 +37,7 @@ const execPromise = util.promisify(exec);
 
 @Injectable()
 export class BluetoothClassicService
-  extends KalmanFilterable(Object, 1.4, 1)
+  extends KalmanFilterable(Object, 0.01, 0.7)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothClassicConfig;
   private rotationOffset = 0;
@@ -163,7 +163,9 @@ export class BluetoothClassicService
       `Received RSSI of ${event.rssi} for ${event.device.address} from ${event.instanceName}`
     );
 
-    const baseId = this.config.entityOverrides[event.device.address]?.id || event.device.address;
+    const baseId =
+      this.config.entityOverrides[event.device.address]?.id ||
+      event.device.address;
     const sensorId = makeId(`bluetooth-classic ${baseId}`);
     let sensor: RoomPresenceDistanceSensor;
     if (this.entitiesService.has(sensorId)) {
