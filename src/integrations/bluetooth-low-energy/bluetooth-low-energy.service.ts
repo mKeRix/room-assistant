@@ -33,9 +33,9 @@ import * as util from 'util';
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 const APPLE_ADVERTISEMENT_ID = Buffer.from([0x4c, 0x00]);
 
-@Injectable() // parameters determined experimentally
+@Injectable()
 export class BluetoothLowEnergyService
-  extends KalmanFilterable(Object, 0.8, 15)
+  extends KalmanFilterable(Object, 0.008, 4)
   implements OnModuleInit, OnApplicationBootstrap {
   private readonly config: BluetoothLowEnergyConfig;
   private readonly logger: Logger;
