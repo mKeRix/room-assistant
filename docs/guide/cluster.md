@@ -53,7 +53,6 @@ If you're seeing multiple clusters form on your network that are both trying to 
 
 ```yaml
 cluster:
-  networkInterface: wlan0
   port: 6425
   peerAddresses:
     - 192.168.1.10:6425
