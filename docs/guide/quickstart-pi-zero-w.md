@@ -12,8 +12,7 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 
 ### Software
 
-- [balenaEtcher](https://www.balena.io/etcher/)
-- Download of the latest [Raspbian Buster Lite image](https://www.raspberrypi.org/downloads/raspbian/)
+- [Raspberry Pi Imager](https://www.raspberrypi.org/software/)
 
 ## Installing Raspbian
 
@@ -21,50 +20,26 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 
 2. Open balenaEtcher, select the Raspbian image you downloaded and flash it to the SD card.
 
-3. After that is done, create an empty file called `ssh` on the `boot` partition of the SD card that you should now see in your file explorer. You may have to eject your SD card and put it back again before it becomes visible.
-
-4. *Optional:* If you want to use the Pi Zero W with WiFi, you also need to configure the credentials. Create a file called `wpa_supplicant.conf` on the `boot` partition and fill it as shown below, with the marked variables replaced. A list of country codes is available on [Wikipedia](https://en.wikipedia.org/wiki/ISO_3166-1).
-
-   ```
-   ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-   update_config=1
-   country=<Insert country code here>
-   
-   network={
-    ssid="<Name of your WiFi>"
-    psk="<Password for your WiFi>"
-   }
-   ```
-
-5. Unmount the SD card and remove it from your card reader.
-
-6. Insert the SD card into your Raspberry Pi Zero W, then connect the power supply. Wait a minute for it to boot and connect to your network.
-
-7. Open a SSH shell to `raspberrypi.local` with the default user `pi` and password `raspberry`. On Windows you can use [Putty](https://www.putty.org), with Linux and macOS you can just open the terminal and type `ssh pi@raspberrypi.local`. If the hostname is not found, use the IP of the Pi instead - it can be found in your router administration panel.
-
-8. Type `passwd` to change your password to something more secure.
-
-9. Type `sudo raspi-config`, use the arrow keys to go to `Network Settings` and hit Enter, then select `Hostname`. Set the hostname to something recognizable, like `bedroom`. After that select `Finish` and let the Pi reboot.
+4. Insert the SD card into your Raspberry Pi Zero W, then connect the power supply. Wait a minute for it to boot and connect to your network.
+5. Open a SSH shell to `<hostname>.local` (default: `raspberrypi.local`) with the user `pi` and the password you configured (default: `raspberry`). On Windows you can use [Putty](https://www.putty.org), with Linux and macOS you can just open the terminal and e.g. type `ssh pi@raspberrypi.local`. If the hostname is not found, use the IP of the Pi instead - it can be found in your router administration panel.
 
 ## Installing room-assistant
 
-1. Open a new SSH session, this time using the hostname (e.g. `bedroom.local`) and password you set above.
-
-2. Now we install NodeJS by running
+1. Now we install NodeJS by running
 
    ```bash
    wget -O - https://gist.githubusercontent.com/mKeRix/88b7b81e9bca044f74de1dc51696efb2/raw/799a20bca44cc61d8f8ae93878f2f28af8365a69/getNodeLTS.sh | bash
    ```
 
-3. To make the commands we install with npm available the $PATH environment variable needs to be extended as well. Edit the file `~/.profile` (e.g. with `nano ~/.profile`) and add the `PATH="$PATH:/opt/nodejs/bin"` to the end of the file. Save, then run `source ~/.profile`.
+2. To make the commands we install with npm available the $PATH environment variable needs to be extended as well. Edit the file `~/.profile` (e.g. with `nano ~/.profile`) and add the `PATH="$PATH:/opt/nodejs/bin"` to the end of the file. Save, then run `source ~/.profile`.
 
-4. We need to install some other dependencies as well, do so by running `sudo apt-get update && sudo apt-get install build-essential libavahi-compat-libdnssd-dev bluetooth libbluetooth-dev libudev-dev`.
+3. We need to install some other dependencies as well, do so by running `sudo apt-get update && sudo apt-get install build-essential libavahi-compat-libdnssd-dev bluetooth libbluetooth-dev libudev-dev`.
 
-5. Now let's get install room-assistant! Run `sudo npm i --global --unsafe-perm room-assistant`. You will see messages like the one shown below during the installation process. Don't worry about them - they're not errors!
+4. Now let's get install room-assistant! Run `sudo npm i --global --unsafe-perm room-assistant`. You will see messages like the one shown below during the installation process. Don't worry about them - they're not errors!
 
    ![compilation messages](./compilation-msgs.png)
 
-6. *Optional:* If you want to run Bluetooth related integrations, you should also grant some additional permissions by executing the commands below.
+5. *Optional:* If you want to run Bluetooth related integrations, you should also grant some additional permissions by executing the commands below.
 
    ```shell
    sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
