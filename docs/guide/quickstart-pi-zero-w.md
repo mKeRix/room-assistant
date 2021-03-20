@@ -17,9 +17,11 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 ## Installing Raspbian
 
 1. Put your microSD card into your card reader.
-
-2. Open balenaEtcher, select the Raspbian image you downloaded and flash it to the SD card.
-
+2. Open the [Raspberry Pi Imager](https://www.raspberrypi.org/software/) and select the following options:
+   1. OS -> Raspberry Pi OS (other) -> Raspberry Pi OS (Lite)
+   2. SD Card -> the SD card you put into your card reader
+   3. Open the advanced options (Windows: *Ctrl + Shift + X*, macOS: *Cmd + Shift + X*) and enable SSH. Optionally, you can configure WiFi credentials, the hostname to be something recognizable like `bedroom` and more in this same menu. Hit "Save" on the bottom after you're done.
+3. Write the image to the card from the main menu. Wait for it to be finished before removing the card from the reader.
 4. Insert the SD card into your Raspberry Pi Zero W, then connect the power supply. Wait a minute for it to boot and connect to your network.
 5. Open a SSH shell to `<hostname>.local` (default: `raspberrypi.local`) with the user `pi` and the password you configured (default: `raspberry`). On Windows you can use [Putty](https://www.putty.org), with Linux and macOS you can just open the terminal and e.g. type `ssh pi@raspberrypi.local`. If the hostname is not found, use the IP of the Pi instead - it can be found in your router administration panel.
 
