@@ -5,6 +5,7 @@ import c from 'config';
 import { LoggerConfig } from './config/logger.config';
 import { ElasticsearchTransport } from 'winston-elasticsearch';
 import * as TransportStream from 'winston-transport';
+import LokiTransport from 'winston-loki';
 
 const config = c.get<LoggerConfig>('logger');
 const instanceName = c.get<string>('global.instanceName');
@@ -33,6 +34,28 @@ if (config.elasticsearch.enabled) {
         node: config.elasticsearch.node,
         auth: config.elasticsearch.auth,
       },
+    })
+  );
+}
+
+if (config.loki.enabled) {
+  const lokiFormatter = winston.format((info) => {
+    info.labels = info.labels || {};
+    info.labels.context = info.context;
+    info.labels.instanceName = info.instanceName;
+    return info;
+  });
+
+  transports.push(
+    new LokiTransport({
+      host: config.loki.host,
+      labels: {
+        job: 'room-assistant',
+      },
+      format: winston.format.combine(
+        lokiFormatter(),
+        winston.format.printf((info) => `${info.message}`)
+      ),
     })
   );
 }

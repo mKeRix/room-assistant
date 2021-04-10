@@ -124,7 +124,8 @@
     "i2c-bus": "^5.1.0",
     "mdns": "^2.5.1",
     "onoff": "^6.0.0",
-    "winston-elasticsearch": "^0.12.3"
+    "winston-elasticsearch": "^0.12.3",
+    "winston-loki": "^6.0.0"
   },
   "engines": {
     "node": ">= 12 < 15"

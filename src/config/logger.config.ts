@@ -32,9 +32,21 @@ class ElasticsearchConfig {
   indexPrefix = 'room-assistant';
 }
 
+class LokiConfig {
+  @(jf.boolean().required())
+  enabled = false;
+  @(jf
+    .string()
+    .uri({ scheme: ['http', 'https'] })
+    .required())
+  host = 'http://localhost:3100';
+}
+
 export class LoggerConfig {
   @(jf.object({ objectClass: ElasticsearchConfig }).required())
   elasticsearch = new ElasticsearchConfig();
+  @(jf.object({ objectClass: LokiConfig }).required())
+  loki = new LokiConfig();
 }
 
 // Custom validators as no decorator for "key: Type1|Type2"

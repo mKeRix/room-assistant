@@ -40,10 +40,31 @@ room-assistant is capable of piping log output into an Elasticsearch cluster wit
 
 ```yaml
 logger:
-    elasticsearch:
-        enabled: true
-        node: http://192.168.0.20:9200
+  elasticsearch:
+    enabled: true
+    node: http://192.168.0.20:9200
 ```
 
 :::
 
+### Loki
+
+**Config Key:** `loki`
+
+You can send the room-assistant logs to an instance of [Grafana Loki](https://grafana.com/oss/loki/), which will allow you to collect and query logs easily from [Grafana](https://grafana.com/grafana/).
+
+| Name      | Type    | Default               | Description                                             |
+| --------- | ------- | --------------------- | ------------------------------------------------------- |
+| `enabled` | Boolean | `false`               | Whether room-assistant should send logs to Loki or not. |
+| `host`    | String  | http://localhost:3100 | The endpoint of your Loki instance.                     |
+
+::: details Example Config
+
+```yaml
+logger:
+  loki:
+    enabled: true
+    host: http://192.168.0.20:3100
+```
+
+:::
