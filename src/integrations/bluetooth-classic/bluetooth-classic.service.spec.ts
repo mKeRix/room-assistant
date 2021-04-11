@@ -41,7 +41,9 @@ import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import * as util from 'util';
 
 jest.mock('mdns', () => ({}), { virtual: true });
-jest.mock('../../integration-support/room-presence/room-presence-distance.sensor');
+jest.mock(
+  '../../integration-support/room-presence/room-presence-distance.sensor'
+);
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {
     return {
@@ -87,7 +89,7 @@ describe('BluetoothClassicService', () => {
     timeoutCycles: 2,
     preserveState: false,
     inquireFromStart: true,
-    entityOverrides: {}
+    entityOverrides: {},
   };
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
@@ -479,7 +481,7 @@ describe('BluetoothClassicService', () => {
   it('should register entities with overridden ID if available', async () => {
     const deviceId = '10:36:cf:ca:9a:27';
     const overriddenId = 'new-id';
-    config.entityOverrides[deviceId] = { id: overriddenId }
+    config.entityOverrides[deviceId] = { id: overriddenId };
 
     entitiesService.has.mockReturnValue(false);
     entitiesService.add.mockImplementation((entity) => entity);
@@ -509,6 +511,52 @@ describe('BluetoothClassicService', () => {
             device: {
               identifiers: deviceId,
               name: 'Test Device',
+              connections: [['mac', deviceId]],
+              manufacturer: undefined,
+              viaDevice: 'room-assistant-distributed',
+            },
+          },
+        },
+      ]
+    );
+  });
+
+  it('should register entities with overridden name if available', async () => {
+    const deviceId = '10:36:cf:ca:9a:27';
+    const overriddenName = 'New Name';
+    config.entityOverrides[deviceId] = { name: overriddenName };
+
+    entitiesService.has.mockReturnValue(false);
+    entitiesService.add.mockImplementation((entity) => entity);
+    clusterService.nodes.mockReturnValue({
+      abcd: { channels: [NEW_RSSI_CHANNEL] },
+    });
+    bluetoothService.inquireClassicDeviceInfo.mockResolvedValue({
+      address: deviceId,
+      name: 'Test iPhone',
+    });
+    jest.useFakeTimers();
+
+    const event = new NewRssiEvent(
+      'test-instance',
+      new Device(deviceId, 'Test iPhone'),
+      -10
+    );
+    await service.handleNewRssi(event);
+
+    expect(entitiesService.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'bluetooth-classic-10-36-cf-ca-9a-27-tracker',
+        name: 'New Name Tracker',
+      }),
+      [
+        {
+          for: DeviceTrackerConfig,
+          overrides: {
+            sourceType: 'bluetooth',
+            device: {
+              identifiers: deviceId,
+              name: overriddenName,
               connections: [['mac', deviceId]],
               manufacturer: undefined,
               viaDevice: 'room-assistant-distributed',

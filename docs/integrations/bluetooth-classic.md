@@ -97,9 +97,10 @@ Try to pair your Apple Watch to a Bluetooth device such as headphones/speakers f
 
 The entity overrides object can be considered as a map with the device MAC as key and an object with some of the following settings as value.
 
-| Name | Type   | Default | Description                                                  |
-| ---- | ------ | ------- | ------------------------------------------------------------ |
-| `id` | String |         | Changes the ID of the device entities. Useful to hide device addresses from publicly shared home automation configurations. |
+| Name   | Type   | Default | Description                                                  |
+| ------ | ------ | ------- | ------------------------------------------------------------ |
+| `id`   | String |         | Changes the ID of the device entities. Useful to hide device addresses from publicly shared home automation configurations. |
+| `name` | String |         | Changes the friendly name for the device, which is sent to the home automation software for easier identification. |
 
 ::: details Simple Example Config
 
@@ -134,6 +135,7 @@ bluetoothClassic:
   entityOverrides:
     '08:05:90:ed:3b:60':
     	id: my-phone
+    	name: My Phone
 ```
 
 :::

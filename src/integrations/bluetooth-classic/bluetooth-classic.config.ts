@@ -9,6 +9,8 @@ const MAC_ERROR = '{#label} does not match the required MAC address format';
 class BluetoothClassicEntityOverride {
   @(jf.string().optional())
   id?: string;
+  @(jf.string().optional())
+  name?: string;
 }
 
 export class BluetoothClassicConfig {

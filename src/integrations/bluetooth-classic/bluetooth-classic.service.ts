@@ -333,9 +333,11 @@ export class BluetoothClassicService
     sensorId: string,
     device: Device
   ): Promise<RoomPresenceDistanceSensor> {
+    const baseName =
+      this.config.entityOverrides[device.address]?.name || device.name;
     const deviceInfo: DeviceInfo = {
       identifiers: device.address,
-      name: device.name,
+      name: baseName,
       manufacturer: device.manufacturer,
       connections: [['mac', device.address]],
       viaDevice: DISTRIBUTED_DEVICE_ID,
@@ -343,7 +345,7 @@ export class BluetoothClassicService
 
     const deviceTracker = this.createDeviceTracker(
       makeId(`${sensorId}-tracker`),
-      `${device.name} Tracker`,
+      `${baseName} Tracker`,
       deviceInfo
     );
 
@@ -358,7 +360,7 @@ export class BluetoothClassicService
     ];
     const rawSensor = new RoomPresenceDistanceSensor(
       sensorId,
-      `${device.name} Room Presence`,
+      `${baseName} Room Presence`,
       0
     );
     const sensorProxy = new Proxy<RoomPresenceDistanceSensor>(
