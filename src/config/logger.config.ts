@@ -1,4 +1,3 @@
-import { ApiKeyAuth, BasicAuth } from '@elastic/elasticsearch/lib/pool';
 import * as Joi from 'joi';
 import * as jf from 'joiful';
 
@@ -9,12 +8,12 @@ class IdKeyPair {
   api_key: string;
 }
 
-class ApiKeyAuthConfig implements ApiKeyAuth {
+class ApiKeyAuthConfig {
   @(jf.any().custom(validateApiKey).required())
   apiKey: string | IdKeyPair;
 }
 
-class BasicAuthConfig implements BasicAuth {
+class BasicAuthConfig {
   @(jf.string().required())
   username: string;
   @(jf.string().required())

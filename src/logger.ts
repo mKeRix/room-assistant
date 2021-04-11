@@ -3,12 +3,11 @@ import winston from 'winston';
 import { TransformableInfo } from 'logform';
 import c from 'config';
 import { LoggerConfig } from './config/logger.config';
-import { ElasticsearchTransport } from 'winston-elasticsearch';
 import * as TransportStream from 'winston-transport';
-import LokiTransport from 'winston-loki';
 
 const config = c.get<LoggerConfig>('logger');
 const instanceName = c.get<string>('global.instanceName');
+const missingDeps: string[] = [];
 
 const transports: TransportStream[] = [
   new winston.transports.Console({
@@ -27,15 +26,23 @@ const transports: TransportStream[] = [
 ];
 
 if (config.elasticsearch.enabled) {
-  transports.push(
-    new ElasticsearchTransport({
-      indexPrefix: config.elasticsearch.indexPrefix,
-      clientOpts: {
-        node: config.elasticsearch.node,
-        auth: config.elasticsearch.auth,
-      },
-    })
-  );
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const ElasticsearchTransport = require('winston-elasticsearch')
+      .ElasticsearchTransport;
+
+    transports.push(
+      new ElasticsearchTransport({
+        indexPrefix: config.elasticsearch.indexPrefix,
+        clientOpts: {
+          node: config.elasticsearch.node,
+          auth: config.elasticsearch.auth,
+        },
+      })
+    );
+  } catch (e) {
+    missingDeps.push('elasticsearch');
+  }
 }
 
 if (config.loki.enabled) {
@@ -46,18 +53,25 @@ if (config.loki.enabled) {
     return info;
   });
 
-  transports.push(
-    new LokiTransport({
-      host: config.loki.host,
-      labels: {
-        job: 'room-assistant',
-      },
-      format: winston.format.combine(
-        lokiFormatter(),
-        winston.format.printf((info) => `${info.message}`)
-      ),
-    })
-  );
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const LokiTransport = require('winston-loki');
+
+    transports.push(
+      new LokiTransport({
+        host: config.loki.host,
+        labels: {
+          job: 'room-assistant',
+        },
+        format: winston.format.combine(
+          lokiFormatter(),
+          winston.format.printf((info) => `${info.message}`)
+        ),
+      })
+    );
+  } catch (e) {
+    missingDeps.push('loki');
+  }
 }
 
 export const WINSTON_LOGGER = WinstonModule.createLogger({
@@ -66,4 +80,12 @@ export const WINSTON_LOGGER = WinstonModule.createLogger({
     instanceName,
   },
   transports,
+});
+
+missingDeps.forEach((dep) => {
+  WINSTON_LOGGER.error(
+    `Logging with ${dep} was enabled, but the dependency is missing. Please install it with "npm install -g winston-${dep}".`,
+    null,
+    'LoggerService'
+  );
 });

@@ -27,7 +27,7 @@ If you want to capture the logs of all your instances in a single place you can 
 
 **Config Key:** `elasticsearch`
 
-room-assistant is capable of piping log output into an Elasticsearch cluster with the logstash format, which makes it searchable from Kibana.
+room-assistant is capable of piping log output into an Elasticsearch cluster with the logstash format, which makes it searchable from Kibana. On NodeJS installations this logger requires an additional dependency, which you can install with `npm install -g winston-elasticsearch`.
 
 | Name          | Type    | Default               | Description                                                  |
 | ------------- | ------- | --------------------- | ------------------------------------------------------------ |
@@ -51,7 +51,7 @@ logger:
 
 **Config Key:** `loki`
 
-You can send the room-assistant logs to an instance of [Grafana Loki](https://grafana.com/oss/loki/), which will allow you to collect and query logs easily from [Grafana](https://grafana.com/grafana/).
+You can send the room-assistant logs to an instance of [Grafana Loki](https://grafana.com/oss/loki/), which will allow you to collect and query logs easily from [Grafana](https://grafana.com/grafana/). On NodeJS installations this logger requires an additional dependency, which you can install with `npm install -g winston-loki`.
 
 | Name      | Type    | Default               | Description                                             |
 | --------- | ------- | --------------------- | ------------------------------------------------------- |

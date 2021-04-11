@@ -2,27 +2,8 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const pkg = require('../package.json');
 require('please-upgrade-node')(pkg);
-const updateNotifier = require('update-notifier');
-const chalk = require('chalk');
 const commandLineUsage = require('command-line-usage');
 const commandLineArgs = require('command-line-args');
-
-const isBeta = pkg.version.includes('beta');
-let updateCommand = 'npm i -g --unsafe-perm {packageName}';
-if (isBeta) {
-  updateCommand += '@beta';
-}
-
-updateNotifier({
-  pkg,
-  distTag: isBeta ? 'beta' : 'latest',
-}).notify({
-  message: `Update available ${chalk.dim('{currentVersion}')} ${chalk.reset(
-    '→'
-  )} ${chalk.green('{latestVersion}')} \nRun ${chalk.cyan(
-    updateCommand
-  )} to update`,
-});
 
 const optionDefinitions = [
   {
