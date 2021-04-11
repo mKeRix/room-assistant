@@ -1,7 +1,7 @@
 import { ThermopileOccupancyService } from './thermopile-occupancy.service';
 import { Pixel } from './pixel';
 import { HeatmapOptions } from './thermopile-occupancy.config';
-import * as PImg from 'pureimage';
+import * as pureimage from 'pureimage';
 
 jest.mock('pureimage', () => ({
   __esModule: true,
@@ -36,10 +36,10 @@ describe('ThermopileOccupancyService', () => {
     jest.clearAllMocks();
     service = new MockThermopileOccupancyService();
 
-    testBitmap = PImg.make(150, 150);
+    testBitmap = pureimage.make(150, 150);
     testContext = testBitmap.getContext('2d');
     jest.spyOn(testBitmap, 'getContext').mockReturnValue(testContext);
-    jest.spyOn(PImg, 'make').mockReturnValue(testBitmap);
+    jest.spyOn(pureimage, 'make').mockReturnValue(testBitmap);
   });
 
   it('should find all pixels that are above the delta threshold', () => {
@@ -87,7 +87,7 @@ describe('ThermopileOccupancyService', () => {
   });
 
   it('should choose canvas size based on parameters', async () => {
-    const makeSpy = jest.spyOn(PImg, 'make');
+    const makeSpy = jest.spyOn(pureimage, 'make');
 
     await service.generateHeatmap(PRESENCE_TEMPERATURES, undefined, 250, 250);
 
@@ -129,7 +129,7 @@ describe('ThermopileOccupancyService', () => {
   });
 
   it('should output a jpeg image buffer', async () => {
-    const outputSpy = jest.spyOn(PImg, 'encodeJPEGToStream');
+    const outputSpy = jest.spyOn(pureimage, 'encodeJPEGToStream');
 
     await service.generateHeatmap(PRESENCE_TEMPERATURES);
 

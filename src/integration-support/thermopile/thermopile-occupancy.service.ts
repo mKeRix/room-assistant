@@ -3,14 +3,14 @@ import * as math from 'mathjs';
 import { Cluster } from './cluster';
 import * as _ from 'lodash';
 import { HeatmapOptions } from './thermopile-occupancy.config';
-import * as PImg from 'pureimage';
+import { make, registerFont, encodeJPEGToStream } from 'pureimage';
 import { WritableStreamBuffer } from 'stream-buffers';
 import * as path from 'path';
 import { rotate } from '2d-array-rotation';
 
 export type RotationOption = 0 | 90 | 180 | 270;
 
-const OPEN_SANS = PImg.registerFont(
+const OPEN_SANS = registerFont(
   path.resolve(__dirname, 'OpenSans-Regular.ttf'),
   'Open Sans',
   400,
@@ -109,8 +109,8 @@ export abstract class ThermopileOccupancyService {
     const segmentHeight = Math.round(height / temperatures.length);
     const segmentWidth = Math.round(width / temperatures[0].length);
     const canvas = [90, 270].includes(options.rotation)
-      ? PImg.make(height, width)
-      : PImg.make(width, height);
+      ? make(height, width)
+      : make(width, height);
     const ctx = canvas.getContext('2d');
 
     let normed = math.divide(
@@ -149,7 +149,7 @@ export abstract class ThermopileOccupancyService {
     }
 
     const outputBuffer = new WritableStreamBuffer();
-    await PImg.encodeJPEGToStream(canvas, outputBuffer, 100);
+    await encodeJPEGToStream(canvas, outputBuffer, 100);
 
     return outputBuffer.getContents();
   }
