@@ -424,7 +424,9 @@ describe('BluetoothLowEnergyService', () => {
     const handleDistanceSpy = jest
       .spyOn(service, 'handleNewDistance')
       .mockImplementation(() => undefined);
-    const allowlistSpy = jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+    const allowlistSpy = jest
+      .spyOn(service, 'isOnAllowlist')
+      .mockReturnValue(true);
     jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
     mockConfig.tagOverrides = {
       abcd: {
@@ -445,7 +447,7 @@ describe('BluetoothLowEnergyService', () => {
         tagId: 'new-id',
       })
     );
-    expect(allowlistSpy).toHaveBeenCalledWith('new-id')
+    expect(allowlistSpy).toHaveBeenCalledWith('abcd');
   });
 
   it('should apply a tag name override if it exists', async () => {
@@ -1290,7 +1292,7 @@ describe('BluetoothLowEnergyService', () => {
 
       expect(discoverSpy).toHaveBeenCalledTimes(1);
 
-      jest.advanceTimersByTime(1 * 60 * 1000);
+      jest.advanceTimersByTime(60 * 1000);
 
       await service.handleDiscovery(peripheral);
 
