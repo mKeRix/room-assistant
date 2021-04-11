@@ -15,18 +15,21 @@ global:
     - homeAssistant
     - mqtt
 logger:
-    elasticsearch:
-        enabled: true
-        node: http://192.168.0.20:33333
-        auth:
-          username: user
-          password: password
+  elasticsearch:
+    enabled: true
+    node: http://192.168.0.20:33333
+    auth:
+      username: user
+      password: password
 # Alternate variants covered through specific tests
-#          apiKey: "mykey"
-#          apikey:
-#            id: "my id"
-#            api_key: "my api key"
-        indexPrefix: <indexPrefix>-<date>
+#     apiKey: "mykey"
+#     apikey:
+#       id: "my id"
+#       api_key: "my api key"
+    indexPrefix: <indexPrefix>-<date>
+  loki:
+    enabled: false
+    host: http://localhost:3100
 cluster:
   networkInterface: eth0
   port: 6425

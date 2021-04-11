@@ -20,17 +20,20 @@ global:
     - mqtt
     - blueoothClassic                 # FORMAT ERROR: Missspelt Property
 logger:
-    elasticsearch:
-        enabled: yes                  # TYPE ERROR: Boolean Required
-        auth:                         # TYPE ERROR: Auth Class Required
-#          username: user
-          password: password
-          apiKey: "mykey"
-#          apiKey:
-#            id: "my id"
-#            api_key: "my api key"
-        node: http://192.168.0.20:33333
-        indexPrefix: <indexPrefix>-<date>
+  elasticsearch:
+    enabled: yes                  # TYPE ERROR: Boolean Required
+    auth:                         # TYPE ERROR: Auth Class Required
+#     username: user
+      password: password
+      apiKey: "mykey"
+#     apiKey:
+#       id: "my id"
+#       api_key: "my api key"
+    node: http://192.168.0.20:33333
+    indexPrefix: <indexPrefix>-<date>
+  loki:
+    enabled: false
+    host: http://localhost:3100
 cluster:
   networkInterface: eth0
   port: 6425
