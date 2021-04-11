@@ -115,6 +115,7 @@ bluetoothClassic:
     '08:05:90:ed:3b:60': 10               # CONTEXT: Negative Required
     '08:05:90:ed:32:1Z': -10              # CONTEXT: MAC Required
     default: -20
+  rssiFactor: 0.9
   addresses:
     - '08:05:90:ED:3B:60'
     - '77:50:fb:4d:ab:7G'             # TYPE ERROR: MAC Required

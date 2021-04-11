@@ -81,6 +81,7 @@ Try to pair your Apple Watch to a Bluetooth device such as headphones/speakers f
 | ------------------ | -------------------------------------------- | ------- | ------------------------------------------------------------ |
 | `addresses`        | Array                                        |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
 | `minRssi`          | Number _or_ [detailed config](#minimum-rssi) |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
+| `rssiFactor`       | Number                                       | `1`     | Multiplier for the measured RSSI values. Allows you to fine-tune measurements if you use different Bluetooth adapters across your cluster. |
 | `hciDeviceId`      | Number                                       | `0`     | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
 | `interval`         | Number                                       | `10`    | The interval at which the Bluetooth devices are queried in seconds. |
 | `scanTimeLimit`    | Number                                       | `6`     | The maximum time allowed for completing a device query in seconds. This should be set lower than the interval. |

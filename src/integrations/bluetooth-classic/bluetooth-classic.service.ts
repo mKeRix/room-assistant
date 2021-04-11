@@ -116,6 +116,7 @@ export class BluetoothClassicService
       }
 
       if (rssi !== undefined) {
+        rssi = rssi * this.config.rssiFactor;
         rssi = _.round(this.filterRssi(address, rssi), 1);
 
         let device: Device;

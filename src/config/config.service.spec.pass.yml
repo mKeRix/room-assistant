@@ -109,6 +109,7 @@ bluetoothClassic:
     '08:05:90:ed:3f:60': -10
     '08:05:90:ed:32:12': -20
     default: -20
+  rssiFactor: 0.9
   addresses:
     - '08:05:90:ED:3B:60'
     - '77:50:fb:4d:ab:70'

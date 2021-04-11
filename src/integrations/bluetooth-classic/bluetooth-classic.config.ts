@@ -18,6 +18,8 @@ export class BluetoothClassicConfig {
   addresses: string[] = [];
   @(jf.any().custom(validateMinRSSI).optional())
   minRssi?: number | { [macAddress: string]: number };
+  @(jf.number().required())
+  rssiFactor = 1;
   @(jf.number().integer().min(0).required())
   hciDeviceId = 0;
   @(jf.number().min(1).required())

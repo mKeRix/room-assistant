@@ -82,15 +82,7 @@ describe('BluetoothClassicService', () => {
     error: jest.fn(),
     warn: jest.fn(),
   };
-  const config: Partial<BluetoothClassicConfig> = {
-    addresses: ['8d:ad:e3:e2:7a:01', 'f7:6c:e3:10:55:b5'],
-    hciDeviceId: 0,
-    interval: 6,
-    timeoutCycles: 2,
-    preserveState: false,
-    inquireFromStart: true,
-    entityOverrides: {},
-  };
+  let config: Partial<BluetoothClassicConfig>;
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
       return key === 'bluetoothClassic' ? config : c.get(key);
@@ -99,6 +91,16 @@ describe('BluetoothClassicService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    config = {
+      addresses: ['8d:ad:e3:e2:7a:01', 'f7:6c:e3:10:55:b5'],
+      hciDeviceId: 0,
+      interval: 6,
+      timeoutCycles: 2,
+      preserveState: false,
+      inquireFromStart: true,
+      entityOverrides: {},
+      rssiFactor: 1,
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -782,6 +784,29 @@ describe('BluetoothClassicService', () => {
     expect(nodes.find((node) => node.id === 'abcd')).not.toBeUndefined();
     expect(nodes.find((node) => node.id === 'def')).not.toBeUndefined();
     expect(nodes.find((node) => node.id === 'xyz')).toBeUndefined();
+  });
+
+  it('should apply the RSSI factor', async () => {
+    config.rssiFactor = 2;
+
+    jest.spyOn(service, 'shouldInquire').mockReturnValue(true);
+    bluetoothService.inquireClassicRssi.mockResolvedValue(-3);
+    const handleRssiMock = jest
+      .spyOn(service, 'handleNewRssi')
+      .mockImplementation(() => undefined);
+
+    const address = 'ab:cd:01:23:00:70';
+    const device = new Device(address, 'Test Device');
+    bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(device);
+
+    const expectedEvent = new NewRssiEvent('test-instance', device, -6);
+
+    await service.handleRssiRequest(address);
+    expect(clusterService.publish).toHaveBeenCalledWith(
+      NEW_RSSI_CHANNEL,
+      expectedEvent
+    );
+    expect(handleRssiMock).toHaveBeenCalledWith(expectedEvent);
   });
 
   it('should filter the RSSI of inquired devices before publishing', async () => {
