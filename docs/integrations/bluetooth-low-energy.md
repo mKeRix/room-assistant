@@ -76,6 +76,7 @@ bluetoothLowEnergy:
 | `timeout`         | Number                          | `60`    | The time after which a recorded distance is considered outdated. This value should be higher than the advertisement frequency of your peripheral. |
 | `updateFrequency` | Number                          | `0`      | Minimum amount of seconds that should be waited between distance updates for each tag. The default value disables the throttling. |
 | `maxDistance`     | Number                          |          | Limits the distance at which a received BLE advertisement is still reported if configured. Value is in meters. |
+| `rssiFactor` | Number | `1` | Multiplier for the measured RSSI values. Allows you to fine-tune measurements if you use different Bluetooth adapters across your cluster. |
 | `majorMask`       | Number                          | `0xffff` | Filter out bits of the major ID to make dynamic tag IDs with encoded information consistent for filtering. |
 | `minorMask`       | Number                          | `0xffff` | Filter out bits of the minor ID to make dynamic tag IDs with encoded information consistent for filtering. |
 | `batteryMask`     | Number                          | `0x00000000` | If non-zero, extract the beacon's battery level from the major/minor fields. The mask operates on a 32bit value with major as the high two bytes and minor as the low two bytes. |

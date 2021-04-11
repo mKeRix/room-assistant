@@ -69,9 +69,7 @@ describe('BluetoothLowEnergyService', () => {
     get: jest.fn(),
     add: jest.fn(),
   };
-  let mockConfig: Partial<BluetoothLowEnergyConfig> = {
-    tagOverrides: {},
-  };
+  let mockConfig: Partial<BluetoothLowEnergyConfig>;
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
       return key === 'bluetoothLowEnergy' ? mockConfig : c.get(key);
@@ -113,7 +111,7 @@ describe('BluetoothLowEnergyService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockConfig = { tagOverrides: {} };
+    mockConfig = { tagOverrides: {}, rssiFactor: 1 };
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -599,6 +597,31 @@ describe('BluetoothLowEnergyService', () => {
     expect(service.isOnDenylist('123')).toBeTruthy();
     expect(service.isOnDenylist('test')).toBeFalsy();
     expect(service.isOnDenylist('test123')).toBeFalsy();
+  });
+
+  it('should apply the RSSI factor', async () => {
+    mockConfig.rssiFactor = 0.9;
+
+    const handleDistanceSpy = jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+
+    await service.handleDiscovery({
+      id: '12:ab:cd:12:cd',
+      rssi: -70,
+      advertisement: {
+        localName: 'Test BLE Device',
+      },
+    } as Peripheral);
+
+    expect(handleDistanceSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        distance: 1.6,
+        rssi: -63,
+      })
+    );
   });
 
   it('should filter the measured RSSI of the peripherals', async () => {

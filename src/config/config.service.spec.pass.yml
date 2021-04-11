@@ -91,6 +91,7 @@ bluetoothLowEnergy:
   timeout: 30
   updateFrequency: 55
   maxDistance: 44.4
+  rssiFactor: 1.1
   tagOverrides:
     ebef1234567890-55555-333:
       name: iBeacon 1

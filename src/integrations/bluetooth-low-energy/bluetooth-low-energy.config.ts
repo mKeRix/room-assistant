@@ -54,6 +54,8 @@ export class BluetoothLowEnergyConfig {
   timeout = 60;
   @(jf.number().min(0).required())
   updateFrequency = 0;
+  @(jf.number().required())
+  rssiFactor = 1;
   @(jf.number().positive().optional())
   maxDistance?: number;
 }

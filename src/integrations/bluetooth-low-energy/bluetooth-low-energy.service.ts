@@ -107,6 +107,7 @@ export class BluetoothLowEnergyService
       !this.isOnDenylist(tag.id)
     ) {
       tag = this.applyOverrides(tag);
+      tag.rssi = tag.rssi * this.config.rssiFactor;
       tag.rssi = this.filterRssi(tag.id, tag.rssi);
 
       const globalSettings = this.configService.get('global');
