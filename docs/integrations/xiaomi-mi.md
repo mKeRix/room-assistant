@@ -75,6 +75,19 @@ Some Xiaomi sensors encrypted their data (e.g. LYWSD03MMC). To be able to read t
 
 :::
 
+::: details Example Config
+```yaml
+global:
+  integrations:
+    - xiaomiMi
+xiaomiMi:
+  hciDeviceId: 0
+  sensors:
+    - name: xiaomiSensor1
+      address: c47c8d6c9820
+```
+:::
+
 ## See also
 
 There are many projects dedicated to these devices.  This integration has particularly benefited from these two:
