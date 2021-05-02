@@ -190,7 +190,6 @@ describe('BluetoothLowEnergyService', () => {
       '2f234454cf6d4a0fadf2f4911ba9ffa6-1-2',
       'Test Beacon',
       'abcd1234',
-      false,
       -50,
       -52,
       0.7
@@ -225,7 +224,6 @@ describe('BluetoothLowEnergyService', () => {
       'abcd1234',
       'Test Beacon',
       'abcd1234',
-      false,
       -59,
       -59,
       1
@@ -257,7 +255,6 @@ describe('BluetoothLowEnergyService', () => {
       '123-123',
       'Test BLE Device',
       '123-123',
-      false,
       -81,
       -59,
       10.5
@@ -373,7 +370,6 @@ describe('BluetoothLowEnergyService', () => {
       'abcd',
       'Test BLE Device',
       'abcd',
-      false,
       -81,
       -80,
       1.1
@@ -813,16 +809,7 @@ describe('BluetoothLowEnergyService', () => {
     const sensorHandleSpy = jest.spyOn(sensor, 'handleNewDistance');
 
     service.handleNewDistance(
-      new NewDistanceEvent(
-        'test-instance',
-        'test',
-        'Test',
-        'test',
-        false,
-        -80,
-        -50,
-        2
-      )
+      new NewDistanceEvent('test-instance', 'test', 'Test', 'test', -80, -50, 2)
     );
 
     expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 2, false);
@@ -841,7 +828,6 @@ describe('BluetoothLowEnergyService', () => {
         'new',
         'New Tag',
         'new',
-        false,
         -80,
         -50,
         1.3
@@ -889,11 +875,11 @@ describe('BluetoothLowEnergyService', () => {
         'new',
         'New Tag',
         'new',
-        false,
         -80,
         -50,
         1.3,
         false,
+        undefined,
         99
       )
     );
@@ -922,16 +908,7 @@ describe('BluetoothLowEnergyService', () => {
     entitiesService.get.mockReturnValue(sensor);
 
     service.handleNewDistance(
-      new NewDistanceEvent(
-        'test-instance',
-        'test',
-        'Test',
-        'test',
-        false,
-        -80,
-        -50,
-        2
-      )
+      new NewDistanceEvent('test-instance', 'test', 'Test', 'test', -80, -50, 2)
     );
 
     expect(sensor.measuredValues['test-instance'].rssi).toBe(-80);
@@ -943,23 +920,13 @@ describe('BluetoothLowEnergyService', () => {
         'test',
         'Test',
         'test',
-        false,
         -40,
         -45,
         2
       )
     );
     service.handleNewDistance(
-      new NewDistanceEvent(
-        'test-instance',
-        'test',
-        'Test',
-        'test',
-        false,
-        -70,
-        -50,
-        2
-      )
+      new NewDistanceEvent('test-instance', 'test', 'Test', 'test', -70, -50, 2)
     );
 
     expect(sensor.measuredValues['test-instance-2'].rssi).toBe(-40);
@@ -1251,16 +1218,18 @@ describe('BluetoothLowEnergyService', () => {
       await service.handleNewDistance(
         new NewDistanceEvent(
           'test-instance',
-          'app-id',
+          'tag-id',
           'Test',
           'peripheral-id',
-          true,
           -80,
           -50,
-          2
+          2,
+          false,
+          'app-id'
         )
       );
 
+      const newDistanceSpy = jest.spyOn(service, 'handleNewDistance');
       await service.handleDiscovery({
         id: 'peripheral-id',
         rssi: -50,
@@ -1271,6 +1240,12 @@ describe('BluetoothLowEnergyService', () => {
       } as Peripheral);
 
       expect(discoverSpy).not.toHaveBeenCalled();
+      expect(newDistanceSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          peripheralId: 'peripheral-id',
+          appId: 'app-id',
+        })
+      );
     });
 
     it('should temporarily denylist devices that error out from discovery attempts', async () => {

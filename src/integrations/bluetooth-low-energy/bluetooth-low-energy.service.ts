@@ -106,6 +106,7 @@ export class BluetoothLowEnergyService
         (!this.isAllowlistEnabled() && this.isDenylistEnabled())) &&
       !this.isOnDenylist(tag.id)
     ) {
+      const appId = tag.isApp ? tag.id : undefined;
       tag = this.applyOverrides(tag);
       tag.rssi = tag.rssi * this.config.rssiFactor;
       tag.rssi = this.filterRssi(tag.id, tag.rssi);
@@ -116,11 +117,11 @@ export class BluetoothLowEnergyService
         tag.id,
         tag.name,
         tag.peripheral.id,
-        tag.isApp,
         tag.rssi,
         tag.measuredPower,
         tag.distance,
         tag.distance > this.config.maxDistance,
+        appId,
         tag instanceof IBeacon ? tag.batteryLevel : undefined
       );
 
@@ -190,7 +191,7 @@ export class BluetoothLowEnergyService
     const hasBattery = event.batteryLevel !== undefined;
 
     if (event.isApp) {
-      this.handleAppDiscovery(event.peripheralId, event.tagId);
+      this.handleAppDiscovery(event.peripheralId, event.appId);
     }
 
     if (this.entitiesService.has(sensorId)) {
