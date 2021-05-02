@@ -30,7 +30,7 @@ This page will guide you through setting up a Raspberry Pi 3 or 4 to run room-as
 1. Install NodeJS using the following commands.
 
    ```shell
-   curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+   curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
    sudo apt-get install -y nodejs
    ```
 
