@@ -38,15 +38,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    continue-on-error: ${{ matrix.experimental }}
 
     strategy:
       matrix:
         node-version: [12.x, 14.x]
-        experimental: [false]
-        include:
-          - node-version: 16.x
-            experimental: true
 
     steps:
       - uses: actions/checkout@v2
