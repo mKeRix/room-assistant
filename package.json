@@ -64,7 +64,7 @@
     "js-yaml": "^4.0.0",
     "kalmanjs": "^1.1.0",
     "lodash": "^4.17.21",
-    "mathjs": "9.3.0",
+    "mathjs": "^9.3.2",
     "nest-emitter": "^1.1.1",
     "nest-winston": "^1.4.1",
     "please-upgrade-node": "^3.2.0",
@@ -108,7 +108,7 @@
     "rimraf": "^3.0.2",
     "supertest": "^6.1.3",
     "ts-jest": "^26.5.4",
-    "ts-loader": "^8.1.0",
+    "ts-loader": "^9.1.1",
     "ts-node": "^9.1.1",
     "tsconfig-paths": "^3.9.0",
     "typescript": "^4.2.4",
@@ -124,7 +124,7 @@
     "onoff": "^6.0.0"
   },
   "peerDependencies": {
-    "winston-elasticsearch": "^0.12.3",
+    "winston-elasticsearch": "^0.15.4",
     "winston-loki": "^6.0.0"
   },
   "peerDependenciesMeta": {
