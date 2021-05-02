@@ -6,7 +6,7 @@ on:
     workflows:
       - Release
     branches:
-      - master
+      - main
     types:
       - requested
   release:

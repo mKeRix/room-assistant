@@ -22,7 +22,7 @@ async function bootstrap(): Promise<void> {
     .setExternalDoc('Website', 'https://room-assistant.io')
     .setLicense(
       'MIT License',
-      'https://github.com/mKeRix/room-assistant/blob/master/LICENSE'
+      'https://github.com/mKeRix/room-assistant/blob/main/LICENSE'
     )
     .addTag('entities', 'Access to the internal entity registry', {
       description: 'Configuration',
