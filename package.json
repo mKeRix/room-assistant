@@ -1,6 +1,6 @@
 {
   "name": "room-assistant",
-  "version": "2.16.0",
+  "version": "2.16.1",
   "description": "Presence tracking and more for automation on the room-level",
   "author": "Heiko Rothe <me@heikorothe.com> (https://heikorothe.com)",
   "license": "MIT",
@@ -165,7 +165,10 @@
   "release": {
     "branches": [
       "main",
-      {"name": "beta", "prerelease": true}
+      {
+        "name": "beta",
+        "prerelease": true
+      }
     ],
     "plugins": [
       "@semantic-release/commit-analyzer",
