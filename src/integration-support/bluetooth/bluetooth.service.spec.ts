@@ -8,7 +8,7 @@ import noble, { Peripheral } from '@mkerix/noble';
 import bleno from 'bleno';
 import * as Promises from '../../util/promises';
 import { makeCounterProvider } from '@willsoto/nestjs-prometheus';
-import { mocked } from 'ts-jest';
+import { mocked } from 'ts-jest/utils';
 
 jest.mock('util', () => ({
   ...jest.requireActual('util'),

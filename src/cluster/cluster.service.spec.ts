@@ -13,7 +13,7 @@ import { ClusterConfig } from './cluster.config';
 import { ConfigService } from '../config/config.service';
 import c from 'config';
 import mdns from 'mdns';
-import { mocked } from 'ts-jest';
+import { mocked } from 'ts-jest/utils';
 
 jest.mock('os');
 jest.mock('dgram', () => {
