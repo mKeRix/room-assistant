@@ -7,8 +7,6 @@ import { EntitiesService } from '../entities/entities.service';
 import { ClusterService } from '../cluster/cluster.service';
 import { Sensor } from '../entities/sensor';
 
-jest.mock('mdns', () => ({}), { virtual: true });
-
 describe('StatusService', () => {
   let service: StatusService;
   const entitiesService = {

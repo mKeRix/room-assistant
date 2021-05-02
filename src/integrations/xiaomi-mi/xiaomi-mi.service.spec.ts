@@ -1,19 +1,3 @@
-jest.mock('mdns', () => ({}), { virtual: true });
-jest.mock(
-  '@mkerix/noble',
-  () => {
-    return {};
-  },
-  { virtual: true }
-);
-jest.mock(
-  'bleno',
-  () => {
-    return {};
-  },
-  { virtual: true }
-);
-
 import { Peripheral } from '@mkerix/noble';
 import { ConfigService } from '../../config/config.service';
 import { Test, TestingModule } from '@nestjs/testing';

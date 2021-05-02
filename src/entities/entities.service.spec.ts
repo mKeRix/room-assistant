@@ -11,8 +11,6 @@ import { ClusterModule } from '../cluster/cluster.module';
 import { Switch } from './switch';
 import { ConfigModule } from '../config/config.module';
 
-jest.mock('mdns', () => ({}), { virtual: true });
-
 describe('EntitiesService', () => {
   let service: EntitiesService;
   const emitter: EventEmitter = new EventEmitter();
@@ -56,7 +54,7 @@ describe('EntitiesService', () => {
       expect(util.types.isProxy(returnedEntity)).toBeTruthy();
     });
 
-    it("should proxify object properties", () => {
+    it('should proxify object properties', () => {
       const entity = new Sensor('example', 'Example Sensor');
       const returnedEntity = service.add(entity);
 
@@ -65,7 +63,7 @@ describe('EntitiesService', () => {
       expect(util.types.isProxy(returnedEntity.attributes.object)).toBeTruthy();
     });
 
-    it("should not proxify Date properties", () => {
+    it('should not proxify Date properties', () => {
       const entity = new Sensor('example', 'Example Sensor');
       const returnedEntity = service.add(entity);
 
@@ -119,7 +117,7 @@ describe('EntitiesService', () => {
     it('should return undefined for non-existent entities', () => {
       expect(service.get('ghost_entity')).toBeUndefined();
     });
-  })
+  });
 
   describe('Entity Updates', () => {
     it('should announce new entities to publishers', () => {
@@ -140,11 +138,18 @@ describe('EntitiesService', () => {
       entityProxy.state = 1337;
       jest.advanceTimersByTime(250);
 
-      expect(spy).toHaveBeenCalledWith('entityUpdate', entity, [{
-        newValue: 1337,
-        oldValue: undefined,
-        path: '/state'
-      }], true);
+      expect(spy).toHaveBeenCalledWith(
+        'entityUpdate',
+        entity,
+        [
+          {
+            newValue: 1337,
+            oldValue: undefined,
+            path: '/state',
+          },
+        ],
+        true
+      );
     });
 
     it('should send attribute updates to publishers', () => {
@@ -160,16 +165,18 @@ describe('EntitiesService', () => {
       expect(spy).toHaveBeenCalledWith(
         'entityUpdate',
         entityProxy,
-        [{
-          newValue: '123',
-          oldValue: undefined,
-          path: '/attributes/test'
-        }],
+        [
+          {
+            newValue: '123',
+            oldValue: undefined,
+            path: '/attributes/test',
+          },
+        ],
         true
       );
     });
 
-    it("should not send updates for non-changed values", () => {
+    it('should not send updates for non-changed values', () => {
       jest.useFakeTimers('modern');
 
       const entity = new Sensor('test_sensor', 'Test Sensor');
@@ -186,7 +193,7 @@ describe('EntitiesService', () => {
       expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    it("should not include diffs for non-changed values", () => {
+    it('should not include diffs for non-changed values', () => {
       jest.useFakeTimers('modern');
 
       const entity = new Sensor('test_sensor', 'Test Sensor');
@@ -199,14 +206,21 @@ describe('EntitiesService', () => {
       entityProxy.state = 'abc';
       jest.advanceTimersByTime(250);
 
-      expect(spy).toHaveBeenCalledWith('entityUpdate', entityProxy, [{
-        newValue: 'abc',
-        oldValue: undefined,
-        path: '/state'
-      }], true);
+      expect(spy).toHaveBeenCalledWith(
+        'entityUpdate',
+        entityProxy,
+        [
+          {
+            newValue: 'abc',
+            oldValue: undefined,
+            path: '/state',
+          },
+        ],
+        true
+      );
     });
 
-    it("should send updates for type-changed values", () => {
+    it('should send updates for type-changed values', () => {
       jest.useFakeTimers('modern');
 
       const entity = new Sensor('test_sensor', 'Test Sensor');
@@ -223,7 +237,7 @@ describe('EntitiesService', () => {
       expect(spy).toHaveBeenCalledTimes(2);
     });
 
-    it("should send include old values in entity updates", () => {
+    it('should send include old values in entity updates', () => {
       jest.useFakeTimers('modern');
 
       const entity = new Sensor('test_sensor', 'Test Sensor');
@@ -237,15 +251,22 @@ describe('EntitiesService', () => {
       entityProxy.state = 'def';
       jest.advanceTimersByTime(250);
 
-      expect(spy).toHaveBeenCalledWith('entityUpdate', entity, [{
-        newValue: 'def',
-        oldValue: 'abc',
-        path: '/state'
-      }], true)
+      expect(spy).toHaveBeenCalledWith(
+        'entityUpdate',
+        entity,
+        [
+          {
+            newValue: 'def',
+            oldValue: 'abc',
+            path: '/state',
+          },
+        ],
+        true
+      );
     });
 
-    it("should emit entity updates for array changes", () => {
-      jest.useFakeTimers('modern')
+    it('should emit entity updates for array changes', () => {
+      jest.useFakeTimers('modern');
 
       const entity = new Sensor('test_sensor', 'Test Sensor');
       const spy = jest.spyOn(emitter, 'emit');
@@ -256,23 +277,37 @@ describe('EntitiesService', () => {
       entityProxy.attributes.test = ['item1'];
       jest.advanceTimersByTime(250);
 
-      expect(spy).toHaveBeenCalledWith('entityUpdate', entityProxy, [{
-        newValue: ['item1'],
-        oldValue: undefined,
-        path: '/attributes/test'
-      }], true)
+      expect(spy).toHaveBeenCalledWith(
+        'entityUpdate',
+        entityProxy,
+        [
+          {
+            newValue: ['item1'],
+            oldValue: undefined,
+            path: '/attributes/test',
+          },
+        ],
+        true
+      );
 
       entityProxy.attributes.test.push('item2');
       jest.advanceTimersByTime(250);
 
-      expect(spy).toHaveBeenCalledWith('entityUpdate', entityProxy, [{
-        newValue: 'item2',
-        oldValue: undefined,
-        path: '/attributes/test/1'
-      }], true)
+      expect(spy).toHaveBeenCalledWith(
+        'entityUpdate',
+        entityProxy,
+        [
+          {
+            newValue: 'item2',
+            oldValue: undefined,
+            path: '/attributes/test/1',
+          },
+        ],
+        true
+      );
     });
 
-    it("should send updates for nested objects", () => {
+    it('should send updates for nested objects', () => {
       jest.useFakeTimers('modern');
 
       const entity = new Sensor('test_sensor', 'Test Sensor');
@@ -282,17 +317,24 @@ describe('EntitiesService', () => {
       spy.mockClear();
 
       entityProxy.attributes.test = {
-        key1: 'value1'
+        key1: 'value1',
       };
       jest.advanceTimersByTime(250);
       entityProxy.attributes.test.key1 = 'value2';
       jest.advanceTimersByTime(250);
 
-      expect(spy).toHaveBeenCalledWith('entityUpdate', entity, [{
-        newValue: 'value2',
-        oldValue: 'value1',
-        path: '/attributes/test/key1'
-      }], true);
+      expect(spy).toHaveBeenCalledWith(
+        'entityUpdate',
+        entity,
+        [
+          {
+            newValue: 'value2',
+            oldValue: 'value1',
+            path: '/attributes/test/key1',
+          },
+        ],
+        true
+      );
     });
   });
 
@@ -310,7 +352,12 @@ describe('EntitiesService', () => {
       jest.advanceTimersByTime(250);
 
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith('entityUpdate', expect.anything(), expect.anything(), true)
+      expect(spy).toHaveBeenCalledWith(
+        'entityUpdate',
+        expect.anything(),
+        expect.anything(),
+        true
+      );
     });
 
     it('should mark distributed entity updates as non-authority if not the leader', () => {
@@ -326,7 +373,12 @@ describe('EntitiesService', () => {
       jest.advanceTimersByTime(250);
 
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith('entityUpdate', expect.anything(), expect.anything(), false)
+      expect(spy).toHaveBeenCalledWith(
+        'entityUpdate',
+        expect.anything(),
+        expect.anything(),
+        false
+      );
     });
 
     it('should mark distributed entity updates as authority if the leader', () => {
@@ -342,11 +394,16 @@ describe('EntitiesService', () => {
       jest.advanceTimersByTime(250);
 
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith('entityUpdate', expect.anything(), expect.anything(), true)
+      expect(spy).toHaveBeenCalledWith(
+        'entityUpdate',
+        expect.anything(),
+        expect.anything(),
+        true
+      );
     });
 
     it('should mark distributed entity updates as authority if state is not locked', () => {
-      jest.useFakeTimers('modern')
+      jest.useFakeTimers('modern');
 
       const entity = new Sensor(
         'distributed_sensor',
@@ -363,9 +420,14 @@ describe('EntitiesService', () => {
       jest.advanceTimersByTime(250);
 
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith('entityUpdate', expect.anything(), expect.anything(), true)
+      expect(spy).toHaveBeenCalledWith(
+        'entityUpdate',
+        expect.anything(),
+        expect.anything(),
+        true
+      );
     });
-  })
+  });
 
   describe('Entity Refresh', () => {
     it('should register a callback to leader election on bootstrap', () => {
@@ -436,7 +498,7 @@ describe('EntitiesService', () => {
       expect(spy).toHaveBeenCalledWith('entityRefresh', sensor2, true);
       expect(spy).toHaveBeenCalledWith('entityRefresh', sensor3, true);
     });
-  })
+  });
 
   describe('Entity Behaviors', () => {
     it('should debounce state updates if configured', () => {
@@ -460,11 +522,13 @@ describe('EntitiesService', () => {
       expect(spy).toHaveBeenCalledWith(
         'entityUpdate',
         entityProxy,
-        [{
-          newValue: 1337,
-          oldValue: undefined,
-          path: '/state'
-        }],
+        [
+          {
+            newValue: 1337,
+            oldValue: undefined,
+            path: '/state',
+          },
+        ],
         true
       );
     });
@@ -490,11 +554,13 @@ describe('EntitiesService', () => {
       expect(spy).toHaveBeenCalledWith(
         'entityUpdate',
         entityProxy,
-        [{
-          newValue: 42,
-          oldValue: undefined,
-          path: '/state'
-        }],
+        [
+          {
+            newValue: 42,
+            oldValue: undefined,
+            path: '/state',
+          },
+        ],
         true
       );
     });
@@ -515,11 +581,13 @@ describe('EntitiesService', () => {
       expect(spy).toHaveBeenCalledWith(
         'entityUpdate',
         entityProxy,
-        [{
-          newValue: 'test1',
-          oldValue: undefined,
-          path: '/state'
-        }],
+        [
+          {
+            newValue: 'test1',
+            oldValue: undefined,
+            path: '/state',
+          },
+        ],
         true
       );
 
@@ -532,11 +600,13 @@ describe('EntitiesService', () => {
       expect(spy).toHaveBeenCalledWith(
         'entityUpdate',
         entityProxy,
-        [{
-          newValue: 'test2',
-          oldValue: 'test1',
-          path: '/state'
-        }],
+        [
+          {
+            newValue: 'test2',
+            oldValue: 'test1',
+            path: '/state',
+          },
+        ],
         true
       );
       expect(spy).toHaveBeenCalledTimes(2);
@@ -564,8 +634,8 @@ describe('EntitiesService', () => {
         entityProxy,
         [
           expect.objectContaining({
-            newValue: 10
-          })
+            newValue: 10,
+          }),
         ],
         true
       );
@@ -577,14 +647,14 @@ describe('EntitiesService', () => {
       jest.advanceTimersByTime(6 * 1000);
       expect(entityProxy.state).toBe(13.75);
 
-      jest.advanceTimersByTime(250)
+      jest.advanceTimersByTime(250);
       expect(spy).toHaveBeenCalledWith(
         'entityUpdate',
         entityProxy,
         [
           expect.objectContaining({
-            newValue: 13.75
-          })
+            newValue: 13.75,
+          }),
         ],
         true
       );
@@ -592,14 +662,14 @@ describe('EntitiesService', () => {
       jest.advanceTimersByTime(55 * 1000 - 250);
       expect(entityProxy.state).toBe(20);
 
-      jest.advanceTimersByTime(250)
+      jest.advanceTimersByTime(250);
       expect(spy).toHaveBeenCalledWith(
         'entityUpdate',
         entityProxy,
         [
           expect.objectContaining({
-            newValue: 20
-          })
+            newValue: 20,
+          }),
         ],
         true
       );
@@ -631,5 +701,4 @@ describe('EntitiesService', () => {
       expect(entityProxy.state).toBe('test3');
     });
   });
-
 });

@@ -12,8 +12,6 @@ import { ConfigModule } from '../config/config.module';
 import { BinarySensor } from './binary-sensor';
 import { Camera } from './camera';
 
-jest.mock('mdns', () => ({}), { virtual: true });
-
 describe('Entities Controller', () => {
   let controller: EntitiesController;
   let service: EntitiesService;

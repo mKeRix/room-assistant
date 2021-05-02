@@ -1,4 +1,3 @@
-jest.mock('mdns', () => ({}), { virtual: true });
 jest.mock('kalmanjs', () => {
   return jest.fn().mockImplementation(() => {
     return {
@@ -6,20 +5,6 @@ jest.mock('kalmanjs', () => {
     };
   });
 });
-jest.mock(
-  '@mkerix/noble',
-  () => {
-    return {};
-  },
-  { virtual: true }
-);
-jest.mock(
-  'bleno',
-  () => {
-    return {};
-  },
-  { virtual: true }
-);
 
 import { Peripheral } from '@mkerix/noble';
 import { ConfigService } from '../../config/config.service';

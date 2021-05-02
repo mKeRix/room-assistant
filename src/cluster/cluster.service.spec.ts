@@ -1,24 +1,3 @@
-const mockBrowser = {
-  on: jest.fn(),
-  start: jest.fn(),
-};
-const mockAdvertisement = {
-  start: jest.fn(),
-};
-const mockMdns = {
-  udp: jest.fn().mockImplementation((name: string) => {
-    return { name };
-  }),
-  createBrowser: jest.fn().mockReturnValue(mockBrowser),
-  createAdvertisement: jest.fn().mockReturnValue(mockAdvertisement),
-  rst: {
-    DNSServiceResolve: jest.fn(),
-    DNSServiceGetAddrInfo: jest.fn(),
-    getaddrinfo: jest.fn(),
-    makeAddressesUnique: jest.fn(),
-  },
-  dns_sd: [],
-};
 const mockSocket = {
   bind: jest.fn(),
   on: jest.fn(),
@@ -33,6 +12,8 @@ import { ConfigModule } from '../config/config.module';
 import { ClusterConfig } from './cluster.config';
 import { ConfigService } from '../config/config.service';
 import c from 'config';
+import mdns from 'mdns';
+import { mocked } from 'ts-jest';
 
 jest.mock('os');
 jest.mock('dgram', () => {
@@ -40,8 +21,9 @@ jest.mock('dgram', () => {
     createSocket: jest.fn().mockReturnValue(mockSocket),
   };
 });
-jest.mock('mdns', () => mockMdns, { virtual: true });
 jest.useFakeTimers();
+
+const mockMdns = mocked(mdns);
 
 describe('ClusterService', () => {
   let service: ClusterService;
@@ -111,7 +93,12 @@ describe('ClusterService', () => {
       { name: 'room-assistant' },
       expect.anything()
     );
+
+    const mockBrowser = mockMdns.createBrowser.mock.results[0].value;
     expect(mockBrowser.start).toHaveBeenCalled();
+
+    const mockAdvertisement =
+      mockMdns.createAdvertisement.mock.results[0].value;
     expect(mockAdvertisement.start).toHaveBeenCalled();
   });
 

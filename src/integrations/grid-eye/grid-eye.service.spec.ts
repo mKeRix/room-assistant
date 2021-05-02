@@ -15,7 +15,6 @@ import { Sensor } from '../../entities/sensor';
 import i2cBus from 'i2c-bus';
 import * as math from 'mathjs';
 
-jest.mock('mdns', () => ({}), { virtual: true });
 jest.mock(
   'i2c-bus',
   () => {

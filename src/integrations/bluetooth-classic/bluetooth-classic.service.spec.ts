@@ -1,18 +1,4 @@
 const mockExec = jest.fn();
-jest.mock(
-  '@mkerix/noble',
-  () => {
-    return {};
-  },
-  { virtual: true }
-);
-jest.mock(
-  'bleno',
-  () => {
-    return {};
-  },
-  { virtual: true }
-);
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { BluetoothClassicService } from './bluetooth-classic.service';
@@ -40,7 +26,6 @@ import { DeviceTracker } from '../../entities/device-tracker';
 import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import * as util from 'util';
 
-jest.mock('mdns', () => ({}), { virtual: true });
 jest.mock(
   '../../integration-support/room-presence/room-presence-distance.sensor'
 );

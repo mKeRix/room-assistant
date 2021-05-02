@@ -1,4 +1,4 @@
-import { Sensor } from "../../entities/sensor";
+import { Sensor } from '../../entities/sensor';
 
 const mockMqttClient = {
   on: jest.fn(),
@@ -7,26 +7,25 @@ const mockMqttClient = {
   end: jest.fn(),
 };
 
-import { ClusterService } from "../../cluster/cluster.service";
-import { MqttService } from "./mqtt.service";
-import { Test, TestingModule } from "@nestjs/testing";
-import { NestEmitterModule } from "nest-emitter";
-import { ConfigModule } from "../../config/config.module";
-import { EntitiesModule } from "../../entities/entities.module";
-import { EventEmitter } from "events";
-import { EntitiesService } from "../../entities/entities.service";
-import { ConfigService } from "../../config/config.service";
-import c from "config";
-import { MqttConfig } from "./mqtt.config";
-import { mocked } from "ts-jest/utils";
-import * as mqtt from "async-mqtt";
-import { BinarySensor } from "../../entities/binary-sensor";
-import { DeviceTracker } from "../../entities/device-tracker";
-import { Switch } from "../../entities/switch";
-import { Camera } from "../../entities/camera";
-import { Entity } from "../../entities/entity.dto";
+import { ClusterService } from '../../cluster/cluster.service';
+import { MqttService } from './mqtt.service';
+import { Test, TestingModule } from '@nestjs/testing';
+import { NestEmitterModule } from 'nest-emitter';
+import { ConfigModule } from '../../config/config.module';
+import { EntitiesModule } from '../../entities/entities.module';
+import { EventEmitter } from 'events';
+import { EntitiesService } from '../../entities/entities.service';
+import { ConfigService } from '../../config/config.service';
+import c from 'config';
+import { MqttConfig } from './mqtt.config';
+import { mocked } from 'ts-jest/utils';
+import * as mqtt from 'async-mqtt';
+import { BinarySensor } from '../../entities/binary-sensor';
+import { DeviceTracker } from '../../entities/device-tracker';
+import { Switch } from '../../entities/switch';
+import { Camera } from '../../entities/camera';
+import { Entity } from '../../entities/entity.dto';
 
-jest.mock('mdns', () => ({}), { virtual: true });
 jest.mock('async-mqtt', () => {
   return {
     connectAsync: jest.fn().mockReturnValue(mockMqttClient),
@@ -63,7 +62,7 @@ describe('MqttService', () => {
         ConfigModule,
         EntitiesModule,
       ],
-      providers: [MqttService]
+      providers: [MqttService],
     })
       .overrideProvider(EntitiesService)
       .useValue(entitiesService)
@@ -74,7 +73,7 @@ describe('MqttService', () => {
       .compile();
 
     service = module.get<MqttService>(MqttService);
-  })
+  });
 
   it('should subscribe to entity events on init', async () => {
     const emitterOnSpy = jest.spyOn(entitiesEmitter, 'on');
@@ -112,47 +111,55 @@ describe('MqttService', () => {
     ['binary-sensor', new BinarySensor('test', 'Test')],
     ['device-tracker', new DeviceTracker('test', 'Test')],
     ['switch', new Switch('test', 'Test')],
-    ['camera', new Camera('test', 'Test')]
-  ])("should post %s entity update messages", async (entityTopic: string, entity: Entity) => {
-    const diff = [{
-      newValue: 'new-state',
-      oldValue: 'old-state',
-      path: '/state'
-    }];
-    const hasAuthority = true;
+    ['camera', new Camera('test', 'Test')],
+  ])(
+    'should post %s entity update messages',
+    async (entityTopic: string, entity: Entity) => {
+      const diff = [
+        {
+          newValue: 'new-state',
+          oldValue: 'old-state',
+          path: '/state',
+        },
+      ];
+      const hasAuthority = true;
 
-    await service.onModuleInit();
+      await service.onModuleInit();
 
-    entitiesEmitter.emit('entityUpdate', entity, diff, hasAuthority);
+      entitiesEmitter.emit('entityUpdate', entity, diff, hasAuthority);
 
-    expect(mockMqttClient.publish).toHaveBeenCalledWith(
-      `room-assistant/entity/test-instance/${entityTopic}/${entity.id}`,
-      JSON.stringify({ entity, diff, hasAuthority }),
-      expect.any(Object)
-    )
-  });
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        `room-assistant/entity/test-instance/${entityTopic}/${entity.id}`,
+        JSON.stringify({ entity, diff, hasAuthority }),
+        expect.any(Object)
+      );
+    }
+  );
 
   it.each([
     ['sensor', new Sensor('test', 'Test')],
     ['binary-sensor', new BinarySensor('test', 'Test')],
     ['device-tracker', new DeviceTracker('test', 'Test')],
     ['switch', new Switch('test', 'Test')],
-    ['camera', new Camera('test', 'Test')]
-  ])("should post %s entity refresh messages", async (entityTopic: string, entity: Entity) => {
-    const hasAuthority = true;
+    ['camera', new Camera('test', 'Test')],
+  ])(
+    'should post %s entity refresh messages',
+    async (entityTopic: string, entity: Entity) => {
+      const hasAuthority = true;
 
-    await service.onModuleInit();
+      await service.onModuleInit();
 
-    entitiesEmitter.emit('entityRefresh', entity, hasAuthority);
+      entitiesEmitter.emit('entityRefresh', entity, hasAuthority);
 
-    expect(mockMqttClient.publish).toHaveBeenCalledWith(
-      `room-assistant/entity/test-instance/${entityTopic}/${entity.id}`,
-      JSON.stringify({ entity, hasAuthority }),
-      expect.any(Object)
-    )
-  });
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        `room-assistant/entity/test-instance/${entityTopic}/${entity.id}`,
+        JSON.stringify({ entity, hasAuthority }),
+        expect.any(Object)
+      );
+    }
+  );
 
-  it("should use the configured base topic", async () => {
+  it('should use the configured base topic', async () => {
     mockConfig.baseTopic = 'my-new-topic';
 
     await service.onModuleInit();
@@ -162,10 +169,10 @@ describe('MqttService', () => {
       'my-new-topic/test-instance/sensor/test',
       expect.any(String),
       expect.any(Object)
-    )
+    );
   });
 
-  it("should pass the configured retain setting", async () => {
+  it('should pass the configured retain setting', async () => {
     mockConfig.retain = true;
 
     await service.onModuleInit();
@@ -175,12 +182,12 @@ describe('MqttService', () => {
       expect.any(String),
       expect.any(String),
       expect.objectContaining({
-        retain: true
+        retain: true,
       })
-    )
+    );
   });
 
-  it("should pass the configured qos setting", async () => {
+  it('should pass the configured qos setting', async () => {
     mockConfig.qos = 2;
 
     await service.onModuleInit();
@@ -190,8 +197,8 @@ describe('MqttService', () => {
       expect.any(String),
       expect.any(String),
       expect.objectContaining({
-        qos: 2
+        qos: 2,
       })
-    )
+    );
   });
-})
+});
