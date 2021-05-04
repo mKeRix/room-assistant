@@ -1,0 +1,24 @@
+name: 'Close stale issues and PRs'
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '30 1 * * *'
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v3
+        with:
+          debug-only: true
+          days-before-stale: 90
+          exempt-issue-labels: 'enhancement'
+          stale-issue-label: 'stale'
+          stale-issue-message: >
+            There hasn't been any activity on this issue recently. In an effort
+            to provide a better overview of current issues we automatically clean
+            some of the old ones. Many of them may already be resolved in newer
+            versions of room-assistant.
+
+            This issue has now been marked as stale and will be closed if no further
+            activity occurs. Thank you for your contributions.
