@@ -66,7 +66,7 @@ jobs:
         env:
           CI: true
       - name: Upload code coverage
-        uses: codecov/codecov-action@v1.4.1
+        uses: codecov/codecov-action@v1.5.0
         if: matrix.node-version == '14.x'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
