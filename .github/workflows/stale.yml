@@ -10,7 +10,7 @@ jobs:
       - uses: actions/stale@v3
         with:
           days-before-stale: 90
-          exempt-issue-labels: 'enhancement'
+          exempt-issue-labels: 'enhancement,no_stale'
           stale-issue-label: 'stale'
           stale-issue-message: >
             There hasn't been any activity on this issue recently. In an effort
