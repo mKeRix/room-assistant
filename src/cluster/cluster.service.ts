@@ -31,7 +31,8 @@ export class ClusterService
   private readonly config: ClusterConfig;
   private readonly logger: Logger;
 
-  private advertisement: Advertisement;
+  private clusterAdvertisement: Advertisement;
+  private apiAdvertisement: Advertisement;
   private browser: Browser;
   private networkInterfaces: NetworkInterfaceInfo[];
 
@@ -100,7 +101,8 @@ export class ClusterService
    * Lifecycle hook, called once the application is shutting down.
    */
   onApplicationShutdown(): void {
-    this.advertisement?.stop();
+    this.clusterAdvertisement?.stop();
+    this.apiAdvertisement?.stop();
     this.browser?.stop();
   }
 
@@ -203,9 +205,16 @@ export class ClusterService
    * Starts advertising and browsing for room-assistant services using MDNS.
    */
   protected startBonjourDiscovery(): void {
-    this.advertisement = mdns.createAdvertisement(
+    this.clusterAdvertisement = mdns.createAdvertisement(
       mdns.udp('room-assistant'),
       this.config.port,
+      {
+        networkInterface: this.config.networkInterface,
+      }
+    );
+    this.apiAdvertisement = mdns.createAdvertisement(
+      mdns.tcp('room-asst-api'),
+      this.configService.get('global').apiPort,
       {
         networkInterface: this.config.networkInterface,
       }
@@ -228,7 +237,8 @@ export class ClusterService
     });
 
     this.logger.log('Starting mDNS advertisements and discovery');
-    this.advertisement.start();
+    this.clusterAdvertisement.start();
+    this.apiAdvertisement.start();
     this.browser.start();
   }
 

@@ -89,6 +89,13 @@ describe('ClusterService', () => {
         networkInterface: undefined,
       }
     );
+    expect(mockMdns.createAdvertisement).toHaveBeenCalledWith(
+      { name: 'room-asst-api' },
+      6415,
+      {
+        networkInterface: undefined,
+      }
+    );
     expect(mockMdns.createBrowser).toHaveBeenCalledWith(
       { name: 'room-assistant' },
       expect.anything()
@@ -97,9 +104,13 @@ describe('ClusterService', () => {
     const mockBrowser = mockMdns.createBrowser.mock.results[0].value;
     expect(mockBrowser.start).toHaveBeenCalled();
 
-    const mockAdvertisement =
+    const mockClusterAdvertisement =
       mockMdns.createAdvertisement.mock.results[0].value;
-    expect(mockAdvertisement.start).toHaveBeenCalled();
+    expect(mockClusterAdvertisement.start).toHaveBeenCalled();
+
+    const mockApiAdvertisement =
+      mockMdns.createAdvertisement.mock.results[1].value;
+    expect(mockApiAdvertisement.start).toHaveBeenCalled();
   });
 
   it('should not advertise the instance if auto discovery has been turned off', () => {
