@@ -19,6 +19,7 @@ global:
     - homeAssistant
     - mqtt
     - blueoothClassic                 # FORMAT ERROR: Missspelt Property
+  apiPort: 6415
 logger:
   elasticsearch:
     enabled: yes                  # TYPE ERROR: Boolean Required

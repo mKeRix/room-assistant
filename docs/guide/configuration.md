@@ -44,10 +44,11 @@ services:
 
 room-assistant exposes a few settings that affect the overall behavior of the application.
 
-| Name           | Type   | Default  | Description                                                                                      |
-| -------------- | ------ | -------- | ------------------------------------------------------------------------------------------------ |
+| Name           | Type   | Default  | Description                                                  |
+| -------------- | ------ | -------- | ------------------------------------------------------------ |
 | `instanceName` | String | Hostname | The name of the room-assistant instance. May be used as state for some sensors. Put something in |
-| `integrations` | Array  |          | The integrations that should be loaded on this instance, denoted as camelCase.                   |
+| `integrations` | Array  |          | The integrations that should be loaded on this instance, denoted as camelCase. |
+| `apiPort`      | Number | `6415`   | The port that the REST API should be available on.           |
 
 ::: details Example Config
 ```yaml
