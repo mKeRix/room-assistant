@@ -12,6 +12,7 @@ import { WINSTON_LOGGER } from './logger';
 import { StatusModule } from './status/status.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { register } from 'prom-client';
+import { EventsModule } from './events/events.module';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 export const VERSION = require('../package.json').version;
@@ -26,6 +27,7 @@ register.setDefaultLabels({
 
 @Module({
   imports: [
+    EventsModule,
     EntitiesModule,
     ConfigModule,
     ClusterModule,

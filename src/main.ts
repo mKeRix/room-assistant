@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { WINSTON_LOGGER } from './logger';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from './config/config.service';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const pkg = require('../package.json');
@@ -13,6 +14,7 @@ async function bootstrap(): Promise<void> {
     logger: WINSTON_LOGGER,
   });
   app.enableShutdownHooks();
+  app.useWebSocketAdapter(new WsAdapter(app));
 
   const options = new DocumentBuilder()
     .setTitle('room-assistant')
