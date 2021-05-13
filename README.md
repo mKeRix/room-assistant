@@ -8,9 +8,6 @@
 <a href="https://codecov.io/gh/mKeRix/room-assistant">
   <img alt="code coverage" src="https://codecov.io/gh/mKeRix/room-assistant/branch/master/graph/badge.svg" />
 </a>
-<a href="https://snyk.io/test/github/mKeRix/room-assistant?targetFile=package.json">
-  <img src="https://snyk.io/test/github/mKeRix/room-assistant/badge.svg?targetFile=package.json" alt="Known Vulnerabilities" data-canonical-src="https://snyk.io/test/github/mKeRix/room-assistant?targetFile=package.json" style="max-width:100%;">
-</a>
 <a href="https://github.com/semantic-release/semantic-release">
   <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
 </a>
