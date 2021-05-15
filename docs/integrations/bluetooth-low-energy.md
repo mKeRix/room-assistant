@@ -46,7 +46,7 @@ If you are unsure what ID your device has you can start room-assistant with the 
 
 You can track iOS devices (iPhones, iPads) with this integration using our companion app. You will need to install the app, open it, grant the requested permissions and then follow the on-screen instructions.
 
-The app is currently in beta, you can join it through TestFlight with this link: [https://testflight.apple.com/join/OpCkeHf8](https://testflight.apple.com/join/OpCkeHf8).
+[![Download on the App Store](./app-store-badge.svg)](https://apps.apple.com/us/app/room-assistant/id1538642237?itsct=apps_box_link&itscg=30200)
 
 It is recommended to raise the `timeout` setting to at least `60` when using the companion app, as the signal may not always be constant.
 
