@@ -1,13 +1,17 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
-import { ConfigService } from "../../config/config.service";
-import { EntitiesService } from "../../entities/entities.service";
-import { InjectEventEmitter } from "nest-emitter";
-import { EntitiesEventEmitter, PropertyDiff } from "../../entities/entities.events";
-import { MqttConfig } from "./mqtt.config";
-import mqtt, { AsyncMqttClient } from "async-mqtt";
-import { Entity } from "../../entities/entity.dto";
-import { makeId } from "../../util/id";
-import _ from "lodash";
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '../../config/config.service';
+import { EntitiesService } from '../../entities/entities.service';
+import { InjectEventEmitter } from 'nest-emitter';
+import {
+  EntitiesEventEmitter,
+  PropertyDiff,
+} from '../../entities/entities.events';
+import { MqttConfig } from './mqtt.config';
+import mqtt, { AsyncMqttClient } from 'async-mqtt';
+import { Entity } from '../../entities/entity.dto';
+import { makeId } from '../../util/id';
+import _ from 'lodash';
+import { ClusterService } from '../../cluster/cluster.service';
 
 @Injectable()
 export class MqttService implements OnModuleInit {
@@ -15,9 +19,12 @@ export class MqttService implements OnModuleInit {
   private mqttClient: AsyncMqttClient;
   private readonly logger: Logger = new Logger(MqttService.name);
 
-  constructor(private readonly configService: ConfigService,
-              private readonly entitiesService: EntitiesService,
-              @InjectEventEmitter() private readonly emitter: EntitiesEventEmitter) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly entitiesService: EntitiesService,
+    private readonly clusterService: ClusterService,
+    @InjectEventEmitter() private readonly emitter: EntitiesEventEmitter
+  ) {
     this.config = configService.get('mqtt');
   }
 
@@ -32,17 +39,18 @@ export class MqttService implements OnModuleInit {
         false
       );
 
-      this.mqttClient.on('error', e => this.logger.error(e.message, e.stack))
+      this.mqttClient.on('error', (e) => this.logger.error(e.message, e.stack));
       this.mqttClient.on('connect', this.handleReconnect.bind(this));
       this.logger.log(
         `Successfully connected to MQTT broker at ${this.config.mqttUrl}`
       );
 
       this.emitter.on('entityUpdate', this.handleEntityUpdate.bind(this));
-      this.emitter.on('entityRefresh', this.handleEntityRefresh.bind(this));
     } catch (e) {
       this.logger.error(e.message, e.stack);
     }
+
+    this.clusterService.on('elected', this.refreshEntities.bind(this));
   }
 
   /**
@@ -53,32 +61,45 @@ export class MqttService implements OnModuleInit {
   }
 
   /**
+   * Resends all entity information to MQTT broker, e.g. after a re-connect.
+   */
+  refreshEntities(): void {
+    this.logger.log('Refreshing entity states');
+
+    this.entitiesService.getAll().forEach((entity) => {
+      this.handleEntityUpdate(
+        entity,
+        undefined,
+        this.entitiesService.hasAuthorityOver(entity)
+      );
+    });
+  }
+
+  /**
    * Passes entity updates to the MQTT broker.
    *
    * @param entity - Entity in its updated state
    * @param diff - Difference between old and new state
    * @param hasAuthority - Whether this instance has control of the entity or not
    */
-  private handleEntityUpdate(entity: Entity, diff: Array<PropertyDiff>, hasAuthority: boolean): void {
+  private handleEntityUpdate(
+    entity: Entity,
+    diff: Array<PropertyDiff>,
+    hasAuthority: boolean
+  ): void {
     const message: EntityUpdateMessage = {
       entity,
       diff,
-      hasAuthority
+      hasAuthority,
     };
-    this.mqttClient.publish(this.getTopicName(entity), JSON.stringify(message), {
-      qos: this.config.qos,
-      retain: this.config.retain
-    })
-  }
-
-  /**
-   * Passes entity information to MQTT during a refresh.
-   *
-   * @param entity - Entity in its current state
-   * @param hasAuthority - Whether this instance has control of the entity or not
-   */
-  private handleEntityRefresh(entity: Entity, hasAuthority: boolean): void {
-    this.handleEntityUpdate(entity, undefined, hasAuthority)
+    this.mqttClient.publish(
+      this.getTopicName(entity),
+      JSON.stringify(message),
+      {
+        qos: this.config.qos,
+        retain: this.config.retain,
+      }
+    );
   }
 
   /**
@@ -86,7 +107,7 @@ export class MqttService implements OnModuleInit {
    */
   private handleReconnect(): void {
     this.logger.log('Re-connected to broker');
-    this.entitiesService.refreshStates();
+    this.refreshEntities();
   }
 
   /**
@@ -95,12 +116,14 @@ export class MqttService implements OnModuleInit {
    * @param entity - Entity that the topic should contain
    */
   private getTopicName(entity: Entity) {
-    return `${this.config.baseTopic}/${makeId(this.configService.get('global').instanceName)}/${_.kebabCase(entity.constructor.name)}/${makeId(entity.id)}`;
+    return `${this.config.baseTopic}/${makeId(
+      this.configService.get('global').instanceName
+    )}/${_.kebabCase(entity.constructor.name)}/${makeId(entity.id)}`;
   }
 }
 
 interface EntityUpdateMessage {
-  entity: Entity,
-  diff?: Array<PropertyDiff>,
-  hasAuthority: boolean
+  entity: Entity;
+  diff?: Array<PropertyDiff>;
+  hasAuthority: boolean;
 }

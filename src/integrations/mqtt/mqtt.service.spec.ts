@@ -25,6 +25,7 @@ import { DeviceTracker } from '../../entities/device-tracker';
 import { Switch } from '../../entities/switch';
 import { Camera } from '../../entities/camera';
 import { Entity } from '../../entities/entity.dto';
+import { ClusterModule } from '../../cluster/cluster.module';
 
 jest.mock('async-mqtt', () => {
   return {
@@ -39,8 +40,10 @@ describe('MqttService', () => {
   const entitiesEmitter = new EventEmitter();
   const mqttEmitter = new EventEmitter();
   const entitiesService = {
-    refreshStates: jest.fn(),
+    getAll: jest.fn().mockReturnValue([]),
+    hasAuthorityOver: jest.fn().mockReturnValue(true),
   };
+  const clusterService = new EventEmitter();
   const configService = {
     get: jest.fn().mockImplementation((key: string) => {
       return key === 'mqtt' ? mockConfig : c.get(key);
@@ -50,6 +53,7 @@ describe('MqttService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     entitiesEmitter.removeAllListeners();
+    clusterService.removeAllListeners();
     mqttEmitter.removeAllListeners();
     mockMqttClient.on.mockImplementation((event, callback) => {
       mqttEmitter.on(event, callback);
@@ -61,6 +65,7 @@ describe('MqttService', () => {
         NestEmitterModule.forRoot(entitiesEmitter),
         ConfigModule,
         EntitiesModule,
+        ClusterModule,
       ],
       providers: [MqttService],
     })
@@ -69,7 +74,7 @@ describe('MqttService', () => {
       .overrideProvider(ConfigService)
       .useValue(configService)
       .overrideProvider(ClusterService)
-      .useValue({})
+      .useValue(clusterService)
       .compile();
 
     service = module.get<MqttService>(MqttService);
@@ -83,10 +88,6 @@ describe('MqttService', () => {
       'entityUpdate',
       expect.any(Function)
     );
-    expect(emitterOnSpy).toHaveBeenCalledWith(
-      'entityRefresh',
-      expect.any(Function)
-    );
   });
 
   it('should connect to MQTT on init', async () => {
@@ -98,12 +99,22 @@ describe('MqttService', () => {
     );
   });
 
-  it('should request an entity state refresh on broker reconnect', async () => {
-    await service.onModuleInit();
+  it('should refresh entities on broker reconnect', async () => {
+    const spy = jest.spyOn(service, 'refreshEntities');
 
+    await service.onModuleInit();
     mqttEmitter.emit('connect');
 
-    expect(entitiesService.refreshStates).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should refresh entities after leader was elected', async () => {
+    const spy = jest.spyOn(service, 'refreshEntities');
+
+    await service.onModuleInit();
+    clusterService.emit('elected');
+
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   it.each([
@@ -145,15 +156,14 @@ describe('MqttService', () => {
   ])(
     'should post %s entity refresh messages',
     async (entityTopic: string, entity: Entity) => {
-      const hasAuthority = true;
+      entitiesService.getAll.mockReturnValue([entity]);
 
       await service.onModuleInit();
-
-      entitiesEmitter.emit('entityRefresh', entity, hasAuthority);
+      service.refreshEntities();
 
       expect(mockMqttClient.publish).toHaveBeenCalledWith(
         `room-assistant/entity/test-instance/${entityTopic}/${entity.id}`,
-        JSON.stringify({ entity, hasAuthority }),
+        JSON.stringify({ entity, hasAuthority: true }),
         expect.any(Object)
       );
     }

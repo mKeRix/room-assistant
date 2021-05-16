@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Entity } from './entity.dto';
 import { EntityProxyHandler } from './entity.proxy';
 import { InjectEventEmitter } from 'nest-emitter';
@@ -11,7 +11,7 @@ import { DebounceProxyHandler } from './debounce.proxy';
 import { RollingAverageProxyHandler } from './rolling-average.proxy';
 
 @Injectable()
-export class EntitiesService implements OnApplicationBootstrap {
+export class EntitiesService {
   private readonly config: EntitiesConfig;
   private readonly entities: Map<string, Entity> = new Map<string, Entity>();
   private readonly logger: Logger;
@@ -23,15 +23,6 @@ export class EntitiesService implements OnApplicationBootstrap {
   ) {
     this.config = configService.get('entities');
     this.logger = new Logger(EntitiesService.name);
-  }
-
-  /**
-   * Lifecycle hook, called once the application has started.
-   */
-  onApplicationBootstrap(): void {
-    this.clusterService.on('elected', () => {
-      this.refreshStates();
-    });
   }
 
   /**
@@ -81,16 +72,26 @@ export class EntitiesService implements OnApplicationBootstrap {
     this.logger.debug(`Adding new entity ${entity.id}`);
     let proxy = new Proxy<Entity>(
       entity,
-      new EntityProxyHandler(
-        this.emitter,
-        this.clusterService.isMajorityLeader.bind(this.clusterService)
-      )
+      new EntityProxyHandler(this.emitter, this.hasAuthorityOver.bind(this))
     );
     proxy = this.applyEntityBehaviors(proxy);
 
     this.entities.set(entity.id, proxy);
     this.emitter.emit('newEntity', proxy, customizations);
     return proxy;
+  }
+
+  /**
+   * Checks if this instance controls the cluster-wide state of an entity.
+   *
+   * @param entity - Entity to check
+   */
+  hasAuthorityOver(entity: Entity): boolean {
+    return (
+      !entity.distributed ||
+      !entity.stateLocked ||
+      this.clusterService.isMajorityLeader()
+    );
   }
 
   /**
@@ -117,21 +118,5 @@ export class EntitiesService implements OnApplicationBootstrap {
     }
 
     return proxy;
-  }
-
-  /**
-   * Emits the current states of all entities that this instance has power over.
-   */
-  refreshStates(): void {
-    this.logger.log('Refreshing entity states');
-    this.entities.forEach((entity) => {
-      const hasAuthority = !entity.distributed || !entity.stateLocked || this.clusterService.isMajorityLeader()
-
-      this.emitter.emit(
-        'entityRefresh',
-        entity,
-        hasAuthority
-      )
-    });
   }
 }

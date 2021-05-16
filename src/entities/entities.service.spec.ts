@@ -16,7 +16,6 @@ describe('EntitiesService', () => {
   const emitter: EventEmitter = new EventEmitter();
   const clusterService = {
     isMajorityLeader: jest.fn(),
-    on: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -237,7 +236,7 @@ describe('EntitiesService', () => {
       expect(spy).toHaveBeenCalledTimes(2);
     });
 
-    it('should send include old values in entity updates', () => {
+    it('should include old values in entity updates', () => {
       jest.useFakeTimers('modern');
 
       const entity = new Sensor('test_sensor', 'Test Sensor');
@@ -336,43 +335,18 @@ describe('EntitiesService', () => {
         true
       );
     });
-  });
 
-  describe('Entity Authority', () => {
-    it('should always mark non-distributed entity updates as authority', () => {
+    it('should include authority in updates', () => {
       jest.useFakeTimers('modern');
+      jest.spyOn(service, 'hasAuthorityOver').mockReturnValue(false);
 
-      const entity = new Sensor('distributed_sensor', 'Distribution', false);
+      const entity = new Sensor('test_sensor', 'Test Sensor');
       const spy = jest.spyOn(emitter, 'emit');
-      clusterService.isMajorityLeader.mockReturnValue(false);
 
       const entityProxy = service.add(entity);
-      spy.mockClear();
-      entityProxy.state = true;
+      entityProxy.state = 1337;
       jest.advanceTimersByTime(250);
 
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(
-        'entityUpdate',
-        expect.anything(),
-        expect.anything(),
-        true
-      );
-    });
-
-    it('should mark distributed entity updates as non-authority if not the leader', () => {
-      jest.useFakeTimers('modern');
-
-      const entity = new Sensor('distributed_sensor', 'Distribution', true);
-      const spy = jest.spyOn(emitter, 'emit');
-      clusterService.isMajorityLeader.mockReturnValue(false);
-
-      const entityProxy = service.add(entity);
-      spy.mockClear();
-      entityProxy.state = true;
-      jest.advanceTimersByTime(250);
-
-      expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(
         'entityUpdate',
         expect.anything(),
@@ -380,123 +354,40 @@ describe('EntitiesService', () => {
         false
       );
     });
+  });
+
+  describe('Entity Authority', () => {
+    it('should always mark non-distributed entity updates as authority', () => {
+      const entity = new Sensor('distributed_sensor', 'Distribution', false);
+      clusterService.isMajorityLeader.mockReturnValue(false);
+
+      expect(service.hasAuthorityOver(entity)).toBeTruthy();
+    });
+
+    it('should mark distributed entity updates as non-authority if not the leader', () => {
+      const entity = new Sensor('distributed_sensor', 'Distribution', true);
+      clusterService.isMajorityLeader.mockReturnValue(false);
+
+      expect(service.hasAuthorityOver(entity)).toBeFalsy();
+    });
 
     it('should mark distributed entity updates as authority if the leader', () => {
-      jest.useFakeTimers('modern');
-
       const entity = new Sensor('distributed_sensor', 'Distribution', true);
-      const spy = jest.spyOn(emitter, 'emit');
       clusterService.isMajorityLeader.mockReturnValue(true);
 
-      const entityProxy = service.add(entity);
-      spy.mockClear();
-      entityProxy.state = true;
-      jest.advanceTimersByTime(250);
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(
-        'entityUpdate',
-        expect.anything(),
-        expect.anything(),
-        true
-      );
+      expect(service.hasAuthorityOver(entity)).toBeTruthy();
     });
 
     it('should mark distributed entity updates as authority if state is not locked', () => {
-      jest.useFakeTimers('modern');
-
       const entity = new Sensor(
         'distributed_sensor',
         'Distribution',
         true,
         false
       );
-      const spy = jest.spyOn(emitter, 'emit');
       clusterService.isMajorityLeader.mockReturnValue(false);
 
-      const entityProxy = service.add(entity);
-      spy.mockClear();
-      entityProxy.state = 'test';
-      jest.advanceTimersByTime(250);
-
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(
-        'entityUpdate',
-        expect.anything(),
-        expect.anything(),
-        true
-      );
-    });
-  });
-
-  describe('Entity Refresh', () => {
-    it('should register a callback to leader election on bootstrap', () => {
-      service.onApplicationBootstrap();
-      expect(clusterService.on).toHaveBeenCalled();
-    });
-
-    it('should refresh entity states if elected', () => {
-      const refreshSpy = jest
-        .spyOn(service, 'refreshStates')
-        .mockImplementation(() => undefined);
-
-      service.onApplicationBootstrap();
-      const electedCallback = clusterService.on.mock.calls[0][1].bind(service);
-      electedCallback();
-
-      expect(refreshSpy).toHaveBeenCalled();
-    });
-
-    it('should send out events for all entities when refreshing as non-leader', () => {
-      clusterService.isMajorityLeader.mockReturnValue(false);
-      const spy = jest.spyOn(emitter, 'emit');
-
-      const sensor1 = new Sensor('sensor1', 'Sensor 1');
-      sensor1.state = 1;
-      sensor1.attributes = {
-        test: 'abc',
-      };
-      service.add(sensor1);
-      const sensor2 = new Sensor('sensor2', 'Sensor 2', true);
-      sensor2.state = 2;
-      service.add(sensor2);
-      const sensor3 = new Sensor('sensor3', 'Sensor 3', true, false);
-      sensor3.state = 3;
-      service.add(sensor3);
-      spy.mockClear();
-
-      service.refreshStates();
-
-      expect(spy).toHaveBeenCalledTimes(3);
-      expect(spy).toHaveBeenCalledWith('entityRefresh', sensor1, true);
-      expect(spy).toHaveBeenCalledWith('entityRefresh', sensor2, false);
-      expect(spy).toHaveBeenCalledWith('entityRefresh', sensor3, true);
-    });
-
-    it('should send out events for all non-distributed or locked entities when refreshing as majority leader', () => {
-      clusterService.isMajorityLeader.mockReturnValue(true);
-      const spy = jest.spyOn(emitter, 'emit');
-
-      const sensor1 = new Sensor('sensor1', 'Sensor 1');
-      sensor1.state = 1;
-      sensor1.attributes = {
-        test: 'abc',
-      };
-      service.add(sensor1);
-      const sensor2 = new Sensor('sensor2', 'Sensor 2', true);
-      sensor2.state = 2;
-      service.add(sensor2);
-      const sensor3 = new Sensor('sensor3', 'Sensor 3', true, false);
-      sensor3.state = 3;
-      service.add(sensor3);
-      spy.mockClear();
-
-      service.refreshStates();
-
-      expect(spy).toHaveBeenCalledTimes(3);
-      expect(spy).toHaveBeenCalledWith('entityRefresh', sensor1, true);
-      expect(spy).toHaveBeenCalledWith('entityRefresh', sensor2, true);
-      expect(spy).toHaveBeenCalledWith('entityRefresh', sensor3, true);
+      expect(service.hasAuthorityOver(entity)).toBeTruthy();
     });
   });
 

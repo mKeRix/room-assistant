@@ -16,7 +16,10 @@ import { HomeAssistantConfig } from './home-assistant.config';
 import { Device } from './device';
 import { system } from 'systeminformation';
 import { InjectEventEmitter } from 'nest-emitter';
-import { EntitiesEventEmitter, PropertyDiff } from "../../entities/entities.events";
+import {
+  EntitiesEventEmitter,
+  PropertyDiff,
+} from '../../entities/entities.events';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { makeId } from '../../util/id';
 import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
@@ -29,6 +32,7 @@ import { DeviceTrackerConfig } from './device-tracker-config';
 import { Camera } from '../../entities/camera';
 import { CameraConfig } from './camera-config';
 import { EntitiesService } from '../../entities/entities.service';
+import { ClusterService } from '../../cluster/cluster.service';
 
 const PROPERTY_DENYLIST = ['component', 'configTopic', 'commandStore'];
 
@@ -51,6 +55,7 @@ export class HomeAssistantService
   constructor(
     private readonly configService: ConfigService,
     private readonly entitiesService: EntitiesService,
+    private readonly clusterService: ClusterService,
     @InjectEventEmitter() private readonly emitter: EntitiesEventEmitter
   ) {
     this.config = this.configService.get('homeAssistant');
@@ -69,7 +74,7 @@ export class HomeAssistantService
         false
       );
       this.mqttClient.on('message', this.handleIncomingMessage.bind(this));
-      this.mqttClient.on('error', e => this.logger.error(e.message, e.stack))
+      this.mqttClient.on('error', (e) => this.logger.error(e.message, e.stack));
       this.mqttClient.on('connect', this.handleReconnect.bind(this));
       this.logger.log(
         `Successfully connected to MQTT broker at ${this.config.mqttUrl}`
@@ -77,10 +82,11 @@ export class HomeAssistantService
 
       this.emitter.on('newEntity', this.handleNewEntity.bind(this));
       this.emitter.on('entityUpdate', this.handleEntityUpdate.bind(this));
-      this.emitter.on('entityRefresh', this.handleEntityRefresh.bind(this));
     } catch (e) {
       this.logger.error(e.message, e.stack);
     }
+
+    this.clusterService.on('elected', this.refreshEntities.bind(this));
   }
 
   /**
@@ -167,23 +173,35 @@ export class HomeAssistantService
    * @param diff - Diff between old and new entity
    * @param hasAuthority - Whether this instance has control of the entity or not
    */
-  handleEntityUpdate(entity: Entity, diff: Array<PropertyDiff>, hasAuthority: boolean): void {
-    const config = this.entityConfigs.get(this.getCombinedId(entity.id, entity.distributed));
+  handleEntityUpdate(
+    entity: Entity,
+    diff: Array<PropertyDiff>,
+    hasAuthority: boolean
+  ): void {
+    const config = this.entityConfigs.get(
+      this.getCombinedId(entity.id, entity.distributed)
+    );
     if (config === undefined) {
       return;
     }
 
     if (hasAuthority) {
-      if (diff.some(diff => diff.path.startsWith('/state'))) {
-        this.sendNewState(entity, config)
+      if (diff.some((diff) => diff.path.startsWith('/state'))) {
+        this.sendNewState(entity, config);
       }
 
-      if (this.config.sendAttributes && diff.some(diff => diff.path.startsWith('/attributes'))) {
-        this.sendNewAttributes(entity, config)
+      if (
+        this.config.sendAttributes &&
+        diff.some((diff) => diff.path.startsWith('/attributes'))
+      ) {
+        this.sendNewAttributes(entity, config);
       }
 
-      if (this.config.sendMqttRoom && diff.some(diff => diff.path.startsWith('/distances/'))) {
-        this.sendNewMqttRoomDistances(entity.id, entity.name, diff)
+      if (
+        this.config.sendMqttRoom &&
+        diff.some((diff) => diff.path.startsWith('/distances/'))
+      ) {
+        this.sendNewMqttRoomDistances(entity.id, entity.name, diff);
       }
     }
   }
@@ -191,23 +209,26 @@ export class HomeAssistantService
   /**
    * Re-publishes entity information that this instance has authority over
    * on a refresh (e.g. after MQTT re-connect).
-   *
-   * @param entity - Entity in its current state
-   * @param hasAuthority - Whether this instance has control of the entity or not
    */
-  handleEntityRefresh(entity: Entity, hasAuthority: boolean): void {
-    const config = this.entityConfigs.get(this.getCombinedId(entity.id, entity.distributed));
-    if (config === undefined) {
-      return;
-    }
+  refreshEntities(): void {
+    this.logger.log('Refreshing entity states');
 
-    if (hasAuthority) {
-      this.sendNewState(entity, config);
-
-      if (this.config.sendAttributes) {
-        this.sendNewAttributes(entity, config)
+    this.entitiesService.getAll().forEach((entity) => {
+      const config = this.entityConfigs.get(
+        this.getCombinedId(entity.id, entity.distributed)
+      );
+      if (config === undefined) {
+        return;
       }
-    }
+
+      if (this.entitiesService.hasAuthorityOver(entity)) {
+        this.sendNewState(entity, config);
+
+        if (this.config.sendAttributes) {
+          this.sendNewAttributes(entity, config);
+        }
+      }
+    });
   }
 
   /**
@@ -247,7 +268,7 @@ export class HomeAssistantService
    */
   protected handleReconnect(): void {
     this.logger.log('Re-connected to broker');
-    this.entitiesService.refreshStates();
+    this.refreshEntities();
   }
 
   /**
@@ -410,16 +431,24 @@ export class HomeAssistantService
    * @param name - Name of the device to be sent
    * @param diff - Diff including changes to the /distances/* paths
    */
-  private sendNewMqttRoomDistances(id: string, name: string, diff: PropertyDiff[]) {
-    diff.filter(value => value.path.startsWith('/distances/'))
-      .forEach(value => {
+  private sendNewMqttRoomDistances(
+    id: string,
+    name: string,
+    diff: PropertyDiff[]
+  ) {
+    diff
+      .filter((value) => value.path.startsWith('/distances/'))
+      .forEach((value) => {
         const room = value.path.split('/')[2];
-        this.mqttClient.publish(`${this.config.mqttRoomPrefix}/${room}`, JSON.stringify({
-          id,
-          name,
-          distance: value.newValue.distance
-        }))
-      })
+        this.mqttClient.publish(
+          `${this.config.mqttRoomPrefix}/${room}`,
+          JSON.stringify({
+            id,
+            name,
+            distance: value.newValue.distance,
+          })
+        );
+      });
   }
 
   /**

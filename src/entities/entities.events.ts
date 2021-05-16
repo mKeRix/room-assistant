@@ -14,11 +14,6 @@ interface EntitiesEvents {
     diff: Array<PropertyDiff>,
     hasAuthority: boolean
   ) => void;
-
-  entityRefresh: (
-    entity: Entity,
-    hasAuthority: boolean
-  ) => void;
 }
 
 export interface PropertyDiff {

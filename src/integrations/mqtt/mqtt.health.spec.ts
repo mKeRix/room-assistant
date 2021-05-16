@@ -1,12 +1,14 @@
-import { mocked } from "ts-jest/utils";
-import { MqttService } from "./mqtt.service";
-import { MqttHealthIndicator } from "./mqtt.health";
-import { HealthCheckError } from "@nestjs/terminus";
+import { mocked } from 'ts-jest/utils';
+import { MqttService } from './mqtt.service';
+import { MqttHealthIndicator } from './mqtt.health';
+import { HealthCheckError } from '@nestjs/terminus';
 
-jest.mock('./mqtt.service')
+jest.mock('./mqtt.service');
 
 describe('MqttHealthIndicator', () => {
-  const serviceMock = mocked(new MqttService(undefined, undefined, undefined));
+  const serviceMock = mocked(
+    new MqttService(undefined, undefined, undefined, undefined)
+  );
   const healthIndicator = new MqttHealthIndicator(serviceMock);
 
   it('should report healthy if connection is established', () => {
@@ -27,4 +29,4 @@ describe('MqttHealthIndicator', () => {
 
     expect(() => healthIndicator.connectionCheck()).toThrow(HealthCheckError);
   });
-})
+});
