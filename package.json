@@ -91,7 +91,6 @@
     "@types/i2c-bus": "^5.1.0",
     "@types/jest": "^26.0.22",
     "@types/lodash": "^4.14.168",
-    "@types/mathjs": "^6.0.11",
     "@types/mdns": "0.0.33",
     "@types/node": "^14.14.37",
     "@types/supertest": "^2.0.11",
