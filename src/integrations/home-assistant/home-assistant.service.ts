@@ -7,7 +7,11 @@ import {
 } from '@nestjs/common';
 import { Entity } from '../../entities/entity.dto';
 import { Sensor } from '../../entities/sensor';
-import { EntityConfig } from './entity-config';
+import {
+  AvailabilityStatus,
+  EntityConfig,
+  PROPERTY_DENYLIST,
+} from './entity-config';
 import { SensorConfig } from './sensor-config';
 import * as _ from 'lodash';
 import { ConfigService } from '../../config/config.service';
@@ -33,8 +37,10 @@ import { Camera } from '../../entities/camera';
 import { CameraConfig } from './camera-config';
 import { EntitiesService } from '../../entities/entities.service';
 import { ClusterService } from '../../cluster/cluster.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { Node } from 'democracy';
 
-const PROPERTY_DENYLIST = ['component', 'configTopic', 'commandStore'];
+const INSTANCE_STATUS_BASE_TOPIC = 'room-assistant/status';
 
 @Injectable()
 export class HomeAssistantService
@@ -49,7 +55,8 @@ export class HomeAssistantService
     string,
     (attributes: { [key: string]: any }) => void
   >();
-  private mqttClient: AsyncMqttClient;
+  private mqttClient?: AsyncMqttClient;
+  private readonly statusTopic: string;
   private readonly logger: Logger = new Logger(HomeAssistantService.name);
 
   constructor(
@@ -59,6 +66,9 @@ export class HomeAssistantService
     @InjectEventEmitter() private readonly emitter: EntitiesEventEmitter
   ) {
     this.config = this.configService.get('homeAssistant');
+
+    const instanceName = this.configService.get('global').instanceName;
+    this.statusTopic = `${INSTANCE_STATUS_BASE_TOPIC}/${instanceName}`;
   }
 
   /**
@@ -70,9 +80,23 @@ export class HomeAssistantService
     try {
       this.mqttClient = await mqtt.connectAsync(
         this.config.mqttUrl,
-        { ...this.config.mqttOptions },
+        {
+          will: {
+            topic: this.statusTopic,
+            payload: 'offline',
+            retain: false,
+            qos: 1,
+            properties: {
+              willDelayInterval: 60,
+            },
+          },
+          ...this.config.mqttOptions,
+        },
         false
       );
+
+      this.sendInstanceStatus();
+
       this.mqttClient.on('message', this.handleIncomingMessage.bind(this));
       this.mqttClient.on('error', (e) => this.logger.error(e.message, e.stack));
       this.mqttClient.on('connect', this.handleReconnect.bind(this));
@@ -87,29 +111,32 @@ export class HomeAssistantService
     }
 
     this.clusterService.on('elected', this.refreshEntities.bind(this));
+    this.clusterService.on(
+      'elected',
+      this.updateDistributedAvailability.bind(this)
+    );
+    this.clusterService.on(
+      'leader',
+      this.updateDistributedAvailability.bind(this)
+    );
   }
 
   /**
    * Lifecycle hook, called once the application is shutting down.
    */
   async onApplicationShutdown(): Promise<void> {
-    this.entityConfigs.forEach((config) => {
-      if (
-        config.device?.identifiers !== DISTRIBUTED_DEVICE_ID &&
-        config.device?.viaDevice !== DISTRIBUTED_DEVICE_ID
-      ) {
-        this.logger.debug(`Marking ${config.uniqueId} as unavailable`);
-        this.mqttClient.publish(
-          config.availabilityTopic,
-          config.payloadNotAvailable,
-          {
-            qos: 0,
-            retain: true,
-          }
-        );
-      }
-    });
-    return this.mqttClient?.end();
+    await this.sendInstanceStatus('offline');
+
+    const entityStatusUpdates = Array.from(this.entityConfigs.values())
+      .filter(
+        (config) =>
+          (config.distributed && this.clusterService.isLeader()) ||
+          !config.distributed
+      )
+      .map((config) => this.sendEntityStatus(config, 'offline'));
+    await Promise.all(entityStatusUpdates);
+
+    await this.mqttClient?.end();
   }
 
   /**
@@ -142,27 +169,8 @@ export class HomeAssistantService
 
     this.entityConfigs.set(combinedId, config);
 
-    // camera entities do not support stateTopic
-    const message = this.formatMessage(
-      config instanceof CameraConfig ? _.omit(config, ['stateTopic']) : config
-    );
-
-    // concatenate discoveryPrefix to configTopic
-    const discoveryTopic =
-      this.config.discoveryPrefix + '/' + config.configTopic;
-
-    this.logger.debug(
-      `Registering entity ${config.uniqueId} under ${discoveryTopic}`
-    );
-    this.mqttClient.publish(discoveryTopic, JSON.stringify(message), {
-      qos: 0,
-      retain: true,
-    });
-
-    this.mqttClient.publish(config.availabilityTopic, config.payloadAvailable, {
-      qos: 0,
-      retain: true,
-    });
+    this.sendDiscoveryMessage(config);
+    this.sendEntityStatus(config);
   }
 
   /**
@@ -204,6 +212,17 @@ export class HomeAssistantService
         this.sendNewMqttRoomDistances(entity.id, entity.name, diff);
       }
     }
+  }
+
+  /**
+   * Send online status to own instance and entity availability topics.
+   */
+  @Cron(CronExpression.EVERY_30_SECONDS)
+  sendHeartbeats(): void {
+    this.sendInstanceStatus();
+    this.entityConfigs.forEach((config) => {
+      this.sendEntityStatus(config);
+    });
   }
 
   /**
@@ -268,6 +287,7 @@ export class HomeAssistantService
    */
   protected handleReconnect(): void {
     this.logger.log('Re-connected to broker');
+    this.sendHeartbeats();
     this.refreshEntities();
   }
 
@@ -316,26 +336,61 @@ export class HomeAssistantService
     combinedId: string,
     entity: Entity
   ): EntityConfig {
+    let config: EntityConfig;
+
     if (entity instanceof Sensor) {
-      return new SensorConfig(combinedId, entity.name);
+      config = new SensorConfig(combinedId, entity.name);
     } else if (entity instanceof BinarySensor) {
-      return new BinarySensorConfig(combinedId, entity.name);
+      config = new BinarySensorConfig(combinedId, entity.name);
     } else if (entity instanceof Switch) {
-      const config = new SwitchConfig(
+      config = new SwitchConfig(
         combinedId,
         entity.name,
         entity.turnOn.bind(entity),
         entity.turnOff.bind(entity)
       );
-      this.mqttClient.subscribe(config.commandTopic, { qos: 0 });
-      return config;
+      this.mqttClient.subscribe((config as SwitchConfig).commandTopic, {
+        qos: 0,
+      });
     } else if (entity instanceof Camera) {
-      return new CameraConfig(combinedId, entity.name);
+      config = new CameraConfig(combinedId, entity.name);
     } else if (entity instanceof DeviceTracker) {
-      return new DeviceTrackerConfig(combinedId, entity.name);
+      config = new DeviceTrackerConfig(combinedId, entity.name);
     } else {
       return;
     }
+
+    config.distributed = entity.distributed;
+    config.stateLocked = entity.stateLocked;
+    config.setInstanceStatusTopic(
+      `${INSTANCE_STATUS_BASE_TOPIC}/${
+        this.clusterService.leader()?.id ||
+        this.configService.get('global').instanceName
+      }`
+    );
+
+    return config;
+  }
+
+  /**
+   * Update distributed entities to reflect new leader in availability topics.
+   * Run based on events from ClusterService.
+   *
+   * @param node - Node that is the new leader
+   */
+  private updateDistributedAvailability(node: Node) {
+    Array.from(this.entityConfigs.values())
+      .filter((config) => config.distributed && config.stateLocked)
+      .forEach(async (config) => {
+        config.setInstanceStatusTopic(
+          `${INSTANCE_STATUS_BASE_TOPIC}/${node.id}`
+        );
+
+        if (this.clusterService.isLeader()) {
+          await this.sendDiscoveryMessage(config);
+          this.sendHeartbeats();
+        }
+      });
   }
 
   /**
@@ -371,6 +426,72 @@ export class HomeAssistantService
       return _.mapKeys(obj, (v, k) => {
         return _.snakeCase(k);
       });
+    });
+  }
+
+  /**
+   * Publish entity status to its availability topic with MQTT.
+   *
+   * @param config - Config of the entity
+   * @param status - Status that will be sent
+   */
+  private async sendEntityStatus(
+    config: EntityConfig,
+    status: AvailabilityStatus = 'online'
+  ): Promise<void> {
+    if (config.distributed && !config.stateLocked) {
+      return;
+    }
+
+    this.logger.debug(`Marking ${config.uniqueId} as ${status}`);
+    await this.mqttClient?.publish(config.availability[0].topic, status);
+  }
+
+  /**
+   * Publish instance status to the availability topic with MQTT.
+   *
+   * @param status - Status that will be sent
+   */
+  private async sendInstanceStatus(
+    status: AvailabilityStatus = 'online'
+  ): Promise<void> {
+    this.logger.debug(`Marking instance as ${status}`);
+    await this.mqttClient?.publish(this.statusTopic, status, {
+      qos: 1,
+    });
+  }
+
+  /**
+   * Publish Home Assistant auto-discovery message for an entity with MQTT.
+   *
+   * @param config - Entity config to publish for discovery
+   */
+  private async sendDiscoveryMessage(config: EntityConfig): Promise<void> {
+    if (
+      config.distributed &&
+      config.stateLocked &&
+      !this.clusterService.isLeader()
+    ) {
+      return;
+    }
+
+    // camera entities do not support stateTopic
+    const message = this.formatMessage(
+      config instanceof CameraConfig
+        ? _.omit(config.shallowClone(), ['stateTopic'])
+        : config.shallowClone()
+    );
+
+    // concatenate discoveryPrefix to configTopic
+    const discoveryTopic =
+      this.config.discoveryPrefix + '/' + config.configTopic;
+
+    this.logger.debug(
+      `Registering entity ${config.uniqueId} under ${discoveryTopic}`
+    );
+    await this.mqttClient?.publish(discoveryTopic, JSON.stringify(message), {
+      qos: 0,
+      retain: true,
     });
   }
 
@@ -460,7 +581,13 @@ export class HomeAssistantService
   private deepMap(obj: object, mapper: (v: object) => object): object {
     return mapper(
       _.mapValues(obj, (v) => {
-        return _.isObject(v) && !_.isArray(v) ? this.deepMap(v, mapper) : v;
+        if (_.isArray(v)) {
+          return [...v].map((e) => this.deepMap(e, mapper));
+        } else if (_.isObject(v)) {
+          return this.deepMap(v, mapper);
+        } else {
+          return v;
+        }
       })
     );
   }

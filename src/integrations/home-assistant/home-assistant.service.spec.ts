@@ -22,7 +22,6 @@ import { BinarySensor } from '../../entities/binary-sensor';
 import { Switch } from '../../entities/switch';
 import { DeviceTracker } from '../../entities/device-tracker';
 import { Camera } from '../../entities/camera';
-import { DISTRIBUTED_DEVICE_ID } from './home-assistant.const';
 import { EntitiesModule } from '../../entities/entities.module';
 import { EntitiesService } from '../../entities/entities.service';
 import { ClusterService } from '../../cluster/cluster.service';
@@ -40,6 +39,11 @@ jest.mock('systeminformation', () => {
     system: jest.fn().mockReturnValue({}),
   };
 });
+
+class MockClusterService extends EventEmitter {
+  leader = jest.fn().mockReturnValue({ id: 'test-instance' });
+  isLeader = jest.fn().mockReturnValue(true);
+}
 
 describe('HomeAssistantService', () => {
   let service: HomeAssistantService;
@@ -61,7 +65,7 @@ describe('HomeAssistantService', () => {
       return key === 'homeAssistant' ? mockConfig : c.get(key);
     }),
   };
-  const clusterService = new EventEmitter();
+  const clusterService = new MockClusterService();
 
   beforeEach(async () => {
     mockConfig = new HomeAssistantConfig();
@@ -87,6 +91,7 @@ describe('HomeAssistantService', () => {
     module.useLogger(loggerService);
 
     jest.clearAllMocks();
+    mockMqttClient.on.mockReset();
 
     service = module.get<HomeAssistantService>(HomeAssistantService);
   });
@@ -124,55 +129,6 @@ describe('HomeAssistantService', () => {
       expect(mockSystem).toHaveBeenCalled();
     });
 
-    it('should send offline messages for local entities on shutdown', async () => {
-      await service.onModuleInit();
-      service.handleNewEntity(new Sensor('test', 'Test'));
-      service.handleNewEntity(new Sensor('test2', 'Test 2'));
-      mockMqttClient.publish.mockClear();
-
-      await service.onApplicationShutdown();
-
-      expect(mockMqttClient.publish).toHaveBeenCalledWith(
-        expect.stringContaining('status'),
-        'offline',
-        {
-          qos: 0,
-          retain: true,
-        }
-      );
-      expect(mockMqttClient.publish).toHaveBeenCalledTimes(2);
-    });
-
-    it('should not send offline messages for distributed entities', async () => {
-      await service.onModuleInit();
-      service.handleNewEntity(new Sensor('test-sensor', 'Dist', true));
-      mockMqttClient.publish.mockClear();
-
-      await service.onApplicationShutdown();
-
-      expect(mockMqttClient.publish).not.toHaveBeenCalled();
-    });
-
-    it('should not send offline messages for entities belong to a child device of the distributed hub', async () => {
-      await service.onModuleInit();
-      service.handleNewEntity(new Sensor('test-sensor', 'Dist', true), [
-        {
-          for: SensorConfig,
-          overrides: {
-            device: {
-              identifiers: 'test-device-id',
-              viaDevice: DISTRIBUTED_DEVICE_ID,
-            },
-          },
-        },
-      ]);
-      mockMqttClient.publish.mockClear();
-
-      await service.onApplicationShutdown();
-
-      expect(mockMqttClient.publish).not.toHaveBeenCalled();
-    });
-
     it('should terminate the MQTT connection gracefully on shutdown', async () => {
       await service.onModuleInit();
       await service.onApplicationShutdown();
@@ -194,23 +150,26 @@ describe('HomeAssistantService', () => {
           retain: true,
         }
       );
-      expect(mockMqttClient.publish).toHaveBeenCalledWith(
-        'room-assistant/sensor/test-instance-test-sensor/status',
-        'online',
-        {
-          qos: 0,
-          retain: true,
-        }
-      );
-      expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject(
+      expect(JSON.parse(mockMqttClient.publish.mock.calls[1][1])).toMatchObject(
         {
           unique_id: 'room-assistant-test-instance-test-sensor',
           name: 'Test Sensor',
           state_topic: 'room-assistant/sensor/test-instance-test-sensor/state',
           json_attributes_topic:
             'room-assistant/sensor/test-instance-test-sensor/attributes',
-          availability_topic:
-            'room-assistant/sensor/test-instance-test-sensor/status',
+          availability_mode: 'all',
+          availability: [
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic: 'room-assistant/sensor/test-instance-test-sensor/status',
+            },
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic: 'room-assistant/status/test-instance',
+            },
+          ],
         }
       );
     });
@@ -219,13 +178,45 @@ describe('HomeAssistantService', () => {
       await service.onModuleInit();
       service.handleNewEntity(new Sensor('dist-sensor', 'Dist Sensor', true));
 
-      expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject(
+      expect(JSON.parse(mockMqttClient.publish.mock.calls[1][1])).toMatchObject(
         {
           unique_id: 'room-assistant-dist-sensor',
           name: 'Dist Sensor',
           state_topic: 'room-assistant/sensor/dist-sensor/state',
           json_attributes_topic: 'room-assistant/sensor/dist-sensor/attributes',
-          availability_topic: 'room-assistant/sensor/dist-sensor/status',
+          availability_mode: 'all',
+          availability: [
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic: 'room-assistant/sensor/dist-sensor/status',
+            },
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic: 'room-assistant/status/test-instance',
+            },
+          ],
+          device: {
+            identifiers: 'room-assistant-distributed',
+            name: 'room-assistant hub',
+          },
+        }
+      );
+    });
+
+    it('should publish discovery configuration for a new distributed, state-unlocked sensor', async () => {
+      await service.onModuleInit();
+      service.handleNewEntity(
+        new Sensor('dist-sensor', 'Dist Sensor', true, false)
+      );
+
+      expect(JSON.parse(mockMqttClient.publish.mock.calls[1][1])).toMatchObject(
+        {
+          unique_id: 'room-assistant-dist-sensor',
+          state_topic: 'room-assistant/sensor/dist-sensor/state',
+          json_attributes_topic: 'room-assistant/sensor/dist-sensor/attributes',
+          availability: [],
           device: {
             identifiers: 'room-assistant-distributed',
             name: 'room-assistant hub',
@@ -246,15 +237,7 @@ describe('HomeAssistantService', () => {
           retain: true,
         }
       );
-      expect(mockMqttClient.publish).toHaveBeenCalledWith(
-        'room-assistant/binary_sensor/test-instance-bin-sensor/status',
-        'online',
-        {
-          qos: 0,
-          retain: true,
-        }
-      );
-      expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject(
+      expect(JSON.parse(mockMqttClient.publish.mock.calls[1][1])).toMatchObject(
         {
           unique_id: 'room-assistant-test-instance-bin-sensor',
           name: 'Binary',
@@ -262,10 +245,22 @@ describe('HomeAssistantService', () => {
             'room-assistant/binary_sensor/test-instance-bin-sensor/state',
           json_attributes_topic:
             'room-assistant/binary_sensor/test-instance-bin-sensor/attributes',
-          availability_topic:
-            'room-assistant/binary_sensor/test-instance-bin-sensor/status',
           payload_on: 'true',
           payload_off: 'false',
+          availability_mode: 'all',
+          availability: [
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic:
+                'room-assistant/binary_sensor/test-instance-bin-sensor/status',
+            },
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic: 'room-assistant/status/test-instance',
+            },
+          ],
         }
       );
     });
@@ -282,15 +277,7 @@ describe('HomeAssistantService', () => {
           retain: true,
         }
       );
-      expect(mockMqttClient.publish).toHaveBeenCalledWith(
-        'room-assistant/switch/test-instance-test-switch/status',
-        'online',
-        {
-          qos: 0,
-          retain: true,
-        }
-      );
-      expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject(
+      expect(JSON.parse(mockMqttClient.publish.mock.calls[1][1])).toMatchObject(
         {
           unique_id: 'room-assistant-test-instance-test-switch',
           name: 'Test Switch',
@@ -299,12 +286,23 @@ describe('HomeAssistantService', () => {
             'room-assistant/switch/test-instance-test-switch/command',
           json_attributes_topic:
             'room-assistant/switch/test-instance-test-switch/attributes',
-          availability_topic:
-            'room-assistant/switch/test-instance-test-switch/status',
           payload_on: 'on',
           payload_off: 'off',
           state_on: 'true',
           state_off: 'false',
+          availability_mode: 'all',
+          availability: [
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic: 'room-assistant/switch/test-instance-test-switch/status',
+            },
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic: 'room-assistant/status/test-instance',
+            },
+          ],
         }
       );
     });
@@ -335,25 +333,28 @@ describe('HomeAssistantService', () => {
           retain: true,
         }
       );
-      expect(mockMqttClient.publish).toHaveBeenCalledWith(
-        'room-assistant/device_tracker/test-tracker/status',
-        'online',
-        {
-          qos: 0,
-          retain: true,
-        }
-      );
-      expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject(
+      expect(JSON.parse(mockMqttClient.publish.mock.calls[1][1])).toMatchObject(
         {
           unique_id: 'room-assistant-test-tracker',
           name: 'Test Tracker',
           state_topic: 'room-assistant/device_tracker/test-tracker/state',
           json_attributes_topic:
             'room-assistant/device_tracker/test-tracker/attributes',
-          availability_topic:
-            'room-assistant/device_tracker/test-tracker/status',
           payload_home: 'home',
           payload_not_home: 'not_home',
+          availability_mode: 'all',
+          availability: [
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic: 'room-assistant/device_tracker/test-tracker/status',
+            },
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic: 'room-assistant/status/test-instance',
+            },
+          ],
         }
       );
     });
@@ -370,23 +371,26 @@ describe('HomeAssistantService', () => {
           retain: true,
         }
       );
-      expect(mockMqttClient.publish).toHaveBeenCalledWith(
-        'room-assistant/camera/test-instance-test-camera/status',
-        'online',
-        {
-          qos: 0,
-          retain: true,
-        }
-      );
-      expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject(
+      expect(JSON.parse(mockMqttClient.publish.mock.calls[1][1])).toMatchObject(
         {
           unique_id: 'room-assistant-test-instance-test-camera',
           name: 'Test Camera',
           topic: 'room-assistant/camera/test-instance-test-camera/state',
           json_attributes_topic:
             'room-assistant/camera/test-instance-test-camera/attributes',
-          availability_topic:
-            'room-assistant/camera/test-instance-test-camera/status',
+          availability_mode: 'all',
+          availability: [
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic: 'room-assistant/camera/test-instance-test-camera/status',
+            },
+            {
+              payload_available: 'online',
+              payload_not_available: 'offline',
+              topic: 'room-assistant/status/test-instance',
+            },
+          ],
         }
       );
     });
@@ -401,7 +405,7 @@ describe('HomeAssistantService', () => {
       await service.onModuleInit();
       service.handleNewEntity(new Sensor('d6t-sensor', 'D6T Sensor'));
 
-      expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject(
+      expect(JSON.parse(mockMqttClient.publish.mock.calls[1][1])).toMatchObject(
         {
           device: {
             identifiers: 'abcd',
@@ -423,7 +427,7 @@ describe('HomeAssistantService', () => {
       await service.onModuleInit();
       service.handleNewEntity(new Sensor('grideye-sensor', 'GridEYE Sensor'));
 
-      expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject(
+      expect(JSON.parse(mockMqttClient.publish.mock.calls[1][1])).toMatchObject(
         {
           device: {
             identifiers: 'test-instance',
@@ -447,7 +451,7 @@ describe('HomeAssistantService', () => {
         },
       ]);
 
-      expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject(
+      expect(JSON.parse(mockMqttClient.publish.mock.calls[1][1])).toMatchObject(
         {
           unit_of_measurement: 'm',
           icon: 'mdi:distance',
@@ -459,14 +463,14 @@ describe('HomeAssistantService', () => {
       await service.onModuleInit();
       service.handleNewEntity(new Sensor('test-sensor', 'Test Sensor'));
 
-      const configMsg = JSON.parse(mockMqttClient.publish.mock.calls[0][1]);
-      expect(configMsg).not.toMatchObject({
-        component: 'sensor',
-      });
-      expect(configMsg).not.toMatchObject({
-        config_topic:
-          'homeassistant/sensor/room-assistant/test-instance-test-sensor/config',
-      });
+      const configMsg = JSON.parse(mockMqttClient.publish.mock.calls[1][1]);
+      const configKeys = Object.keys(configMsg);
+      expect(configKeys).not.toContain('component');
+      expect(configKeys).not.toContain('config_topic');
+      expect(configKeys).not.toContain('distributed');
+      expect(configKeys).not.toContain('stateLocked');
+      expect(configKeys).not.toContain('_instanceStatusTopic');
+      expect(configKeys).not.toContain('_entityStatusTopic');
     });
 
     it('should warn when the entity type cannot be matched for Home Assistant', () => {
@@ -480,6 +484,252 @@ describe('HomeAssistantService', () => {
         expect.stringContaining('test-instance-fictitious'),
         expect.anything(),
         expect.anything()
+      );
+    });
+  });
+
+  describe('Availability', () => {
+    it('should send an instance online status on startup', async () => {
+      await service.onModuleInit();
+
+      expect(
+        mockMqttClient.publish
+      ).toHaveBeenCalledWith('room-assistant/status/test-instance', 'online', {
+        qos: 1,
+      });
+    });
+
+    it('should configure a last will message', async () => {
+      await service.onModuleInit();
+
+      expect(mockMqtt.connectAsync).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          will: {
+            topic: 'room-assistant/status/test-instance',
+            payload: 'offline',
+            retain: false,
+            qos: 1,
+            properties: {
+              willDelayInterval: 60,
+            },
+          },
+        }),
+        expect.anything()
+      );
+    });
+
+    it.each([
+      ['sensor', new Sensor('test', 'Test')],
+      ['binary_sensor', new BinarySensor('test', 'Test')],
+      ['device_tracker', new DeviceTracker('test', 'Test')],
+      ['switch', new Switch('test', 'Test')],
+      ['camera', new Camera('test', 'Test')],
+    ])(
+      'should send an entity status when a %s is added',
+      async (component: string, entity: Entity) => {
+        await service.onModuleInit();
+        service.handleNewEntity(entity);
+
+        expect(mockMqttClient.publish).toHaveBeenCalledWith(
+          `room-assistant/${component}/test-instance-${entity.id}/status`,
+          'online'
+        );
+      }
+    );
+
+    it('should send an instance status message as heartbeat', async () => {
+      await service.onModuleInit();
+      mockMqttClient.publish.mockClear();
+
+      service.sendHeartbeats();
+
+      expect(
+        mockMqttClient.publish
+      ).toHaveBeenCalledWith('room-assistant/status/test-instance', 'online', {
+        qos: 1,
+      });
+    });
+
+    it('should send entity status messages as heartbeat', async () => {
+      await service.onModuleInit();
+      service.handleNewEntity(new Sensor('test1', 'Test 1'));
+      service.handleNewEntity(new Sensor('test2', 'Test 2'));
+      mockMqttClient.publish.mockClear();
+
+      service.sendHeartbeats();
+
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        'room-assistant/sensor/test-instance-test1/status',
+        'online'
+      );
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        'room-assistant/sensor/test-instance-test2/status',
+        'online'
+      );
+    });
+
+    it('should not send heartbeat entity status message for state unlocked entity', async () => {
+      await service.onModuleInit();
+      service.handleNewEntity(new Sensor('test1', 'Test 1', true, false));
+      mockMqttClient.publish.mockClear();
+
+      service.sendHeartbeats();
+
+      expect(mockMqttClient.publish).toHaveBeenCalledTimes(1); // only instance heartbeat
+    });
+
+    it('should send heartbeats on broker reconnect', async () => {
+      const mqttEmitter = new EventEmitter();
+      mockMqttClient.on.mockImplementation((event, callback) => {
+        mqttEmitter.on(event, callback);
+      });
+      await service.onModuleInit();
+      mockMqttClient.publish.mockClear();
+
+      mqttEmitter.emit('connect');
+
+      expect(
+        mockMqttClient.publish
+      ).toHaveBeenCalledWith('room-assistant/status/test-instance', 'online', {
+        qos: 1,
+      });
+    });
+
+    it('should update availability topics of distributed entities if instance is elected as new leader', async () => {
+      clusterService.leader.mockReturnValue({ id: 'old-leader' });
+
+      await service.onModuleInit();
+      service.handleNewEntity(new Sensor('test', 'Test', true));
+      mockMqttClient.publish.mockClear();
+
+      clusterService.leader.mockReturnValue({ id: 'new-leader' });
+      clusterService.isLeader.mockReturnValue(true);
+
+      clusterService.emit('elected', { id: 'new-leader' });
+
+      expect(
+        mockMqttClient.publish
+      ).toHaveBeenCalledWith(
+        'homeassistant/sensor/room-assistant/test/config',
+        expect.any(String),
+        { qos: 0, retain: true }
+      );
+      expect(JSON.parse(mockMqttClient.publish.mock.calls[0][1])).toMatchObject(
+        {
+          availability: expect.arrayContaining([
+            expect.objectContaining({
+              topic: 'room-assistant/sensor/test/status',
+            }),
+            expect.objectContaining({
+              topic: 'room-assistant/status/new-leader',
+            }),
+          ]),
+        }
+      );
+    });
+
+    it('should not update availability topics of local entities if instance is elected as new leader', async () => {
+      clusterService.leader.mockReturnValue({ id: 'old-leader' });
+
+      await service.onModuleInit();
+      service.handleNewEntity(new Sensor('test', 'Test'));
+      mockMqttClient.publish.mockClear();
+
+      clusterService.leader.mockReturnValue({ id: 'new-leader' });
+      clusterService.isLeader.mockReturnValue(true);
+
+      clusterService.emit('elected', { id: 'new-leader' });
+
+      expect(mockMqttClient.publish).not.toHaveBeenCalled();
+    });
+
+    it('should not update availability topics of distributed state-unlocked entities if instance is elected as new leader', async () => {
+      clusterService.leader.mockReturnValue({ id: 'old-leader' });
+
+      await service.onModuleInit();
+      service.handleNewEntity(new Sensor('test', 'Test', true, false));
+      mockMqttClient.publish.mockClear();
+
+      clusterService.leader.mockReturnValue({ id: 'new-leader' });
+      clusterService.isLeader.mockReturnValue(true);
+
+      clusterService.emit('elected', { id: 'new-leader' });
+
+      expect(mockMqttClient.publish).not.toHaveBeenCalled();
+    });
+
+    it('should send an instance offline status on shutdown', async () => {
+      await service.onModuleInit();
+      mockMqttClient.publish.mockClear();
+
+      await service.onApplicationShutdown();
+
+      expect(
+        mockMqttClient.publish
+      ).toHaveBeenCalledWith('room-assistant/status/test-instance', 'offline', {
+        qos: 1,
+      });
+    });
+
+    it('should send offline messages for local entities on shutdown', async () => {
+      await service.onModuleInit();
+      service.handleNewEntity(new Sensor('test', 'Test'));
+      service.handleNewEntity(new Sensor('test2', 'Test 2'));
+      mockMqttClient.publish.mockClear();
+
+      await service.onApplicationShutdown();
+
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        'room-assistant/sensor/test-instance-test/status',
+        'offline'
+      );
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        'room-assistant/sensor/test-instance-test2/status',
+        'offline'
+      );
+    });
+
+    it('should send offline messages for distributed entities if the leader', async () => {
+      clusterService.isLeader.mockReturnValue(true);
+
+      await service.onModuleInit();
+      service.handleNewEntity(new Sensor('test-sensor', 'Dist', true));
+      mockMqttClient.publish.mockClear();
+
+      await service.onApplicationShutdown();
+
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        'room-assistant/sensor/test-sensor/status',
+        'offline'
+      );
+    });
+
+    it('should not send offline messages for distributed entities if not the leader', async () => {
+      clusterService.isLeader.mockReturnValue(false);
+
+      await service.onModuleInit();
+      service.handleNewEntity(new Sensor('test-sensor', 'Dist', true));
+      mockMqttClient.publish.mockClear();
+
+      await service.onApplicationShutdown();
+
+      expect(mockMqttClient.publish).not.toHaveBeenCalledWith(
+        'room-assistant/sensor/test-sensor/status',
+        'offline'
+      );
+    });
+
+    it('should not send offline messages for distributed entities with an unlocked state', async () => {
+      await service.onModuleInit();
+      service.handleNewEntity(new Sensor('test-sensor', 'Dist', true, false));
+      mockMqttClient.publish.mockClear();
+
+      await service.onApplicationShutdown();
+
+      expect(mockMqttClient.publish).not.toHaveBeenCalledWith(
+        'room-assistant/sensor/test-sensor/status',
+        'offline'
       );
     });
   });

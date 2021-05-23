@@ -5,13 +5,20 @@ import { EntitiesModule } from '../../entities/entities.module';
 import { StatusModule } from '../../status/status.module';
 import { HomeAssistantHealthIndicator } from './home-assistant.health';
 import { ClusterModule } from '../../cluster/cluster.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({})
 export default class HomeAssistantModule {
   static forRoot(): DynamicModule {
     return {
       module: HomeAssistantModule,
-      imports: [ConfigModule, EntitiesModule, ClusterModule, StatusModule],
+      imports: [
+        ConfigModule,
+        EntitiesModule,
+        ClusterModule,
+        StatusModule,
+        ScheduleModule.forRoot(),
+      ],
       providers: [HomeAssistantService, HomeAssistantHealthIndicator],
     };
   }
