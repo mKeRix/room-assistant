@@ -67,6 +67,8 @@ if (config.loki.enabled) {
           lokiFormatter(),
           winston.format.printf((info) => `${info.message}`)
         ),
+        gracefulShutdown: false,
+        clearOnError: true,
       })
     );
   } catch (e) {
