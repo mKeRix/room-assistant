@@ -44,6 +44,12 @@ If you are unsure what ID your device has you can start room-assistant with the 
 
 ## Tracking iOS Devices
 
+::: tip
+
+To use all features that the app offers you should be running room-assistant **v2.17.0** or higher.
+
+:::
+
 You can track iOS devices (iPhones, iPads) with this integration using our companion app. You will need to install the app, open it, grant the requested permissions and then follow the on-screen instructions.
 
 [![Download on the App Store](./app-store-badge.svg)](https://apps.apple.com/us/app/room-assistant/id1538642237?itsct=apps_box_link&itscg=30200)
