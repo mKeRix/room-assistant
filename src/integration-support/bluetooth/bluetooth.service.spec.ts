@@ -22,10 +22,6 @@ const mockBleno = mocked(bleno);
 
 describe('BluetoothService', () => {
   let service: BluetoothService;
-  const healthIndicator = {
-    reportError: jest.fn(),
-    reportSuccess: jest.fn(),
-  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -40,10 +36,7 @@ describe('BluetoothService', () => {
           help: 'help',
         }),
       ],
-    })
-      .overrideProvider(BluetoothHealthIndicator)
-      .useValue(healthIndicator)
-      .compile();
+    }).compile();
     service = module.get<BluetoothService>(BluetoothService);
   });
 
@@ -210,31 +203,36 @@ Requesting information ...
       });
     });
 
-    it('should report success to the health indicator when queries are successful', async () => {
-      mockExec.mockResolvedValue({ stdout: 'RSSI return value: -4' });
+    it('should reset occurred error count when queries are successful', async () => {
+      mockExec
+        .mockRejectedValueOnce({ message: 'critical error' })
+        .mockResolvedValue({ stdout: 'RSSI return value: -4' });
+      await service.inquireClassicRssi(0, '');
       await service.inquireClassicRssi(0, '');
 
-      expect(healthIndicator.reportSuccess).toHaveBeenCalledTimes(1);
+      expect(service.successiveErrorsOccurred).toBe(0);
     });
 
-    it('should report an error to the health indicator when queries are unsuccessful', async () => {
+    it('should add to occurred error count when queries are unsuccessful', async () => {
       mockExec.mockRejectedValue({ message: 'critical error' });
       await service.inquireClassicRssi(0, '');
 
-      expect(healthIndicator.reportError).toHaveBeenCalledTimes(1);
+      expect(service.successiveErrorsOccurred).toBe(1);
     });
 
-    it('should not report anything to the health indicator if the device was not reachable', async () => {
-      mockExec.mockRejectedValue({
-        message: 'Could not connect: Input/output error',
-      });
+    it('should not change the occurred error count if the device was not reachable', async () => {
+      mockExec
+        .mockRejectedValueOnce({ message: 'critical error' })
+        .mockRejectedValue({
+          message: 'Could not connect: Input/output error',
+        });
+      await service.inquireClassicRssi(0, '');
       await service.inquireClassicRssi(0, '');
 
-      expect(healthIndicator.reportSuccess).not.toHaveBeenCalled();
-      expect(healthIndicator.reportError).not.toHaveBeenCalled();
+      expect(service.successiveErrorsOccurred).toBe(1);
     });
 
-    it('should not report an error if the scan was stopped due to low time limits', async () => {
+    it('should not add to the occurred error count if the scan was stopped due to low time limits', async () => {
       mockExec
         .mockRejectedValueOnce({
           message: 'killed',
@@ -243,7 +241,7 @@ Requesting information ...
         .mockResolvedValue({});
       await service.inquireClassicRssi(0, '');
 
-      expect(healthIndicator.reportError).not.toHaveBeenCalled();
+      expect(service.successiveErrorsOccurred).toBe(0);
     });
   });
 

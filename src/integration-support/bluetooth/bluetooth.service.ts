@@ -1,8 +1,7 @@
-import { Injectable, Logger, OnApplicationShutdown } from "@nestjs/common";
+import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
 import noble, { Peripheral } from '@mkerix/noble';
 import util from 'util';
 import { exec } from 'child_process';
-import { BluetoothHealthIndicator } from './bluetooth.health';
 import { BluetoothClassicConfig } from '../../integrations/bluetooth-classic/bluetooth-classic.config';
 import { ConfigService } from '../../config/config.service';
 import { Device } from '../../integrations/bluetooth-classic/device';
@@ -11,12 +10,12 @@ import { Interval } from '@nestjs/schedule';
 import _ from 'lodash';
 import { Counter } from 'prom-client';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import bleno from "bleno";
+import bleno from 'bleno';
 
 const RSSI_REGEX = new RegExp(/-?[0-9]+/);
 const INQUIRY_LOCK_TIMEOUT = 30 * 1000;
 const SCAN_NO_PERIPHERAL_TIMEOUT = 30 * 1000;
-const IBEACON_UUID = 'D1338ACE-002D-44AF-88D1-E57C12484966'
+const IBEACON_UUID = 'D1338ACE-002D-44AF-88D1-E57C12484966';
 
 const execPromise = util.promisify(exec);
 
@@ -44,12 +43,12 @@ export class BluetoothService implements OnApplicationShutdown {
   private readonly classicConfig: BluetoothClassicConfig;
   private readonly adapters = new BluetoothAdapterMap();
   private _lowEnergyAdapterId: number;
+  private _successiveErrorsOccurred = 0;
   private lastLowEnergyDiscovery: Date;
   private scanStartedAt?: Date;
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly healthIndicator: BluetoothHealthIndicator,
     @InjectMetric('bluetooth_le_advertisements_received_count')
     private readonly advertisementReceivedCounter: Counter<string>
   ) {
@@ -61,7 +60,7 @@ export class BluetoothService implements OnApplicationShutdown {
    * scan state started if no discovery was made yet.
    * Returns null if the time is unknown.
    */
-  private get timeSinceLastDiscovery(): number | null {
+  get timeSinceLastDiscovery(): number | null {
     if (
       this._lowEnergyAdapterId == null ||
       !['inactive', 'scan'].includes(
@@ -87,11 +86,21 @@ export class BluetoothService implements OnApplicationShutdown {
   }
 
   /**
+   * Returns the current number of successive BT Classic errors.
+   */
+  get successiveErrorsOccurred(): number {
+    return this._successiveErrorsOccurred;
+  }
+
+  /**
    * Application hook, called when the application shuts down.
    */
   onApplicationShutdown(): void {
-    if (this._lowEnergyAdapterId != null && this.adapters.getState(this._lowEnergyAdapterId) != 'inquiry') {
-      noble.stopScanning()
+    if (
+      this._lowEnergyAdapterId != null &&
+      this.adapters.getState(this._lowEnergyAdapterId) != 'inquiry'
+    ) {
+      noble.stopScanning();
       bleno.stopAdvertising();
     }
   }
@@ -199,7 +208,7 @@ export class BluetoothService implements OnApplicationShutdown {
       );
       const matches = output.stdout.match(RSSI_REGEX);
 
-      this.healthIndicator.reportSuccess();
+      this._successiveErrorsOccurred = 0;
 
       return matches?.length > 0 ? parseInt(matches[0], 10) : undefined;
     } catch (e) {
@@ -215,7 +224,7 @@ export class BluetoothService implements OnApplicationShutdown {
         this.logger.debug(e.message);
       } else {
         this.logger.error(`Inquiring RSSI via BT Classic failed: ${e.message}`);
-        this.healthIndicator.reportError();
+        this._successiveErrorsOccurred++;
       }
 
       return undefined;
@@ -428,9 +437,12 @@ export class BluetoothService implements OnApplicationShutdown {
       this.logger.warn(message);
     });
 
-    bleno.on('stateChange', this.handleAdvertisingAdapterStateChange.bind(this))
-    bleno.on('advertisingStart', this.handleAdvertisingStart.bind(this))
-    bleno.on('advertisingStop', this.handleAdvertisingStop.bind(this))
+    bleno.on(
+      'stateChange',
+      this.handleAdvertisingAdapterStateChange.bind(this)
+    );
+    bleno.on('advertisingStart', this.handleAdvertisingStart.bind(this));
+    bleno.on('advertisingStop', this.handleAdvertisingStop.bind(this));
   }
 
   /**
@@ -466,9 +478,12 @@ export class BluetoothService implements OnApplicationShutdown {
    */
   private handleAdvertisingStart(e?: Error): void {
     if (e) {
-      this.logger.error(`Failed to start advertising instance via BLE: ${e.message}`, e.stack)
+      this.logger.error(
+        `Failed to start advertising instance via BLE: ${e.message}`,
+        e.stack
+      );
     } else {
-      this.logger.debug('Started advertising instance via BLE')
+      this.logger.debug('Started advertising instance via BLE');
     }
   }
 
@@ -476,7 +491,7 @@ export class BluetoothService implements OnApplicationShutdown {
    * Callback that is executed when BLE advertising is stopped.
    */
   private handleAdvertisingStop(): void {
-    this.logger.debug('Stopped advertising instance via BLE')
+    this.logger.debug('Stopped advertising instance via BLE');
   }
 
   /**
@@ -545,7 +560,12 @@ export class BluetoothService implements OnApplicationShutdown {
     const config = this.configService.get('bluetoothLowEnergy');
 
     if (config.instanceBeaconEnabled && bleno.state === 'poweredOn') {
-      bleno.startAdvertisingIBeacon(IBEACON_UUID, config.instanceBeaconMajor, config.instanceBeaconMinor, -59)
+      bleno.startAdvertisingIBeacon(
+        IBEACON_UUID,
+        config.instanceBeaconMajor,
+        config.instanceBeaconMinor,
+        -59
+      );
     }
   }
 
