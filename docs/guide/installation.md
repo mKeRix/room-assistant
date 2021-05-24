@@ -17,10 +17,10 @@ Dedicated or resource-limited computers, like Raspberry Pis.  Has least overhead
 Please make sure you have either NodeJS 14.x or NodeJS 12.x installed. The version provided by Raspbian by default is outdated.
 Installation guides for NodeJS can be found [here](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions). For Pi Zero devices you will need to use a [different installation process](./quickstart-pi-zero-w.md#installing-room-assistant).
 
-room-assistant instances discover each other in the local network using mDNS. You will require two additional system packages to get this working:
+room-assistant instances use some native dependencies for discovering each other in the local network using mDNS and providing health checks for systemd. You will require two additional system packages to get this working:
 
 ```shell script
-sudo apt-get install libavahi-compat-libdnssd-dev
+sudo apt-get install libavahi-compat-libdnssd-dev libsystemd-dev
 ```
 
 Note that some of the integrations may also require system packages to be installed, please look at the documentation of the integrations you want to use for this information.
@@ -53,10 +53,14 @@ To make sure room-assistant always runs on your machine you can create a system 
 Description=room-assistant service
 
 [Service]
+Type=notify
 ExecStart=/usr/local/bin/room-assistant
 WorkingDirectory=/home/pi/room-assistant
+TimeoutStartSec=120
+TimeoutStopSec=30
 Restart=always
 RestartSec=10
+WatchdogSec=60
 User=pi
 
 [Install]

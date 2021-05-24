@@ -1,19 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
-import {
-  HealthCheck,
-  HealthCheckResult,
-  HealthCheckService,
-} from '@nestjs/terminus';
+import { HealthCheck, HealthCheckResult } from '@nestjs/terminus';
 import { HealthIndicatorService } from './health-indicator.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('status')
 @Controller('status')
 export class StatusController {
-  constructor(
-    private health: HealthCheckService,
-    private healthIndicatorService: HealthIndicatorService
-  ) {}
+  constructor(private healthIndicatorService: HealthIndicatorService) {}
 
   @Get()
   @ApiOperation({
@@ -21,6 +14,6 @@ export class StatusController {
   })
   @HealthCheck()
   check(): Promise<HealthCheckResult> {
-    return this.health.check(this.healthIndicatorService.getIndicators());
+    return this.healthIndicatorService.check();
   }
 }

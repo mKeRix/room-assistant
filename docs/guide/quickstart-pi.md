@@ -34,7 +34,7 @@ This page will guide you through setting up a Raspberry Pi 3 or 4 to run room-as
    sudo apt-get install -y nodejs
    ```
 
-2. We need to install some other dependencies as well, do so by running `sudo apt-get update && sudo apt-get install build-essential libavahi-compat-libdnssd-dev bluetooth libbluetooth-dev libudev-dev libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev`.
+2. We need to install some other dependencies as well, do so by running `sudo apt-get update && sudo apt-get install build-essential libavahi-compat-libdnssd-dev libsystemd-dev bluetooth libbluetooth-dev libudev-dev libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev`.
 
 3. Now let's get install room-assistant! Run `sudo npm i --global --unsafe-perm room-assistant`. You will see messages like the one shown below during the installation process. Don't worry about them - they're not errors!
 
@@ -91,10 +91,14 @@ When starting room-assistant you will see warnings about the Apple Bonjour compa
    Description=room-assistant service
    
    [Service]
+   Type=notify
    ExecStart=/usr/bin/room-assistant
    WorkingDirectory=/home/pi/room-assistant
+   TimeoutStartSec=120
+   TimeoutStopSec=30
    Restart=always
    RestartSec=10
+   WatchdogSec=60
    User=pi
    
    [Install]

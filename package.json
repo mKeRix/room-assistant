@@ -123,7 +123,8 @@
     "canvas": "^2.8.0",
     "i2c-bus": "^5.1.0",
     "mdns": "^2.5.1",
-    "onoff": "^6.0.0"
+    "onoff": "^6.0.0",
+    "sd-notify": "^2.8.0"
   },
   "peerDependencies": {
     "winston-elasticsearch": "^0.15.4",

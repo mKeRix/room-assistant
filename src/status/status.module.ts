@@ -6,9 +6,16 @@ import { ConfigModule } from '../config/config.module';
 import { StatusController } from './status.controller';
 import { TerminusModule } from '@nestjs/terminus';
 import { HealthIndicatorService } from './health-indicator.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [ClusterModule, EntitiesModule, ConfigModule, TerminusModule],
+  imports: [
+    ClusterModule,
+    EntitiesModule,
+    ConfigModule,
+    ScheduleModule.forRoot(),
+    TerminusModule,
+  ],
   providers: [StatusService, HealthIndicatorService],
   controllers: [StatusController],
   exports: [HealthIndicatorService],
