@@ -3,20 +3,22 @@ import * as math from 'mathjs';
 import { Cluster } from './cluster';
 import * as _ from 'lodash';
 import { HeatmapOptions } from './thermopile-occupancy.config';
-import { make, registerFont, encodeJPEGToStream } from 'pureimage';
-import { WritableStreamBuffer } from 'stream-buffers';
-import * as path from 'path';
 import { rotate } from '2d-array-rotation';
+import { Logger } from '@nestjs/common';
+import type { createCanvas, Canvas, CanvasRenderingContext2D } from 'canvas';
 
 export type RotationOption = 0 | 90 | 180 | 270;
 
-const OPEN_SANS = registerFont(
-  path.resolve(__dirname, 'OpenSans-Regular.ttf'),
-  'Open Sans',
-  400,
-  'normal'
-);
-OPEN_SANS.loadSync();
+let nodeCanvas: { createCanvas: typeof createCanvas };
+try {
+  nodeCanvas = require('canvas');
+} catch (e) {
+  Logger.debug(
+    `Could not load canvas: ${e.message}`,
+    'ThermopileOccupancyService'
+  );
+  nodeCanvas = undefined;
+}
 
 export abstract class ThermopileOccupancyService {
   /**
@@ -92,6 +94,15 @@ export abstract class ThermopileOccupancyService {
   }
 
   /**
+   * Checks if a heatmap can be generated.
+   *
+   * @returns Whether dependencies for generation are met or not
+   */
+  isHeatmapAvailable(): boolean {
+    return nodeCanvas !== undefined;
+  }
+
+  /**
    * Generates a blue to red heatmap image of the given temperatures.
    *
    * @param temperatures - Matrix of temperatures to be visualized
@@ -106,11 +117,17 @@ export abstract class ThermopileOccupancyService {
     width = 280,
     height = 280
   ): Promise<Buffer> {
+    if (!this.isHeatmapAvailable()) {
+      throw new Error(
+        'Generating a heatmap requires the canvas optional dependency'
+      );
+    }
+
     const segmentHeight = Math.round(height / temperatures.length);
     const segmentWidth = Math.round(width / temperatures[0].length);
-    const canvas = [90, 270].includes(options.rotation)
-      ? make(height, width)
-      : make(width, height);
+    const canvas: Canvas = [90, 270].includes(options.rotation)
+      ? nodeCanvas.createCanvas(height, width)
+      : nodeCanvas.createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
     let normed = math.divide(
@@ -148,10 +165,7 @@ export abstract class ThermopileOccupancyService {
       }
     }
 
-    const outputBuffer = new WritableStreamBuffer();
-    await encodeJPEGToStream(canvas, outputBuffer, 100);
-
-    return outputBuffer.getContents();
+    return canvas.toBuffer('image/png');
   }
 
   /**
@@ -172,9 +186,8 @@ export abstract class ThermopileOccupancyService {
     height: number,
     normedValue: number
   ): void {
-    const h = (1 - _.clamp(normedValue, 0, 1)) * 0.66;
-    const rgb = this.hslToRgb(h, 1, 0.5);
-    ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+    const h = (1 - _.clamp(normedValue, 0, 1)) * 240;
+    ctx.fillStyle = `hsl(${h}, 100%, 50%)`;
     ctx.fillRect(xOrigin, yOrigin, width, height);
   }
 
@@ -195,46 +208,12 @@ export abstract class ThermopileOccupancyService {
     temperature: number
   ): void {
     ctx.save();
-    ctx.font = `${Math.round(width / 2.7)}px 'Open Sans'`;
+    ctx.font = `${Math.round(width / 2.7)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = 'black';
     ctx.translate(xCenter, yCenter);
     ctx.fillText(temperature.toFixed(1), 0, 0);
     ctx.restore();
-  }
-
-  /**
-   * Converts an HSL color value to RGB.
-   * Taken from https://gist.github.com/mjackson/5311256.
-   *
-   * @param h - Hue between 0 and 1
-   * @param s - Saturation between 0 and 1
-   * @param l - Lightness between 0 and 1
-   * @returns RGB representation as array with 3 elements
-   */
-  private static hslToRgb(h: number, s: number, l: number): number[] {
-    let r, g, b;
-
-    if (s == 0) {
-      r = g = b = l; // achromatic
-    } else {
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      r = this.hueToRgb(p, q, h + 1 / 3);
-      g = this.hueToRgb(p, q, h);
-      b = this.hueToRgb(p, q, h - 1 / 3);
-    }
-
-    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-  }
-
-  private static hueToRgb(p: number, q: number, t: number): number {
-    if (t < 0) t += 1;
-    if (t > 1) t -= 1;
-    if (t < 1 / 6) return p + (q - p) * 6 * t;
-    if (t < 1 / 2) return q;
-    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-    return p;
   }
 }

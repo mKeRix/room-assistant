@@ -16,6 +16,7 @@ import { ConfigService } from '../../config/config.service';
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { Camera } from '../../entities/camera';
+import { Mutex } from 'async-mutex';
 
 const TEMPERATURE_REGISTER_START = 0x80;
 const FRAMERATE_REGISTER = 0x02;
@@ -29,6 +30,7 @@ export class GridEyeService
   private i2cBus: PromisifiedBus;
   private sensor: Entity;
   private camera: Camera;
+  private readonly heatmapMutex = new Mutex();
 
   constructor(
     private readonly entitiesService: EntitiesService,
@@ -50,7 +52,13 @@ export class GridEyeService
     this.sensor = this.createSensor();
 
     if (this.config.heatmap.enabled) {
-      this.camera = this.createHeatmapCamera();
+      if (this.isHeatmapAvailable()) {
+        this.camera = this.createHeatmapCamera();
+      } else {
+        this.logger.error(
+          "Heatmaps cannot be rendered since the required dependencies aren't available. More info: https://www.room-assistant.io/integrations/grid-eye.html#requirements"
+        );
+      }
     }
   }
 
@@ -76,11 +84,13 @@ export class GridEyeService
     this.sensor.state = coordinates.length;
     this.sensor.attributes.coordinates = coordinates;
 
-    if (this.config.heatmap.enabled) {
-      this.camera.state = await this.generateHeatmap(
-        temperatures,
-        this.config.heatmap
-      );
+    if (this.camera != undefined && !this.heatmapMutex.isLocked()) {
+      await this.heatmapMutex.runExclusive(async () => {
+        this.camera.state = await this.generateHeatmap(
+          temperatures,
+          this.config.heatmap
+        );
+      });
     }
   }
 

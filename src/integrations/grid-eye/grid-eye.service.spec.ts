@@ -73,10 +73,25 @@ describe('GridEyeService', () => {
     );
   });
 
-  it('should register a new camera on bootstrap', async () => {
+  it('should register a new camera on bootstrap if available', async () => {
+    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(true);
+
     await service.onApplicationBootstrap();
 
     expect(entitiesService.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'grideye_heatmap',
+        name: 'GridEYE Heatmap',
+      })
+    );
+  });
+
+  it('should not register a new camera on bootstrap if dependency is missing', async () => {
+    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(false);
+
+    await service.onApplicationBootstrap();
+
+    expect(entitiesService.add).not.toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'grideye_heatmap',
         name: 'GridEYE Heatmap',
@@ -117,17 +132,46 @@ describe('GridEyeService', () => {
 
   it('should update the camera entity with the generated heatmap', async () => {
     entitiesService.add.mockImplementation((entity) => entity);
+    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(true);
     jest.spyOn(service, 'getCoordinates').mockResolvedValue([
       [1, 2],
       [8, 6],
     ]);
 
-    const imageData = new Buffer('abc');
+    const imageData = Buffer.from('abc');
     jest.spyOn(service, 'generateHeatmap').mockResolvedValue(imageData);
 
     await service.onApplicationBootstrap();
     await service.updateState();
     expect(entitiesService.add.mock.calls[1][0].state).toBe(imageData);
+  });
+
+  it('should limit heatmap rendering to one at a time', async () => {
+    entitiesService.add.mockImplementation((entity) => entity);
+    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(true);
+    jest.spyOn(service, 'getCoordinates').mockResolvedValue([
+      [1, 2],
+      [8, 6],
+    ]);
+
+    const imageData1 = Buffer.from('abc');
+    const imageData2 = Buffer.from('def');
+
+    let heatmapResolve;
+    const heatmapPromise = new Promise<Buffer>((r) => (heatmapResolve = r));
+    const heatmapSpy = jest
+      .spyOn(service, 'generateHeatmap')
+      .mockReturnValueOnce(heatmapPromise)
+      .mockResolvedValue(imageData2);
+
+    await service.onApplicationBootstrap();
+    service.updateState(); // long running call for imageData1
+    await service.updateState(); // second call that should not trigger heatmap generation
+
+    await heatmapResolve(imageData1);
+
+    expect(entitiesService.add.mock.calls[1][0].state).toBe(imageData1);
+    expect(heatmapSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should get the temperatures of all 64 pixels', async () => {

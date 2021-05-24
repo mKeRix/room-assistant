@@ -18,7 +18,14 @@ This integration only supports the D6T-44L-06 sensor at the moment. You will nee
 
 ### Running with NodeJS
 
-On Raspberry Pi devices the I<sup>2</sup>C interface needs to be enabled using `sudo raspi-config` and then enabling the I<sup>2</sup>C option under Advanced Options.
+To enable heatmap generation you may be required to install some [additional system packages](https://github.com/Automattic/node-canvas#compiling) for compilation:
+
+```shell
+sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+sudo npm i --global --unsafe-perm room-assistant
+```
+
+On Raspberry Pi devices the I<sup>2</sup>C interface also needs to be enabled using `sudo raspi-config` and then enabling the I<sup>2</sup>C option under Advanced Options.
 
 ### Running with Docker
 

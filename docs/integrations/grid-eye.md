@@ -12,7 +12,14 @@ The sensor needs to be connected to the I<sup>2</sup>C pins on your machine.
 
 ### Running with NodeJS
 
-For Raspberry Pi devices the I<sup>2</sup>C interface needs to be enabled using `sudo raspi-config` and then enabling the I<sup>2</sup>C option under Advanced Options.
+To enable heatmap generation you may be required to install some [additional system packages](https://github.com/Automattic/node-canvas#compiling) for compilation:
+
+```shell
+sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+sudo npm i --global --unsafe-perm room-assistant
+```
+
+For Raspberry Pi devices the I<sup>2</sup>C interface also needs to be enabled using `sudo raspi-config` and then enabling the I<sup>2</sup>C option under Advanced Options.
 
 ### Running with Docker
 

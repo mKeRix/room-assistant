@@ -2,7 +2,6 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "plugins": ["@nestjs/swagger/plugin"],
-    "assets": ["**/*.ttf"]
+    "plugins": ["@nestjs/swagger/plugin"]
   }
 }

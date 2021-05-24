@@ -16,6 +16,7 @@ import { I2CError } from './i2c.error';
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { ThermopileOccupancyService } from '../../integration-support/thermopile/thermopile-occupancy.service';
 import { Camera } from '../../entities/camera';
+import { Mutex } from 'async-mutex';
 
 const TEMPERATURE_COMMAND = 0x4c;
 
@@ -27,6 +28,7 @@ export class OmronD6tService
   private i2cBus: PromisifiedBus;
   private sensor: Entity;
   private camera: Camera;
+  private readonly heatmapMutex = new Mutex();
   private readonly logger: Logger;
 
   constructor(
@@ -47,7 +49,13 @@ export class OmronD6tService
     this.sensor = this.createSensor();
 
     if (this.config.heatmap.enabled) {
-      this.camera = this.createHeatmapCamera();
+      if (this.isHeatmapAvailable()) {
+        this.camera = this.createHeatmapCamera();
+      } else {
+        this.logger.error(
+          "Heatmaps cannot be rendered since the required dependencies aren't available. More info: https://www.room-assistant.io/integrations/omron-d6t.html#requirements"
+        );
+      }
     }
   }
 
@@ -74,11 +82,13 @@ export class OmronD6tService
       this.sensor.state = coordinates.length;
       this.sensor.attributes.coordinates = coordinates;
 
-      if (this.config.heatmap.enabled) {
-        this.camera.state = await this.generateHeatmap(
-          temperatures,
-          this.config.heatmap
-        );
+      if (this.camera != undefined && !this.heatmapMutex.isLocked()) {
+        await this.heatmapMutex.runExclusive(async () => {
+          this.camera.state = await this.generateHeatmap(
+            temperatures,
+            this.config.heatmap
+          );
+        });
       }
     } catch (e) {
       if (e instanceof I2CError) {

@@ -1,12 +1,8 @@
 import { ThermopileOccupancyService } from './thermopile-occupancy.service';
 import { Pixel } from './pixel';
 import { HeatmapOptions } from './thermopile-occupancy.config';
-import * as pureimage from 'pureimage';
-
-jest.mock('pureimage', () => ({
-  __esModule: true,
-  ...jest.requireActual('pureimage'),
-}));
+import { mocked } from 'ts-jest/utils';
+import NodeCanvas from 'canvas';
 
 class MockThermopileOccupancyService extends ThermopileOccupancyService {
   async getPixelTemperatures(): Promise<number[][]> {
@@ -27,19 +23,14 @@ const ABSENCE_TEMPERATURES = [
   [21.0, 20.8, 20.8, 21.5],
 ];
 
+const mockedNodeCanvas = mocked(NodeCanvas);
+
 describe('ThermopileOccupancyService', () => {
   let service: MockThermopileOccupancyService;
-  let testBitmap;
-  let testContext;
 
   beforeEach(async () => {
     jest.clearAllMocks();
     service = new MockThermopileOccupancyService();
-
-    testBitmap = pureimage.make(150, 150);
-    testContext = testBitmap.getContext('2d');
-    jest.spyOn(testBitmap, 'getContext').mockReturnValue(testContext);
-    jest.spyOn(pureimage, 'make').mockReturnValue(testBitmap);
   });
 
   it('should find all pixels that are above the delta threshold', () => {
@@ -86,27 +77,32 @@ describe('ThermopileOccupancyService', () => {
     expect(coordinates).toHaveLength(0);
   });
 
-  it('should choose canvas size based on parameters', async () => {
-    const makeSpy = jest.spyOn(pureimage, 'make');
+  it('should throw an error when trying to generate a heatmap without the dependencies', async () => {
+    jest.spyOn(service, 'isHeatmapAvailable').mockReturnValue(false);
 
+    await expect(
+      service.generateHeatmap(PRESENCE_TEMPERATURES)
+    ).rejects.toThrowError(Error);
+  });
+
+  it('should choose canvas size based on parameters', async () => {
     await service.generateHeatmap(PRESENCE_TEMPERATURES, undefined, 250, 250);
 
-    expect(makeSpy).toHaveBeenCalledWith(250, 250);
+    expect(mockedNodeCanvas.createCanvas).toHaveBeenCalledWith(250, 250);
   });
 
   it('should create rectangles with fonts for each pixel', async () => {
-    const translateSpy = jest.spyOn(testContext, 'translate');
-    const rectSpy = jest.spyOn(testContext, 'fillRect');
-    const textSpy = jest.spyOn(testContext, 'fillText');
-
     await service.generateHeatmap(PRESENCE_TEMPERATURES, undefined, 150, 150);
 
-    expect(translateSpy).toHaveBeenCalledWith(19, 19);
-    expect(rectSpy).toHaveBeenCalledTimes(16);
-    expect(rectSpy).toHaveBeenCalledWith(0, 0, 38, 38);
-    expect(rectSpy).toHaveBeenCalledWith(38, 38, 38, 38);
-    expect(textSpy).toHaveBeenCalledTimes(16);
-    expect(textSpy).toHaveBeenCalledWith(
+    const mockedCanvas = mockedNodeCanvas.createCanvas.mock.results[0].value;
+    const mockedContext = mockedCanvas.getContext.mock.results[0].value;
+
+    expect(mockedContext.translate).toHaveBeenCalledWith(19, 19);
+    expect(mockedContext.fillRect).toHaveBeenCalledTimes(16);
+    expect(mockedContext.fillRect).toHaveBeenCalledWith(0, 0, 38, 38);
+    expect(mockedContext.fillRect).toHaveBeenCalledWith(38, 38, 38, 38);
+    expect(mockedContext.fillText).toHaveBeenCalledTimes(16);
+    expect(mockedContext.fillText).toHaveBeenCalledWith(
       PRESENCE_TEMPERATURES[0][0].toFixed(1),
       0,
       0
@@ -114,8 +110,6 @@ describe('ThermopileOccupancyService', () => {
   });
 
   it('should not draw the temperature text if option is disabled', async () => {
-    const textSpy = jest.spyOn(testContext, 'fillText');
-
     const heatmapOptions = new HeatmapOptions();
     heatmapOptions.drawTemperatures = false;
     await service.generateHeatmap(
@@ -125,20 +119,21 @@ describe('ThermopileOccupancyService', () => {
       150
     );
 
-    expect(textSpy).not.toHaveBeenCalled();
+    const mockedCanvas = mockedNodeCanvas.createCanvas.mock.results[0].value;
+    const mockedContext = mockedCanvas.getContext.mock.results[0].value;
+
+    expect(mockedContext.fillText).not.toHaveBeenCalled();
   });
 
   it('should output a jpeg image buffer', async () => {
-    const outputSpy = jest.spyOn(pureimage, 'encodeJPEGToStream');
-
     await service.generateHeatmap(PRESENCE_TEMPERATURES);
 
-    expect(outputSpy).toHaveBeenCalledWith(testBitmap, expect.anything(), 100);
+    const mockedCanvas = mockedNodeCanvas.createCanvas.mock.results[0].value;
+
+    expect(mockedCanvas.toBuffer).toHaveBeenCalledWith('image/png');
   });
 
   it('should allow the output to be rotated', async () => {
-    const textSpy = jest.spyOn(testContext, 'fillText');
-
     await service.generateHeatmap(
       PRESENCE_TEMPERATURES,
       {
@@ -152,7 +147,10 @@ describe('ThermopileOccupancyService', () => {
       200
     );
 
-    expect(textSpy).toHaveBeenCalledWith(
+    const mockedCanvas = mockedNodeCanvas.createCanvas.mock.results[0].value;
+    const mockedContext = mockedCanvas.getContext.mock.results[0].value;
+
+    expect(mockedContext.fillText).toHaveBeenCalledWith(
       PRESENCE_TEMPERATURES[3][0].toFixed(1),
       0,
       0
