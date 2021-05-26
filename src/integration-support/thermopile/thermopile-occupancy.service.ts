@@ -4,7 +4,6 @@ import { Cluster } from './cluster';
 import * as _ from 'lodash';
 import { HeatmapOptions } from './thermopile-occupancy.config';
 import { rotate } from '2d-array-rotation';
-import { Logger } from '@nestjs/common';
 import type { createCanvas, Canvas, CanvasRenderingContext2D } from 'canvas';
 
 export type RotationOption = 0 | 90 | 180 | 270;
@@ -13,10 +12,6 @@ let nodeCanvas: { createCanvas: typeof createCanvas };
 try {
   nodeCanvas = require('canvas');
 } catch (e) {
-  Logger.debug(
-    `Could not load canvas: ${e.message}`,
-    'ThermopileOccupancyService'
-  );
   nodeCanvas = undefined;
 }
 

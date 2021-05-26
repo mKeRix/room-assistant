@@ -15,16 +15,15 @@ let notify;
 try {
   notify = require('sd-notify');
 } catch (e) {
-  Logger.debug(
-    `Could not load sd-notify: ${e.message}`,
-    'HealthIndicatorService'
-  );
+  notify = undefined;
 }
 
 @Injectable()
 export class HealthIndicatorService
-  implements OnApplicationBootstrap, OnModuleDestroy {
+  implements OnApplicationBootstrap, OnModuleDestroy
+{
   private healthIndicators: HealthIndicatorFunction[] = [];
+  private readonly logger: Logger = new Logger(HealthIndicatorService.name);
 
   constructor(
     private readonly health: HealthCheckService,
@@ -35,6 +34,12 @@ export class HealthIndicatorService
    * Lifecycle hook, called once the application has started.
    */
   onApplicationBootstrap(): void {
+    if (notify == undefined) {
+      this.logger.debug(
+        'Systemd watchdog reporting is unavailable, as the optional sd-notify dependency could not be loaded'
+      );
+    }
+
     notify?.ready();
 
     const watchdogInterval: number = notify?.watchdogInterval();
