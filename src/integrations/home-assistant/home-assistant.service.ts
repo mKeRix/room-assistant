@@ -44,7 +44,8 @@ const INSTANCE_STATUS_BASE_TOPIC = 'room-assistant/status';
 
 @Injectable()
 export class HomeAssistantService
-  implements OnModuleInit, OnApplicationShutdown {
+  implements OnModuleInit, OnApplicationShutdown
+{
   private config: HomeAssistantConfig;
   private device: Device;
   private entityConfigs: Map<string, EntityConfig> = new Map<
@@ -423,6 +424,10 @@ export class HomeAssistantService
   protected formatMessage(message: object): object {
     const filteredMessage = _.omit(message, PROPERTY_DENYLIST);
     return this.deepMap(filteredMessage, (obj) => {
+      if (!_.isObject(obj) || _.isArray(obj)) {
+        return obj;
+      }
+
       return _.mapKeys(obj, (v, k) => {
         return _.snakeCase(k);
       });
@@ -579,8 +584,13 @@ export class HomeAssistantService
    * @param mapper - Function to apply to all items
    */
   private deepMap(obj: object, mapper: (v: object) => object): object {
+    const mappingMethod: (
+      obj: object,
+      callback: (v: object) => object
+    ) => object = _.isArray(obj) ? _.map : _.mapValues;
+
     return mapper(
-      _.mapValues(obj, (v) => {
+      mappingMethod(obj, (v) => {
         if (_.isArray(v)) {
           return [...v].map((e) => this.deepMap(e, mapper));
         } else if (_.isObject(v)) {

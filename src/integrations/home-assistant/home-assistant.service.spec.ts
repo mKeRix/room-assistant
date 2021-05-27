@@ -311,9 +311,7 @@ describe('HomeAssistantService', () => {
       await service.onModuleInit();
       service.handleNewEntity(new Switch('test-switch', 'Test Switch'));
 
-      expect(
-        mockMqttClient.subscribe
-      ).toHaveBeenCalledWith(
+      expect(mockMqttClient.subscribe).toHaveBeenCalledWith(
         'room-assistant/switch/test-instance-test-switch/command',
         { qos: 0 }
       );
@@ -439,6 +437,26 @@ describe('HomeAssistantService', () => {
       );
     });
 
+    it('should format device connections correctly', async () => {
+      await service.onModuleInit();
+      service.handleNewEntity(new Sensor('test', 'Test'), [
+        {
+          for: SensorConfig,
+          overrides: {
+            device: {
+              connections: [['mac', '12:34']],
+            },
+          },
+        },
+      ]);
+
+      expect(
+        JSON.parse(mockMqttClient.publish.mock.calls[1][1]).device
+      ).toEqual({
+        connections: [['mac', '12:34']],
+      });
+    });
+
     it('should apply sensor customizations to the discovery message', async () => {
       await service.onModuleInit();
       service.handleNewEntity(new Sensor('custom-sensor', 'Custom'), [
@@ -492,11 +510,13 @@ describe('HomeAssistantService', () => {
     it('should send an instance online status on startup', async () => {
       await service.onModuleInit();
 
-      expect(
-        mockMqttClient.publish
-      ).toHaveBeenCalledWith('room-assistant/status/test-instance', 'online', {
-        qos: 1,
-      });
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        'room-assistant/status/test-instance',
+        'online',
+        {
+          qos: 1,
+        }
+      );
     });
 
     it('should configure a last will message', async () => {
@@ -544,11 +564,13 @@ describe('HomeAssistantService', () => {
 
       service.sendHeartbeats();
 
-      expect(
-        mockMqttClient.publish
-      ).toHaveBeenCalledWith('room-assistant/status/test-instance', 'online', {
-        qos: 1,
-      });
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        'room-assistant/status/test-instance',
+        'online',
+        {
+          qos: 1,
+        }
+      );
     });
 
     it('should send entity status messages as heartbeat', async () => {
@@ -589,11 +611,13 @@ describe('HomeAssistantService', () => {
 
       mqttEmitter.emit('connect');
 
-      expect(
-        mockMqttClient.publish
-      ).toHaveBeenCalledWith('room-assistant/status/test-instance', 'online', {
-        qos: 1,
-      });
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        'room-assistant/status/test-instance',
+        'online',
+        {
+          qos: 1,
+        }
+      );
     });
 
     it('should update availability topics of distributed entities if instance is elected as new leader', async () => {
@@ -608,9 +632,7 @@ describe('HomeAssistantService', () => {
 
       clusterService.emit('elected', { id: 'new-leader' });
 
-      expect(
-        mockMqttClient.publish
-      ).toHaveBeenCalledWith(
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
         'homeassistant/sensor/room-assistant/test/config',
         expect.any(String),
         { qos: 0, retain: true }
@@ -665,11 +687,13 @@ describe('HomeAssistantService', () => {
 
       await service.onApplicationShutdown();
 
-      expect(
-        mockMqttClient.publish
-      ).toHaveBeenCalledWith('room-assistant/status/test-instance', 'offline', {
-        qos: 1,
-      });
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        'room-assistant/status/test-instance',
+        'offline',
+        {
+          qos: 1,
+        }
+      );
     });
 
     it('should send offline messages for local entities on shutdown', async () => {
