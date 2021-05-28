@@ -584,6 +584,10 @@ export class HomeAssistantService
    * @param mapper - Function to apply to all items
    */
   private deepMap(obj: object, mapper: (v: object) => object): object {
+    if (!_.isObject(obj)) {
+      return mapper(obj);
+    }
+
     const mappingMethod: (
       obj: object,
       callback: (v: object) => object

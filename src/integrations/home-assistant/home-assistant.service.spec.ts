@@ -924,6 +924,32 @@ describe('HomeAssistantService', () => {
       expect(mockMqttClient.publish).toHaveBeenCalledTimes(1);
     });
 
+    it('should format string array attribute updates correctly', async () => {
+      jest.useFakeTimers();
+      await service.onModuleInit();
+      const sensor = new Sensor('test', 'Test');
+      service.handleNewEntity(sensor);
+
+      sensor.attributes.nodes = ['abc', 'def'];
+      service.handleEntityUpdate(
+        sensor,
+        [
+          {
+            newValue: ['abc', 'def'],
+            oldValue: undefined,
+            path: '/attributes/nodes',
+          },
+        ],
+        true
+      );
+      jest.runAllTimers();
+
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        'room-assistant/sensor/test-instance-test/attributes',
+        JSON.stringify({ nodes: ['abc', 'def'] })
+      );
+    });
+
     it('should not publish attribute updates if sendAttributes is disabled', async () => {
       jest.useFakeTimers();
       mockConfig.sendAttributes = false;
