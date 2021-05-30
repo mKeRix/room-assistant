@@ -558,6 +558,19 @@ describe('HomeAssistantService', () => {
       }
     );
 
+    it('should clear old retained status messages from pre-2.18.x', async () => {
+      await service.onModuleInit();
+      service.handleNewEntity(new Sensor('test', 'Test'));
+
+      expect(mockMqttClient.publish).toHaveBeenCalledWith(
+        'room-assistant/sensor/test-instance-test/status',
+        '',
+        {
+          retain: true,
+        }
+      );
+    });
+
     it('should send an instance status message as heartbeat', async () => {
       await service.onModuleInit();
       mockMqttClient.publish.mockClear();

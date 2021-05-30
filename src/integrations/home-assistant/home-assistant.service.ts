@@ -171,7 +171,11 @@ export class HomeAssistantService
     this.entityConfigs.set(combinedId, config);
 
     this.sendDiscoveryMessage(config);
-    this.sendEntityStatus(config);
+
+    if (config.availability.length > 0) {
+      this.clearRetained(config.availability[0].topic); // for upgrades from < 2.18.x
+      this.sendEntityStatus(config);
+    }
   }
 
   /**
@@ -432,6 +436,15 @@ export class HomeAssistantService
         return _.snakeCase(k);
       });
     });
+  }
+
+  /**
+   * Clear any retained message from the given MQTT topic.
+   *
+   * @param topic - Topic to clear ("delete")
+   */
+  private async clearRetained(topic: string): Promise<void> {
+    await this.mqttClient.publish(topic, '', { retain: true });
   }
 
   /**
