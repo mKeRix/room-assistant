@@ -2,8 +2,8 @@ import { Peripheral } from '@mkerix/noble';
 import _ from 'lodash';
 
 export class Tag {
-  private _id;
-  private _name;
+  protected _id;
+  protected _name;
 
   constructor(peripheral: Peripheral) {
     this.peripheral = peripheral;

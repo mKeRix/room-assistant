@@ -12,15 +12,12 @@ export class IBeacon extends Tag {
     this.uuid = this.peripheral.advertisement.manufacturerData
       .slice(4, 20)
       .toString('hex');
-    const major = this.peripheral.advertisement.manufacturerData.readUInt16BE(
-      20
-    );
-    const minor = this.peripheral.advertisement.manufacturerData.readUInt16BE(
-      22
-    );
-    this.measuredPower = this.peripheral.advertisement.manufacturerData.readInt8(
-      24
-    );
+    const major =
+      this.peripheral.advertisement.manufacturerData.readUInt16BE(20);
+    const minor =
+      this.peripheral.advertisement.manufacturerData.readUInt16BE(22);
+    this.measuredPower =
+      this.peripheral.advertisement.manufacturerData.readInt8(24);
 
     this._rawMajorMinor = (major << 16) + minor;
     this.major = major & majorMask;
@@ -34,8 +31,12 @@ export class IBeacon extends Tag {
   batteryMask: number;
   private _rawMajorMinor: number;
 
+  set id(id: string) {
+    this._id = id;
+  }
+
   get id(): string {
-    return `${this.uuid}-${this.major}-${this.minor}`;
+    return this._id || `${this.uuid}-${this.major}-${this.minor}`;
   }
 
   get batteryLevel(): number | undefined {
