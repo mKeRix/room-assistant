@@ -531,6 +531,33 @@ describe('BluetoothLowEnergyService', () => {
     );
   });
 
+  it('should look up overrides in case insensitive manner', async () => {
+    const handleDistanceSpy = jest
+      .spyOn(service, 'handleNewDistance')
+      .mockImplementation(() => undefined);
+    jest.spyOn(service, 'isOnAllowlist').mockReturnValue(true);
+    jest.spyOn(service, 'isAllowlistEnabled').mockReturnValue(true);
+    mockConfig.tagOverrides = {
+      ABcd: {
+        id: 'new-id',
+      },
+    };
+
+    await service.handleDiscovery({
+      id: 'abcd',
+      rssi: -12,
+      advertisement: {
+        localName: 'Test BLE Device',
+      },
+    } as Peripheral);
+
+    expect(handleDistanceSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tagId: 'new-id',
+      })
+    );
+  });
+
   it('should not publish state changes for devices that are not on the allowlist', async () => {
     jest.spyOn(service, 'isOnAllowlist').mockReturnValue(false);
 

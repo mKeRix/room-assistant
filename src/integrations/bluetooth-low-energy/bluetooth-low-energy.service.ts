@@ -29,6 +29,7 @@ import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presenc
 import { BluetoothService } from '../../integration-support/bluetooth/bluetooth.service';
 import { promiseWithTimeout } from '../../util/promises';
 import * as util from 'util';
+import { getPropertyCaseInsensitive } from '../../util/objects';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 const APPLE_ADVERTISEMENT_ID = Buffer.from([0x4c, 0x00]);
@@ -36,7 +37,8 @@ const APPLE_ADVERTISEMENT_ID = Buffer.from([0x4c, 0x00]);
 @Injectable()
 export class BluetoothLowEnergyService
   extends KalmanFilterable(Object, 0.008, 4)
-  implements OnModuleInit, OnApplicationBootstrap {
+  implements OnModuleInit, OnApplicationBootstrap
+{
   private readonly config: BluetoothLowEnergyConfig;
   private readonly logger: Logger;
   private readonly seenIds = new Set<string>();
@@ -462,8 +464,12 @@ export class BluetoothLowEnergyService
    * @returns Same tag with potentially overridden data
    */
   protected applyOverrides(tag: Tag): Tag {
-    if (this.config.tagOverrides.hasOwnProperty(tag.id)) {
-      const overrides = this.config.tagOverrides[tag.id];
+    const overrides = getPropertyCaseInsensitive(
+      this.config.tagOverrides,
+      tag.id
+    );
+
+    if (overrides != undefined) {
       if (overrides.id !== undefined) {
         tag.id = overrides.id;
       }
