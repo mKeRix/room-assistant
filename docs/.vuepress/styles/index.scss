@@ -1,0 +1,13 @@
+:root {
+  --c-brand: #59acf8;
+  --c-brand-light: #59acf8;
+}
+
+html.dark {
+  --c-brand: #59acf8;
+  --c-brand-light: #59acf8;
+}
+
+img + span > .icon.outbound {
+  display: none;
+}

@@ -8,7 +8,7 @@ If you changed code:
 
 If you added a new integration:
 - [ ] Documentation page added in `docs/integrations/`
-- [ ] Page linked in `docs/.vuepress/config.js` and `docs/integrations/README.md`
+- [ ] Page linked in `docs/.vuepress/config.ts` and `docs/integrations/README.md`
 
 **Additional information**
 Is this PR related to any issues? Do you have anything else to add?

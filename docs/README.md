@@ -2,8 +2,10 @@
 home: true
 heroImage: /room-assistant.png
 tagline: Automation on the Room-Level
-actionText: Get Started →
-actionLink: /guide/
+actions:
+- text: Get Started
+  link: /guide/
+  type: primary
 features:
 - title: Presence Tracking
   details: Choose from multiple options for tracking presence per room - you can track phones, smart watches, thermal presence and more.
