@@ -367,12 +367,12 @@ export class HomeAssistantService
 
     config.distributed = entity.distributed;
     config.stateLocked = entity.stateLocked;
-    config.setInstanceStatusTopic(
-      `${INSTANCE_STATUS_BASE_TOPIC}/${
-        this.clusterService.leader()?.id ||
-        this.configService.get('global').instanceName
-      }`
-    );
+
+    const instanceId = makeId(this.configService.get('global').instanceName);
+    const leaderId = entity.distributed
+      ? this.clusterService.leader()?.id
+      : instanceId;
+    config.setInstanceStatusTopic(`${INSTANCE_STATUS_BASE_TOPIC}/${leaderId}`);
 
     return config;
   }
