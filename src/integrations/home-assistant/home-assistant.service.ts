@@ -69,7 +69,7 @@ export class HomeAssistantService
     this.config = this.configService.get('homeAssistant');
 
     const instanceName = this.configService.get('global').instanceName;
-    this.statusTopic = `${INSTANCE_STATUS_BASE_TOPIC}/${instanceName}`;
+    this.statusTopic = `${INSTANCE_STATUS_BASE_TOPIC}/${makeId(instanceName)}`;
   }
 
   /**
