@@ -1,0 +1,20 @@
+{
+  "name": "room-assistant",
+  "short_name": "room-assistant",
+  "description": "Automation on the Room-Level",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./index.html",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff"
+}
