@@ -37,7 +37,7 @@ jest.mock('kalmanjs', () => {
   });
 });
 jest.mock('util', () => ({
-  ...jest.requireActual('util'),
+  ...(jest.requireActual('util') as Record<string, unknown>),
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   promisify: () => mockExec,
 }));
@@ -350,9 +350,8 @@ describe('BluetoothClassicService', () => {
 
     const address = '77:50:fb:4d:ab:70';
     const device = new Device(address, 'Test Device');
-    const infoSpy = bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(
-      device
-    );
+    const infoSpy =
+      bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(device);
 
     await service.handleRssiRequest(address);
 
@@ -368,9 +367,8 @@ describe('BluetoothClassicService', () => {
 
     const address = '77:50:fb:4d:ab:70';
     const device = new Device(address, 'Test Device');
-    const infoSpy = bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(
-      device
-    );
+    const infoSpy =
+      bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(device);
 
     await service.handleRssiRequest(address);
     await service.handleRssiRequest(address);

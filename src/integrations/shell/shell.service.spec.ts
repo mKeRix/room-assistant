@@ -13,7 +13,7 @@ import { ShellSwitch } from './shell.switch';
 
 jest.mock('cron');
 jest.mock('util', () => ({
-  ...jest.requireActual('util'),
+  ...(jest.requireActual('util') as Record<string, unknown>),
   promisify: jest.fn(),
 }));
 
