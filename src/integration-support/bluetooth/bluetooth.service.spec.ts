@@ -11,7 +11,7 @@ import { makeCounterProvider } from '@willsoto/nestjs-prometheus';
 import { mocked } from 'ts-jest/utils';
 
 jest.mock('util', () => ({
-  ...jest.requireActual('util'),
+  ...(jest.requireActual('util') as Record<string, unknown>),
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   promisify: () => mockExec,
 }));
@@ -353,10 +353,10 @@ Requesting information ...
         state: 'disconnected',
       };
 
-      service.connectLowEnergyDevice((peripheral as unknown) as Peripheral);
+      service.connectLowEnergyDevice(peripheral as unknown as Peripheral);
 
       await expect(
-        service.connectLowEnergyDevice((peripheral as unknown) as Peripheral)
+        service.connectLowEnergyDevice(peripheral as unknown as Peripheral)
       ).rejects.toThrow();
 
       peripheral.state = 'connected';
@@ -375,16 +375,14 @@ Requesting information ...
         state: 'disconnected',
       };
 
-      await service.connectLowEnergyDevice(
-        (peripheral as unknown) as Peripheral
-      );
+      await service.connectLowEnergyDevice(peripheral as unknown as Peripheral);
 
       const disconnectListener = peripheral.once.mock.calls[0][1];
       disconnectListener();
 
       await expect(async () => {
         await service.connectLowEnergyDevice(
-          (peripheral as unknown) as Peripheral
+          peripheral as unknown as Peripheral
         );
       }).not.toThrow();
     });
@@ -400,7 +398,7 @@ Requesting information ...
 
       await expect(async () => {
         await service.connectLowEnergyDevice(
-          (peripheral as unknown) as Peripheral
+          peripheral as unknown as Peripheral
         );
       }).rejects.toThrow();
 
@@ -424,7 +422,7 @@ Requesting information ...
       };
 
       const promise = service
-        .connectLowEnergyDevice((peripheral as unknown) as Peripheral)
+        .connectLowEnergyDevice(peripheral as unknown as Peripheral)
         .catch((e) => {
           expect(e).toStrictEqual(new Error('timed out'));
         });
@@ -446,7 +444,7 @@ Requesting information ...
       };
 
       const actual = await service.connectLowEnergyDevice(
-        (peripheral as unknown) as Peripheral
+        peripheral as unknown as Peripheral
       );
 
       expect(actual).toBe(peripheral);
@@ -467,7 +465,7 @@ Requesting information ...
       };
 
       const actual = await service.connectLowEnergyDevice(
-        (peripheral as unknown) as Peripheral
+        peripheral as unknown as Peripheral
       );
       expect(actual).toBe(peripheral);
       expect(peripheral.connectAsync).toHaveBeenCalledTimes(2);
@@ -486,7 +484,7 @@ Requesting information ...
 
       await expect(async () => {
         await service.connectLowEnergyDevice(
-          (peripheral as unknown) as Peripheral
+          peripheral as unknown as Peripheral
         );
       }).rejects.toThrow();
       expect(peripheral.connectAsync).toHaveBeenCalledTimes(5);
@@ -499,7 +497,7 @@ Requesting information ...
       };
 
       await service.disconnectLowEnergyDevice(
-        (peripheral as unknown) as Peripheral
+        peripheral as unknown as Peripheral
       );
 
       expect(peripheral.disconnectAsync).toHaveBeenCalled();
@@ -514,7 +512,7 @@ Requesting information ...
       };
 
       await service.disconnectLowEnergyDevice(
-        (peripheral as unknown) as Peripheral
+        peripheral as unknown as Peripheral
       );
 
       expect(mockExec).toHaveBeenCalledWith(
@@ -530,7 +528,7 @@ Requesting information ...
       };
 
       await service.disconnectLowEnergyDevice(
-        (peripheral as unknown) as Peripheral
+        peripheral as unknown as Peripheral
       );
 
       expect(peripheral.disconnectAsync).not.toHaveBeenCalled();

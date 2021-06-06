@@ -3,7 +3,7 @@ const mockExec = jest.fn();
 import { ShellSwitch } from './shell.switch';
 
 jest.mock('util', () => ({
-  ...jest.requireActual('util'),
+  ...(jest.requireActual('util') as Record<string, unknown>),
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   promisify: () => mockExec,
 }));

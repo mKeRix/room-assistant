@@ -4,7 +4,7 @@ import { getAddrInfoDig } from './resolvers';
 import { Service } from 'mdns';
 
 jest.mock('util', () => ({
-  ...jest.requireActual('util'),
+  ...(jest.requireActual('util') as Record<string, unknown>),
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   promisify: () => mockExec,
 }));
