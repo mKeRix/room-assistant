@@ -888,6 +888,7 @@ describe('BluetoothLowEnergyService', () => {
     entitiesService.add.mockReturnValue(sensor);
     mockConfig.timeout = 20;
     const sensorHandleSpy = jest.spyOn(sensor, 'handleNewDistance');
+    const intervalSpy = jest.spyOn(global, 'setInterval');
 
     service.handleNewDistance(
       new NewDistanceEvent(
@@ -927,7 +928,7 @@ describe('BluetoothLowEnergyService', () => {
     expect(
       util.types.isProxy(entitiesService.add.mock.calls[1][0])
     ).toBeTruthy();
-    expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 20 * 1000);
+    expect(intervalSpy).toHaveBeenCalledWith(expect.any(Function), 20 * 1000);
     expect(sensorHandleSpy).toHaveBeenCalledWith('test-instance', 1.3, false);
   });
 
