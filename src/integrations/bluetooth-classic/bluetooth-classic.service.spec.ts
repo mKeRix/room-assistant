@@ -350,9 +350,8 @@ describe('BluetoothClassicService', () => {
 
     const address = '77:50:fb:4d:ab:70';
     const device = new Device(address, 'Test Device');
-    const infoSpy = bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(
-      device
-    );
+    const infoSpy =
+      bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(device);
 
     await service.handleRssiRequest(address);
 
@@ -368,9 +367,8 @@ describe('BluetoothClassicService', () => {
 
     const address = '77:50:fb:4d:ab:70';
     const device = new Device(address, 'Test Device');
-    const infoSpy = bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(
-      device
-    );
+    const infoSpy =
+      bluetoothService.inquireClassicDeviceInfo.mockResolvedValue(device);
 
     await service.handleRssiRequest(address);
     await service.handleRssiRequest(address);
@@ -415,7 +413,9 @@ describe('BluetoothClassicService', () => {
       address: '10:36:cf:ca:9a:18',
       name: 'Test iPhone',
     });
+
     jest.useFakeTimers();
+    const intervalSpy = jest.spyOn(global, 'setInterval');
 
     const event = new NewRssiEvent(
       'test-instance',
@@ -453,7 +453,7 @@ describe('BluetoothClassicService', () => {
     expect(
       util.types.isProxy(entitiesService.add.mock.calls[1][0])
     ).toBeTruthy();
-    expect(setInterval).toHaveBeenCalledWith(expect.any(Function), 6000);
+    expect(intervalSpy).toHaveBeenCalledWith(expect.any(Function), 6000);
 
     const sensorInstance = (RoomPresenceDistanceSensor as jest.Mock).mock
       .instances[0];
