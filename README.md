@@ -23,4 +23,4 @@ And you can even go a step further and configure your personal thermostat prefer
 
 ## Documentation
 
-Find out how to [install](https://www.room-assistant.io/guide/installation) and [configure](https://www.room-assistant.io/guide/configuration) room-assistant and much more on our official documentation site: [room-assistant.io](https://www.room-assistant.io/)!
+Find out how to [install](https://www.room-assistant.io/guide/installation.html) and [configure](https://www.room-assistant.io/guide/configuration.html) room-assistant and much more on our official documentation site: [room-assistant.io](https://www.room-assistant.io/)!
