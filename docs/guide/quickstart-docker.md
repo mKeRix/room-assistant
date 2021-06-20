@@ -4,7 +4,7 @@ This page will guide you through setting up room-assistant with Docker and docke
 
 1. Create a new folder to store your room-assistant files in with `mkdir -p ~/room-assistant/config`.
 
-2. Create the file `~/room-assistant/config/local.yml` and put your configuration into it. The example below configures the [Home Assistant Core](/integrations/home-assistant) and [Bluetooth Classic](/integrations/bluetooth-classic) integrations, but there are many others to choose from. For all options take a look at the [integrations](/integrations) section.
+2. Create the file `~/room-assistant/config/local.yml` and put your configuration into it. The example below configures the [Home Assistant Core](/integrations/home-assistant.md) and [Bluetooth Classic](/integrations/bluetooth-classic.md) integrations, but there are many others to choose from. For all options take a look at the [integrations](/integrations) section.
 
    ```yaml
    global:

@@ -2,7 +2,7 @@
 
 ::: tip
 
-Also checkout the quickstart guides in the menu on the left! If you are planning on installing room-assistant on multiple hosts [Ansible](./quickstart-ansible) will automate the process for you.
+Also checkout the quickstart guides in the menu on the left! If you are planning on installing room-assistant on multiple hosts [Ansible](./quickstart-ansible.md) will automate the process for you.
 
 :::
 

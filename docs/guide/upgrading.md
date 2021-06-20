@@ -24,7 +24,7 @@ room-assistant 2.0 is another rewrite of the software to bring it up-to-par with
 
 #### Installation process
 
-The installation process has changed and is not git-based anymore when running room-assistant directly with NodeJS. Instead, you now need to install the room-assistant binary directly with npm. See the [installation guide](./installation#running-with-nodejs) for detailed information. You can delete the old cloned folder - but keep a copy of your old config for reference.
+The installation process has changed and is not git-based anymore when running room-assistant directly with NodeJS. Instead, you now need to install the room-assistant binary directly with npm. See the [installation guide](./installation.md#running-with-nodejs) for detailed information. You can delete the old cloned folder - but keep a copy of your old config for reference.
 
 For Docker-based installations note that on Linux systems you should also mount the `/var/run/dbus` folder into the container now to make use of the auto-discovery features.
 
@@ -38,7 +38,7 @@ Instead of installing dependencies when starting, room-assistant now just tries 
 
 You can still use JSON as your config format like you did before, however YAML is now also accepted and the preferred method. The config is loaded from `<working-dir>/config`. For Docker you can either choose to mount config files into `/room-assistant/config` or fill the `NODE_CONFIG` environment variable with your config in JSON format. Individual environment variables for the options have been removed.
 
-Note that the layout of the config has changed, even if the naming is similar. It is recommended that you just start a fresh configuration file and copy the previous values over while consulting the [configuration](./configuration) and [integration](/integration) documentation.
+Note that the layout of the config has changed, even if the naming is similar. It is recommended that you just start a fresh configuration file and copy the previous values over while consulting the [configuration](./configuration.md) and [integration](/integrations) documentation.
 
 ### 1.0.x to 1.1.x
 

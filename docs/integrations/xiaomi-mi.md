@@ -4,16 +4,16 @@
 
 ::: warning
 
-Using this together with [Bluetooth Low Energy](./bluetooth-low-energy) requires that the hciDeviceId settings of both integrations are the same value.
+Using this together with [Bluetooth Low Energy](./bluetooth-low-energy.md) requires that the hciDeviceId settings of both integrations are the same value.
 
 :::
 
 The Xiaomi Mi integration scans for Bluetooth Low Engery (BLE) advertisements from a variety of Xiaomi sensors.
-Sensor readings can then be published to MQTT using the [Home Assistant integration](./home-assistant).
+Sensor readings can then be published to MQTT using the [Home Assistant integration](./home-assistant.md).
 
 ## Requirements
 
-This integration has all the same requirements as the [Bluetooth Low Energy](./bluetooth-low-energy) integration.
+This integration has all the same requirements as the [Bluetooth Low Energy](./bluetooth-low-energy.md) integration.
 
 ## Supported devices
 
@@ -56,7 +56,7 @@ This integration has been tested with these devices:
 
 ### Address Format
 
-The `address` field is a lowercase MAC address without `:`.  This is the same format as a [tag ID](./bluetooth-low-energy#determining-the-ids) in the BLE integration. The BLE integration can also be used to log device IDs to the console.
+The `address` field is a lowercase MAC address without `:`.  This is the same format as a [tag ID](./bluetooth-low-energy.md#determining-the-ids) in the BLE integration. The BLE integration can also be used to log device IDs to the console.
 
 ## Encryption
 

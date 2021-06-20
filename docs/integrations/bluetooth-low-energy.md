@@ -10,7 +10,7 @@ The integration calculates an estimated distance in meters for all advertisement
 
 ::: tip
 
-Using this together with [Bluetooth Classic](./bluetooth-classic) on the same adapter works, but will slightly degrade the performance. If you encounter issues you can try to run to run the integrations from different HCI devices.
+Using this together with [Bluetooth Classic](./bluetooth-classic.md) on the same adapter works, but will slightly degrade the performance. If you encounter issues you can try to run to run the integrations from different HCI devices.
 
 :::
 

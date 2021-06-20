@@ -55,7 +55,7 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 
 1. Create a config folder for room-assistant with `mkdir -p ~/room-assistant/config`.
 
-2. Create a new config file with `nano ~/room-assistant/config/local.yml` and put your room-assistant configuration in it. The example below configures the [Home Assistant Core](/integrations/home-assistant) and [Bluetooth Classic](/integrations/bluetooth-classic) integrations. If you want to use something else check out the [integrations](/integrations) section.
+2. Create a new config file with `nano ~/room-assistant/config/local.yml` and put your room-assistant configuration in it. The example below configures the [Home Assistant Core](/integrations/home-assistant.md) and [Bluetooth Classic](/integrations/bluetooth-classic.md) integrations. If you want to use something else check out the [integrations](/integrations) section.
 
    ```yaml
    global:
