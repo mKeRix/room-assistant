@@ -14,6 +14,7 @@ async function bootstrap(): Promise<void> {
     logger: WINSTON_LOGGER,
   });
   app.enableShutdownHooks();
+  app.setGlobalPrefix('api');
   app.useWebSocketAdapter(new WsAdapter(app));
 
   const options = new DocumentBuilder()
