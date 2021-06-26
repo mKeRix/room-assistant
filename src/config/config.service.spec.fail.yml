@@ -90,9 +90,6 @@ bluetoothLowEnergy:
   majorMask: 0xFFFF
   minorMask: 0xGHIG                   # CONSTRAINT ERROR: Hex Required
   batteryMask: 0x0000FF00
-  instanceBeaconEnabled: true
-  instanceBeaconMajor: 1
-  instanceBeaconMinor: 555
   timeout: 30
   updateFrequence: 55                 # FORMAT ERROR: Key Misspelt
 #  updateFrequency: 55                # FORMAT ERROR: Missing Key

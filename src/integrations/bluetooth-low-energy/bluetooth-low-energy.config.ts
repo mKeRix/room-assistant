@@ -1,4 +1,3 @@
-import { randomInt } from '../../util/numbers';
 import * as Joi from 'joi';
 import * as jf from 'joiful';
 
@@ -42,12 +41,6 @@ export class BluetoothLowEnergyConfig {
   minorMask = 0xffff;
   @(jf.number().integer().max(0xffffffff).required())
   batteryMask = 0x00000000;
-  @(jf.boolean().required())
-  instanceBeaconEnabled = true;
-  @(jf.number().integer().min(0).max(65535).required())
-  instanceBeaconMajor = 1;
-  @(jf.number().integer().min(0).max(65535).required())
-  instanceBeaconMinor = randomInt(0, 65535);
   @(jf.object().custom(validateTagOverrides).required())
   tagOverrides: { [entityId: string]: TagOverride } = {};
   @(jf.number().min(0).required())
