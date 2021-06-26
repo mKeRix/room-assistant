@@ -19,6 +19,9 @@
   "bin": "./bin/room-assistant.js",
   "main": "dist/src/main.js",
   "types": "dist/src/main.d.ts",
+  "workspaces": [
+    "client"
+  ],
   "files": [
     "dist/**/*.{js,ts}",
     "bin/*.js",
@@ -49,6 +52,7 @@
     "@nestjs/platform-express": "^7.6.15",
     "@nestjs/platform-ws": "^7.6.15",
     "@nestjs/schedule": "^0.4.3",
+    "@nestjs/serve-static": "^2.1.4",
     "@nestjs/swagger": "^4.8.0",
     "@nestjs/terminus": "^7.1.2",
     "@nestjs/websockets": "^7.6.15",

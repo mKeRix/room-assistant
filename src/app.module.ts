@@ -13,6 +13,8 @@ import { StatusModule } from './status/status.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { register } from 'prom-client';
 import { EventsModule } from './events/events.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import path from 'path';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 export const VERSION = require('../package.json').version;
@@ -36,6 +38,9 @@ register.setDefaultLabels({
     NestEmitterModule.forRoot(new EventEmitter()),
     PrometheusModule.register(),
     IntegrationsModule.register(CONFIGURED_INTEGRATIONS, WINSTON_LOGGER),
+    ServeStaticModule.forRoot({
+      rootPath: path.join(__dirname, '..', 'client', 'dist'),
+    }),
   ],
 })
 export class AppModule {}
