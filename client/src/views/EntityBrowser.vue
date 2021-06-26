@@ -1,5 +1,5 @@
 <template>
-<div>
+<div id="entity-browser">
   <EntityList :entities="entities" />
 </div>
 </template>
@@ -24,3 +24,10 @@ export default class EntityBrowser extends Vue {
   }
 }
 </script>
+
+<style scoped>
+#entity-browser {
+  padding-left: 50px;
+  padding-right: 50px;
+}
+</style>
