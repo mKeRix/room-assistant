@@ -1,19 +1,24 @@
 <template>
-  <div id="nav">
-    <n-menu mode="horizontal" :options="menuOptions" :render-label="renderMenuLabel" />
-  </div>
-  <router-view/>
+  <n-config-provider :theme="context.theme">
+    <n-global-style />
+    <div id="nav">
+      <n-menu mode="horizontal" :options="menuOptions" :render-label="renderMenuLabel" />
+    </div>
+    <router-view/>
+  </n-config-provider>
 </template>
 
 <script lang="ts">
-import { Options, Vue } from "vue-class-component";
-import { h, VNodeChild } from "vue";
+import { Options, setup, Vue } from "vue-class-component";
+import { computed, h, VNodeChild } from "vue";
 import { RouterLink } from "vue-router";
-import { MenuOption, NMenu } from "naive-ui";
+import { darkTheme, MenuOption, NConfigProvider, NGlobalStyle, NMenu, useOsTheme } from "naive-ui";
 
 @Options({
   components: {
-    NMenu
+    NMenu,
+    NConfigProvider,
+    NGlobalStyle
   }
 })
 export default class App extends Vue {
@@ -31,6 +36,14 @@ export default class App extends Vue {
       key: '/entities'
     }
   ]
+
+  context = setup(() => {
+    const osThemeRef = useOsTheme()
+    return {
+      theme: computed(() => (osThemeRef.value === 'dark' ? darkTheme : null)),
+      osTheme: osThemeRef
+    }
+  })
 
   renderMenuLabel(option: MenuOption): VNodeChild {
     return h(
