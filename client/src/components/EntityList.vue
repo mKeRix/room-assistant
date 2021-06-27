@@ -6,6 +6,9 @@
 import { Options, Vue } from "vue-class-component";
 import Entity from "@/models/entity";
 import { NDataTable } from "naive-ui";
+import { TableColumns } from "naive-ui/lib/data-table/src/interface";
+import { h } from "vue";
+import EntityDetails from '@/components/EntityDetails.vue'
 
 @Options({
   props: {
@@ -21,7 +24,21 @@ import { NDataTable } from "naive-ui";
 })
 export default class EntityList extends Vue {
   entities!: Entity[]
-  columns = [
+  columns: TableColumns<Entity> = [
+    {
+      type: 'expand',
+      expandable: row => {
+        return Object.keys(row.attributes).length > 0
+      },
+      renderExpand: row => {
+        return h(
+            EntityDetails,
+            {
+              entity: row
+            }
+        )
+      }
+    },
     {
       title: 'ID',
       key: 'id'
