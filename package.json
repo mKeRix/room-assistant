@@ -49,7 +49,7 @@
     "@nestjs/platform-express": "^7.6.15",
     "@nestjs/platform-ws": "^7.6.15",
     "@nestjs/schedule": "^0.4.3",
-    "@nestjs/swagger": "^4.8.0",
+    "@nestjs/swagger": "^5.0.4",
     "@nestjs/terminus": "^7.1.2",
     "@nestjs/websockets": "^7.6.15",
     "@willsoto/nestjs-prometheus": "^3.0.0",
