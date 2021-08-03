@@ -18,6 +18,12 @@ import { SensorConfig } from '../home-assistant/sensor-config';
 import { BluetoothService } from '../../integration-support/bluetooth/bluetooth.service';
 
 const SERVICE_DATA_UUID = 'fe95';
+const SERVICE_BATTERY_UUID = '0000120400001000800000805f9b34fb';
+const CHARACTERISTIC_BATTERY_UUID = '00001a0200001000800000805f9b34fb';
+
+const BATTERY_QUERY_WINDOW = 60 * 60 * 1000; // Stagger battery queries to reduce adapter contention
+const BATTERY_QUERY_INTERVAL = 23.5 * 60 * 60 * 1000; // Refresh battery level every 23.5-24.5 hours
+const BATTERY_QUERY_ATTEMPTS = 3;
 
 class SensorMetadata {
   name: string;
@@ -54,11 +60,17 @@ const SensorMetadataList: { [index: number]: SensorMetadata } = {
   },
 };
 
+class BatterySchedule {
+  nextQueryAfter: Date;
+  attempts: number;
+}
+
 @Injectable()
 export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
   private readonly logger: Logger;
   private config: XiaomiMiConfig;
   private lastFrameSeen: number[] = [];
+  private batterySchedule: BatterySchedule[] = [];
 
   constructor(
     private readonly bluetoothService: BluetoothService,
@@ -178,6 +190,12 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
         );
       }
     });
+
+    const checkBattery =
+      sensorConfig.enableMifloraBattery ?? this.config.enableMifloraBattery;
+    if (serviceData.productId == ProductId.HHCCJCV01 && checkBattery) {
+      await this.checkMifloraBattery(peripheral, device);
+    }
   }
 
   /**
@@ -267,5 +285,69 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
     bindKey: string | null
   ): ServiceData {
     return new Parser(buffer, bindKey).parse();
+  }
+
+  /**
+   * Query the peripheral's battery service every 24 hours.
+   *
+   * @param peripheral - BLE peripheral
+   * @param device - Device information
+   */
+  async checkMifloraBattery(
+    peripheral: Peripheral,
+    device: Device
+  ): Promise<void> {
+    if (!this.batterySchedule.hasOwnProperty(peripheral.id)) {
+      this.batterySchedule[peripheral.id] = {
+        nextQueryAfter: new Date(
+          Date.now() + Math.random() * BATTERY_QUERY_WINDOW
+        ),
+        attempts: 0,
+      };
+    }
+
+    const schedule: BatterySchedule = this.batterySchedule[peripheral.id];
+    if (Date.now() > schedule.nextQueryAfter.getTime()) {
+      let buffer: Buffer;
+
+      schedule.attempts += 1;
+      try {
+        buffer = await this.bluetoothService.queryLowEnergyDevice(
+          peripheral,
+          SERVICE_BATTERY_UUID,
+          CHARACTERISTIC_BATTERY_UUID
+        );
+      } catch (error) {
+        this.logger.warn(
+          `${device.name}: Error reading battery level (attempt ${schedule.attempts} of ${BATTERY_QUERY_ATTEMPTS}): ${error}`
+        );
+      }
+
+      if (buffer) {
+        this.recordMeasure(
+          device,
+          SensorMetadataList[EventType.battery],
+          buffer[0]
+        );
+        this.logger.log(
+          `${device.name}: Battery level updated to ${buffer[0]}%`
+        );
+      }
+
+      if (buffer || schedule.attempts == BATTERY_QUERY_ATTEMPTS) {
+        schedule.nextQueryAfter = new Date(
+          Date.now() +
+            BATTERY_QUERY_INTERVAL +
+            Math.random() * BATTERY_QUERY_WINDOW
+        );
+        schedule.attempts = 0;
+
+        if (!buffer) {
+          this.logger.error(
+            `${device.name}: Battery query aborted after reaching maximum number of retries`
+          );
+        }
+      }
+    }
   }
 }
