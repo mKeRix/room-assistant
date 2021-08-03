@@ -182,6 +182,81 @@ export class BluetoothService implements OnApplicationShutdown {
   }
 
   /**
+   * Connects to the given peripheral and queries the service/characteristic value.
+   * If the service and characteristic are not found it will return null.
+   *
+   * @param peripheral - Peripheral to connect to
+   * @param serviceUuid - Service UUID to query
+   * @param characteristicUuid - Characteristic UUID to query
+   */
+  async queryLowEnergyDevice(
+    target: Peripheral,
+    serviceUuid: string,
+    characteristicUuid: string
+  ): Promise<Buffer | null> {
+    const disconnectPromise = util.promisify(target.once).bind(target)(
+      'disconnect'
+    );
+
+    const peripheral = await this.connectLowEnergyDevice(target);
+
+    try {
+      return await promiseWithTimeout<Buffer | null>(
+        Promise.race([
+          this.readLowEnergyCharacteristic(
+            peripheral,
+            serviceUuid,
+            characteristicUuid
+          ),
+          disconnectPromise,
+        ]),
+        15 * 1000
+      );
+    } catch (e) {
+      this.logger.error(
+        `Failed to query value from ${target.id}: ${e.message}`,
+        e.trace
+      );
+
+      if (e.message === 'timed out') {
+        this.resetHciDevice(this.lowEnergyAdapterId);
+      }
+
+      return null;
+    } finally {
+      if (!['disconnecting', 'disconnected'].includes(target.state)) {
+        this.disconnectLowEnergyDevice(target);
+      }
+    }
+  }
+
+  /**
+   * Reads a characteristic value of a BLE peripheral as Buffer.
+   *
+   * @param peripheral - peripheral to read from
+   * @param serviceUuid - UUID of the service that contains the characteristic
+   * @param characteristicUuid - UUID of the characteristic to read
+   */
+  private async readLowEnergyCharacteristic(
+    peripheral: Peripheral,
+    serviceUuid: string,
+    characteristicUuid: string
+  ): Promise<Buffer | null> {
+    const services = await peripheral.discoverServicesAsync([serviceUuid]);
+
+    if (services.length > 0) {
+      const characteristics = await services[0].discoverCharacteristicsAsync([
+        characteristicUuid,
+      ]);
+
+      if (characteristics.length > 0) {
+        return await characteristics[0].readAsync();
+      }
+    }
+    return null;
+  }
+
+  /**
    * Queries for the RSSI of a Bluetooth device using the hcitool shell command.
    *
    * @param adapterId - HCI Adapter ID to use for queries

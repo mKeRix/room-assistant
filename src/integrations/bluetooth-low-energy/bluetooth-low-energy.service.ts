@@ -27,12 +27,12 @@ import { Sensor } from '../../entities/sensor';
 import { RoomPresenceProxyHandler } from '../../integration-support/room-presence/room-presence.proxy';
 import { BluetoothLowEnergyPresenceSensor } from './bluetooth-low-energy-presence.sensor';
 import { BluetoothService } from '../../integration-support/bluetooth/bluetooth.service';
-import { promiseWithTimeout } from '../../util/promises';
-import * as util from 'util';
 import { getPropertyCaseInsensitive } from '../../util/objects';
 
 export const NEW_DISTANCE_CHANNEL = 'bluetooth-low-energy.new-distance';
 const APPLE_ADVERTISEMENT_ID = Buffer.from([0x4c, 0x00]);
+const COMPANION_APP_SERVICE_UUID = '5403c8a75c9647e99ab859e373d875a7';
+const COMPANION_APP_CHARACTERISTIC_UUID = '21c46f33e813440786012ad281030052';
 
 @Injectable()
 export class BluetoothLowEnergyService
@@ -146,40 +146,12 @@ export class BluetoothLowEnergyService
    * @param tag - Peripheral to connect to
    */
   async discoverCompanionAppId(tag: Tag): Promise<string | null> {
-    const disconnectPromise = util
-      .promisify(tag.peripheral.once)
-      .bind(tag.peripheral)('disconnect');
-
-    const peripheral = await this.bluetoothService.connectLowEnergyDevice(
-      tag.peripheral
+    const buffer = await this.bluetoothService.queryLowEnergyDevice(
+      tag.peripheral,
+      COMPANION_APP_SERVICE_UUID,
+      COMPANION_APP_CHARACTERISTIC_UUID
     );
-
-    try {
-      return await promiseWithTimeout<string | null>(
-        Promise.race([
-          BluetoothLowEnergyService.readCompanionAppId(peripheral),
-          disconnectPromise,
-        ]),
-        15 * 1000
-      );
-    } catch (e) {
-      this.logger.error(
-        `Failed to search for companion app at tag ${tag.id}: ${e.message}`,
-        e.trace
-      );
-
-      if (e.message === 'timed out') {
-        this.bluetoothService.resetHciDevice(
-          this.bluetoothService.lowEnergyAdapterId
-        );
-      }
-
-      return null;
-    } finally {
-      if (!['disconnecting', 'disconnected'].includes(tag.peripheral.state)) {
-        this.bluetoothService.disconnectLowEnergyDevice(tag.peripheral);
-      }
-    }
+    return buffer ? buffer.toString('utf-8') : null;
   }
 
   /**
@@ -613,49 +585,5 @@ export class BluetoothLowEnergyService
    */
   private static overflowContainsCompanionApp(overflowArea: Buffer): boolean {
     return overflowArea != null && ((overflowArea.readUInt8(3) >> 4) & 1) === 1;
-  }
-
-  /**
-   * Reads a characteristic value of a BLE peripheral as string.
-   *
-   * @param peripheral - peripheral to read from
-   * @param serviceUuid - UUID of the service that contains the characteristic
-   * @param characteristicUuid - UUID of the characteristic to read
-   */
-  private static async readCharacteristic(
-    peripheral: Peripheral,
-    serviceUuid: string,
-    characteristicUuid: string
-  ): Promise<string | null> {
-    const services = await peripheral.discoverServicesAsync([serviceUuid]);
-
-    if (services.length > 0) {
-      const characteristics = await services[0].discoverCharacteristicsAsync([
-        characteristicUuid,
-      ]);
-
-      if (characteristics.length > 0) {
-        const data = await characteristics[0].readAsync();
-        return data.toString('utf-8');
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Reads the companion app ID from the pre-defined characteristic.
-   * May return null, which means no ID was found.
-   *
-   * @param peripheral - BLE peripheral to read from
-   */
-  private static readCompanionAppId(
-    peripheral: Peripheral
-  ): Promise<string | null> {
-    return this.readCharacteristic(
-      peripheral,
-      '5403c8a75c9647e99ab859e373d875a7',
-      '21c46f33e813440786012ad281030052'
-    );
   }
 }
