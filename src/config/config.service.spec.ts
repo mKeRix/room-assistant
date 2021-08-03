@@ -99,6 +99,7 @@ describe('ConfigService', () => {
       `gpio.binarySensors[1].deviceClass`,
       `shell.sensors[1].switches`,
       `shell.switches`,
+      `xiaomiMi.enableMifloraBattery`,
       `xiaomiMi.sensors[0].address`,
       `xiaomiMi.sensors[0].address`,
       `homeAssistant.discoveryPrefix`,

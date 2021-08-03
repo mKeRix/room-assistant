@@ -167,9 +167,11 @@ shell:
       offCommand: echo off
 xiaomiMi:
   hciDeviceId: 0
+  enableMifloraBattery: false
   sensors:
     - address: a4c1383212f9
       name: Xiaomi 1
+      enableMifloraBattery: true
     - address: a4c138131f9e
       name: Xiaomi 2
       bindKey: 2456789ABCDEF
