@@ -41,7 +41,7 @@ export class BluetoothLowEnergyService
 {
   private readonly config: BluetoothLowEnergyConfig;
   private readonly logger: Logger;
-  private readonly seenIds = new Set<string>();
+  private readonly loggedIds = new Set<string>();
   private readonly companionAppTags = new Map<string, string>();
   private readonly companionAppDenylist = new Set<string>();
   private tagUpdaters: {
@@ -96,11 +96,14 @@ export class BluetoothLowEnergyService
 
     tag = await this.applyCompanionAppOverride(tag);
 
-    if (!this.seenIds.has(tag.id)) {
+    if (
+      !this.loggedIds.has(tag.id) &&
+      tag.rssi >= this.config.minDiscoveryLogRssi
+    ) {
       this.logger.log(
-        `Discovered new BLE peripheral ${tag.name} with ID ${tag.id} and RSSI ${tag.rssi}`
+        `Discovered nearby BLE peripheral ${tag.name} with ID ${tag.id} and RSSI ${tag.rssi}`
       );
-      this.seenIds.add(tag.id);
+      this.loggedIds.add(tag.id);
     }
 
     if (

@@ -1005,6 +1005,7 @@ describe('BluetoothLowEnergyService', () => {
 
   it('should log the id of new peripherals that are found', async () => {
     mockConfig.processIBeacon = true;
+    mockConfig.minDiscoveryLogRssi = -99;
     jest.spyOn(service, 'isOnAllowlist').mockReturnValue(false);
 
     await service.handleDiscovery({
@@ -1028,8 +1029,18 @@ describe('BluetoothLowEnergyService', () => {
         manufacturerData: iBeaconData,
       },
     } as Peripheral);
+    await service.handleDiscovery({
+      id: 'test-peripheral-99',
+      rssi: -99,
+      advertisement: {},
+    } as Peripheral);
+    await service.handleDiscovery({
+      id: 'test-peripheral-100',
+      rssi: -100,
+      advertisement: {},
+    } as Peripheral);
 
-    expect(loggerService.log).toHaveBeenCalledTimes(2);
+    expect(loggerService.log).toHaveBeenCalledTimes(3);
     expect(loggerService.log).toHaveBeenCalledWith(
       expect.stringContaining('2f234454cf6d4a0fadf2f4911ba9ffa6-1-2'),
       BluetoothLowEnergyService.name,
@@ -1037,6 +1048,11 @@ describe('BluetoothLowEnergyService', () => {
     );
     expect(loggerService.log).toHaveBeenCalledWith(
       expect.stringContaining('test-peripheral-456'),
+      BluetoothLowEnergyService.name,
+      expect.anything()
+    );
+    expect(loggerService.log).toHaveBeenCalledWith(
+      expect.stringContaining('test-peripheral-99'),
       BluetoothLowEnergyService.name,
       expect.anything()
     );

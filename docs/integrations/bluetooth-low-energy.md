@@ -91,6 +91,7 @@ bluetoothLowEnergy:
 | `instanceBeaconEnabled` | Boolean | `true` | Whether this instance should emit iBeacon advertisements via BLE, which can be used by the room-assistant companion app to auto-toggle advertising. |
 | `instanceBeaconMajor` | Number | `1` | The major of the advertised iBeacon. |
 | `instanceBeaconMinor` | Number | Random | The minor of the advertised iBeacon. |
+| `minDiscoveryLogRssi` | Number | -999 | Only log newly discovered beacons if raw RSSI values are grerater than this (usefull to reduce log spam if on a busy street). |
 
 ### Tag Overrides
 

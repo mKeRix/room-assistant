@@ -87,6 +87,7 @@ describe('ConfigService', () => {
       `bluetoothLowEnergy.tagOverrides.ebef1234567890-55555-444.timeout`,
       `bluetoothLowEnergy.updateFrequency`,
       `bluetoothLowEnergy.updateFrequence`,
+      `bluetoothLowEnergy.minDiscoveryLogRssi`,
       `bluetoothClassic.addresses[1]`,
       `bluetoothClassic.addresses[2]`,
       `bluetoothClassic.addresses[3]`,
