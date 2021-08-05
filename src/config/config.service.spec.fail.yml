@@ -96,6 +96,7 @@ bluetoothLowEnergy:
   timeout: 30
   updateFrequence: 55                 # FORMAT ERROR: Key Misspelt
 #  updateFrequency: 55                # FORMAT ERROR: Missing Key
+  minDiscoveryLogRssi: 50             # FORMAT ERROR: Negative Required
   maxDistance: 44.4
   rssiFactor: 1.1
   tagOverrides:

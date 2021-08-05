@@ -91,6 +91,7 @@ bluetoothLowEnergy:
   instanceBeaconMinor: 555
   timeout: 30
   updateFrequency: 55
+  minDiscoveryLogRssi: -60
   maxDistance: 44.4
   rssiFactor: 1.1
   tagOverrides:

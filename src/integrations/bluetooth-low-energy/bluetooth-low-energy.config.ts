@@ -58,6 +58,8 @@ export class BluetoothLowEnergyConfig {
   rssiFactor = 1;
   @(jf.number().positive().optional())
   maxDistance?: number;
+  @(jf.number().max(0).required())
+  minDiscoveryLogRssi = -999;
 }
 
 function validateTagOverrides(options: {
