@@ -324,6 +324,12 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
       }
 
       if (buffer) {
+        // buffer[0] -> battery level (0-100)
+        // buffer[2:] -> device firmware version (e.g. "3.2.4")
+        if (buffer.length > 2) {
+          device.swVersion = buffer.toString('utf-8', 2);
+        }
+
         this.recordMeasure(
           device,
           SensorMetadataList[EventType.battery],
