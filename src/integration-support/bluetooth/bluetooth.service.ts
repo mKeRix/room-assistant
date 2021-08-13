@@ -195,13 +195,13 @@ export class BluetoothService implements OnApplicationShutdown {
     serviceUuid: string,
     characteristicUuid: string
   ): Promise<Buffer | null> {
-    const disconnectPromise = util.promisify(target.once).bind(target)(
-      'disconnect'
-    );
-
     const peripheral = await this.connectLowEnergyDevice(target);
 
     try {
+      const disconnectPromise = util.promisify(target.once).bind(target)(
+        'disconnect'
+      );
+
       return await promiseWithTimeout<Buffer | null>(
         Promise.race([
           this.readLowEnergyCharacteristic(
