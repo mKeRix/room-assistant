@@ -308,7 +308,7 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
 
     const schedule: BatterySchedule = this.batterySchedule[peripheral.id];
     if (Date.now() > schedule.nextQueryAfter.getTime()) {
-      let buffer: Buffer;
+      let buffer: Buffer = null;
 
       schedule.attempts += 1;
       try {
@@ -317,6 +317,9 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
           SERVICE_BATTERY_UUID,
           CHARACTERISTIC_BATTERY_UUID
         );
+        if (!buffer) {
+          throw new Error('data unavailable');
+        }
       } catch (error) {
         this.logger.warn(
           `${device.name}: Error reading battery level (attempt ${schedule.attempts} of ${BATTERY_QUERY_ATTEMPTS}): ${error}`
@@ -340,7 +343,7 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
         );
       }
 
-      if (buffer || schedule.attempts == BATTERY_QUERY_ATTEMPTS) {
+      if (buffer || schedule.attempts >= BATTERY_QUERY_ATTEMPTS) {
         schedule.nextQueryAfter = new Date(
           Date.now() +
             BATTERY_QUERY_INTERVAL +
