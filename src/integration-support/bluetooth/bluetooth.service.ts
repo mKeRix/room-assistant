@@ -181,7 +181,7 @@ export class BluetoothService implements OnApplicationShutdown {
         `Failed to disconnect from ${peripheral.address}: ${e.message}`,
         e.trace
       );
-      this.resetHciDevice(this._lowEnergyAdapterId);
+      await this.resetHciDevice(this._lowEnergyAdapterId);
     }
   }
 
@@ -239,7 +239,7 @@ export class BluetoothService implements OnApplicationShutdown {
       );
 
       if (e.message === 'timed out') {
-        this.resetHciDevice(this.lowEnergyAdapterId);
+        await this.resetHciDevice(this.lowEnergyAdapterId);
       }
 
       return null;
