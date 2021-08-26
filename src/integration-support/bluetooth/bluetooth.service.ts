@@ -153,6 +153,7 @@ export class BluetoothService implements OnApplicationShutdown {
       );
       peripheral.disconnect();
       peripheral.removeAllListeners();
+      await this.unlockAdapter(this._lowEnergyAdapterId);
       throw e;
     }
   }

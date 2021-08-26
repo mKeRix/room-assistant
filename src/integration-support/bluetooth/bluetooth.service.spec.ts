@@ -438,6 +438,33 @@ Requesting information ...
       return promise;
     });
 
+    it('should unlock the adapter following connection time-out', () => {
+      expect.assertions(1);
+      jest.useFakeTimers('modern');
+      const unlockSpy = jest.spyOn(service, 'unlockAdapter');
+
+      const peripheral = {
+        connectable: true,
+        connectAsync: jest
+          .fn()
+          .mockReturnValue(
+            new Promise((resolve) => setTimeout(resolve, 11 * 1000))
+          ),
+        disconnect: jest.fn(),
+        removeAllListeners: jest.fn(),
+        once: jest.fn(),
+      };
+
+      const promise = service
+        .connectLowEnergyDevice(peripheral as unknown as Peripheral)
+        .catch(() => {
+          expect(unlockSpy).toHaveBeenCalledTimes(1);
+        });
+      jest.advanceTimersByTime(10.5 * 1000);
+
+      return promise;
+    });
+
     it('should return the peripheral after connecting', async () => {
       jest.spyOn(Promises, 'sleep').mockResolvedValue();
       const peripheral = {
