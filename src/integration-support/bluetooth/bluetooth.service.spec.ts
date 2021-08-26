@@ -354,9 +354,6 @@ Requesting information ...
       const peripheral = {
         connectable: true,
         connectAsync: jest.fn().mockReturnValue(connectPromise),
-        disconnect: jest.fn(),
-        removeAllListeners: jest.fn(),
-        once: jest.fn(),
         state: 'disconnected',
       };
 
@@ -370,37 +367,39 @@ Requesting information ...
       connectResolve();
     });
 
-    it('should unlock the adapter on disconnect', async () => {
+    it('should lock the adapter before attempting to connect', async () => {
       jest.spyOn(Promises, 'sleep').mockResolvedValue();
+      const lockSpy = jest.spyOn(service, 'lockAdapter');
       const peripheral = {
         connectable: true,
         connectAsync: jest.fn().mockImplementation(() => {
           peripheral.state = 'connected';
           return Promise.resolve();
         }),
-        once: jest.fn(),
         state: 'disconnected',
       };
-
-      await service.connectLowEnergyDevice(peripheral as unknown as Peripheral);
-
-      const disconnectListener = peripheral.once.mock.calls[0][1];
-      disconnectListener();
 
       await expect(async () => {
         await service.connectLowEnergyDevice(
           peripheral as unknown as Peripheral
         );
       }).not.toThrow();
+
+      expect(lockSpy).toHaveBeenCalled();
     });
 
-    it('should clean up if an exception occurs while connecting', async () => {
+    it('should unlock adapter if an exception occurs while connecting', async () => {
+      jest.spyOn(Promises, 'sleep').mockResolvedValue();
+      const unlockSpy = jest
+        .spyOn(service, 'unlockAdapter')
+        .mockResolvedValue();
       const peripheral = {
         connectable: true,
-        connectAsync: jest.fn().mockRejectedValue(new Error('expected')),
-        disconnect: jest.fn(),
-        removeAllListeners: jest.fn(),
-        once: jest.fn(),
+        connectAsync: jest.fn().mockImplementation(() => {
+          return new Error('timed out');
+        }),
+        disconnectAsync: jest.fn(),
+        state: 'disconnected',
       };
 
       await expect(async () => {
@@ -409,7 +408,7 @@ Requesting information ...
         );
       }).rejects.toThrow();
 
-      expect(peripheral.removeAllListeners).toHaveBeenCalled();
+      expect(unlockSpy).toHaveBeenCalled();
     });
 
     it('should limit the connection attempt time', () => {
@@ -423,9 +422,6 @@ Requesting information ...
           .mockReturnValue(
             new Promise((resolve) => setTimeout(resolve, 11 * 1000))
           ),
-        disconnect: jest.fn(),
-        removeAllListeners: jest.fn(),
-        once: jest.fn(),
       };
 
       const promise = service
@@ -450,9 +446,6 @@ Requesting information ...
           .mockReturnValue(
             new Promise((resolve) => setTimeout(resolve, 11 * 1000))
           ),
-        disconnect: jest.fn(),
-        removeAllListeners: jest.fn(),
-        once: jest.fn(),
       };
 
       const promise = service
@@ -473,7 +466,6 @@ Requesting information ...
           peripheral.state = 'connected';
           return Promise.resolve();
         }),
-        once: jest.fn(),
         state: 'disconnected',
       };
 
@@ -494,7 +486,6 @@ Requesting information ...
             peripheral.state = 'connected';
             return Promise.resolve();
           }),
-        once: jest.fn(),
         state: 'disconnected',
       };
 
@@ -510,9 +501,6 @@ Requesting information ...
       const peripheral = {
         connectable: true,
         connectAsync: jest.fn().mockResolvedValue(undefined),
-        disconnect: jest.fn(),
-        once: jest.fn(),
-        removeAllListeners: jest.fn(),
         state: 'disconnected',
       };
 
@@ -536,8 +524,6 @@ Requesting information ...
           peripheral.state = 'disconnected';
           return Promise.resolve();
         }),
-        once: jest.fn(),
-        removeAllListeners: jest.fn(),
         state: 'disconnected',
       };
 
@@ -595,6 +581,7 @@ Requesting information ...
     });
 
     it('should reset the adapter when query attempts time out', async () => {
+      service.onLowEnergyDiscovery(() => undefined);
       const peripheral = {
         id: 'abcd1234',
         connectable: true,
@@ -606,17 +593,19 @@ Requesting information ...
           .fn()
           .mockRejectedValue(new Error('timed out')),
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
-        once: jest.fn(),
       } as unknown as Peripheral;
-      mockExec.mockReturnValue(new Promise((resolve) => setTimeout(resolve)));
-      const resetSpy = jest.spyOn(service, 'resetHciDevice');
+      const execPromise = Promise.resolve({ stdout: '-1' });
+      mockExec.mockReturnValue(execPromise);
 
       await service.queryLowEnergyDevice(
         peripheral,
         SERVICE_UUID,
         CHARACTERISTIC_UUID
       );
-      expect(resetSpy).toHaveBeenCalled();
+      expect(mockExec).toHaveBeenCalledWith(
+        'hciconfig hci0 reset',
+        expect.anything()
+      );
     });
 
     it('should return the value of a query from the device', async () => {
@@ -637,7 +626,6 @@ Requesting information ...
         }),
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
-        once: jest.fn(),
       } as unknown as Peripheral;
 
       const result = await service.queryLowEnergyDevice(
@@ -663,7 +651,6 @@ Requesting information ...
         }),
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
-        once: jest.fn(),
       } as unknown as Peripheral;
 
       const result = await service.queryLowEnergyDevice(
@@ -686,7 +673,6 @@ Requesting information ...
         }),
         discoverServicesAsync: jest.fn().mockResolvedValue([]),
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
-        once: jest.fn(),
       } as unknown as Peripheral;
 
       const result = await service.queryLowEnergyDevice(
@@ -714,7 +700,6 @@ Requesting information ...
         }),
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
-        once: jest.fn(),
       } as unknown as Peripheral;
 
       const result = await service.queryLowEnergyDevice(
@@ -748,7 +733,6 @@ Requesting information ...
           return Promise.resolve([gattService]);
         }),
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
-        once: jest.fn(),
       } as unknown as Peripheral;
 
       const result = await service.queryLowEnergyDevice(
@@ -762,6 +746,33 @@ Requesting information ...
       expect(gattCharacteristic.readAsync).not.toHaveBeenCalled();
       expect(peripheral.disconnectAsync).not.toHaveBeenCalled();
       expect(result).toBeNull();
+    });
+
+    it('should abort and unlock the adapter when query attempts time out', async () => {
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest
+          .fn()
+          .mockRejectedValue(new Error('timed out')),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      } as unknown as Peripheral;
+      const execPromise = Promise.resolve({ stdout: '-1' });
+      mockExec.mockReturnValue(execPromise);
+      const unlockSpy = jest
+        .spyOn(service, 'unlockAdapter')
+        .mockResolvedValue();
+
+      await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+      expect(unlockSpy).toHaveBeenCalled();
     });
 
     it('should not disconnect from an already disconnecting peripheral', async () => {
@@ -785,7 +796,6 @@ Requesting information ...
         }),
         discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
-        once: jest.fn(),
       } as unknown as Peripheral;
       service.disconnectLowEnergyDevice = jest.fn();
 

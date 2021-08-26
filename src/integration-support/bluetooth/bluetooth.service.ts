@@ -155,7 +155,6 @@ export class BluetoothService implements OnApplicationShutdown {
         `Failed to connect to ${peripheral.address}: ${e.message}`,
         e.trace
       );
-      peripheral.removeAllListeners();
       await this.unlockAdapter(this._lowEnergyAdapterId);
       throw e;
     }
@@ -219,8 +218,9 @@ export class BluetoothService implements OnApplicationShutdown {
       return null;
     } finally {
       if (!['disconnecting', 'disconnected'].includes(target.state)) {
-        this.disconnectLowEnergyDevice(target);
+        await this.disconnectLowEnergyDevice(target);
       }
+      await this.unlockAdapter(this._lowEnergyAdapterId);
     }
   }
 
@@ -708,18 +708,6 @@ export class BluetoothService implements OnApplicationShutdown {
     if (peripheral.state !== 'connected') {
       throw new Error(timeout <= 0 ? 'timed out' : 'retries exceeded');
     }
-
-    peripheral.once('disconnect', (e) => {
-      if (e) {
-        this.logger.error(e);
-      } else {
-        this.logger.debug(
-          `Disconnected from BLE device at address ${peripheral.address}`
-        );
-      }
-
-      this.unlockAdapter(this._lowEnergyAdapterId);
-    });
 
     return peripheral;
   }
