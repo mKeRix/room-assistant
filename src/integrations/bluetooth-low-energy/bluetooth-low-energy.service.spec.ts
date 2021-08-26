@@ -40,6 +40,8 @@ describe('BluetoothLowEnergyService', () => {
     lowEnergyScanUptime: 16 * 1000,
     onLowEnergyDiscovery: jest.fn(),
     queryLowEnergyDevice: jest.fn(),
+    acquireQueryMutex: jest.fn().mockReturnValue(true),
+    releaseQueryMutex: jest.fn(),
   };
   const clusterService = {
     on: jest.fn(),

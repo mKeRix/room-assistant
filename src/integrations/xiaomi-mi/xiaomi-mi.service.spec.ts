@@ -19,6 +19,8 @@ describe('XiaomiMiService', () => {
   const bluetoothService = {
     onLowEnergyDiscovery: jest.fn(),
     queryLowEnergyDevice: jest.fn(),
+    acquireQueryMutex: jest.fn().mockReturnValue(true),
+    releaseQueryMutex: jest.fn(),
   };
   const entitiesService = {
     get: jest.fn(),

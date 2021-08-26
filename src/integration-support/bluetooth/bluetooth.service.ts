@@ -50,6 +50,7 @@ export class BluetoothService implements OnApplicationShutdown {
   private _successiveErrorsOccurred = 0;
   private lastLowEnergyDiscovery: Date;
   private scanStartedAt?: Date;
+  private queryMutexAvailable = true;
 
   constructor(
     private readonly configService: ConfigService,
@@ -185,6 +186,25 @@ export class BluetoothService implements OnApplicationShutdown {
   }
 
   /**
+   * Acquires exclusive access to executing a BLE query.
+   * Will return true if mutex granted otherwise returns false.
+   */
+  acquireQueryMutex(): boolean {
+    if (this.queryMutexAvailable) {
+      this.queryMutexAvailable = false;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Releases the exclusive access on executing a BLE query.
+   */
+  releaseQueryMutex(): void {
+    this.queryMutexAvailable = true;
+  }
+
+  /**
    * Connects to the given peripheral and queries the service/characteristic value.
    * If the service and characteristic are not found it will return null.
    *
@@ -197,6 +217,13 @@ export class BluetoothService implements OnApplicationShutdown {
     serviceUuid: string,
     characteristicUuid: string
   ): Promise<Buffer | null> {
+    if (this.queryMutexAvailable) {
+      this.logger.error(
+        `Permission to query ${target.id} has not been acquired`
+      );
+      return null;
+    }
+
     const peripheral = await this.connectLowEnergyDevice(target);
 
     try {

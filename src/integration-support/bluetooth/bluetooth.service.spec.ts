@@ -19,6 +19,13 @@ jest.mock('util', () => ({
 const mockNoble = mocked(noble);
 const mockBleno = mocked(bleno);
 
+const loggerService = {
+  log: jest.fn(),
+  debug: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+};
+
 describe('BluetoothService', () => {
   let service: BluetoothService;
 
@@ -37,6 +44,7 @@ describe('BluetoothService', () => {
         }),
       ],
     }).compile();
+    module.useLogger(loggerService);
     service = module.get<BluetoothService>(BluetoothService);
   });
 
@@ -580,6 +588,77 @@ Requesting information ...
       expect(peripheral.disconnectAsync).not.toHaveBeenCalled();
     });
 
+    it('should allow a query if the mutex has been acquired', async () => {
+      const gattCharacteristic = {
+        readAsync: jest.fn().mockResolvedValue(Buffer.from('app-id', 'utf-8')),
+      };
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockResolvedValue([gattCharacteristic]),
+      };
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      } as unknown as Peripheral;
+
+      service.acquireQueryMutex();
+      const result = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+      service.releaseQueryMutex();
+
+      expect(peripheral.disconnectAsync).toHaveBeenCalled();
+      expect(result).toStrictEqual(Buffer.from('app-id', 'utf-8'));
+    });
+
+    it('should return null from query if mutex has not been acquired', async () => {
+      const peripheral = {
+        id: 'abcd1234',
+      } as unknown as Peripheral;
+
+      let response = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+
+      expect(loggerService.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Permission to query abcd1234 has not been acquired'
+        ),
+        '',
+        'BluetoothService'
+      );
+      expect(response).toBeNull();
+
+      service.acquireQueryMutex();
+      service.releaseQueryMutex();
+
+      response = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+
+      expect(loggerService.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Permission to query abcd1234 has not been acquired'
+        ),
+        '',
+        'BluetoothService'
+      );
+      expect(response).toBeNull();
+    });
+
     it('should reset the adapter when query attempts time out', async () => {
       service.onLowEnergyDiscovery(() => undefined);
       const peripheral = {
@@ -597,11 +676,14 @@ Requesting information ...
       const execPromise = Promise.resolve({ stdout: '-1' });
       mockExec.mockReturnValue(execPromise);
 
+      service.acquireQueryMutex();
       await service.queryLowEnergyDevice(
         peripheral,
         SERVICE_UUID,
         CHARACTERISTIC_UUID
       );
+      service.releaseQueryMutex();
+
       expect(mockExec).toHaveBeenCalledWith(
         'hciconfig hci0 reset',
         expect.anything()
@@ -628,11 +710,13 @@ Requesting information ...
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
       } as unknown as Peripheral;
 
+      service.acquireQueryMutex();
       const result = await service.queryLowEnergyDevice(
         peripheral,
         SERVICE_UUID,
         CHARACTERISTIC_UUID
       );
+      service.releaseQueryMutex();
 
       expect(peripheral.disconnectAsync).toHaveBeenCalled();
       expect(result).toStrictEqual(Buffer.from('app-id', 'utf-8'));
@@ -653,11 +737,13 @@ Requesting information ...
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
       } as unknown as Peripheral;
 
+      service.acquireQueryMutex();
       const result = await service.queryLowEnergyDevice(
         peripheral,
         SERVICE_UUID,
         CHARACTERISTIC_UUID
       );
+      service.releaseQueryMutex();
 
       expect(peripheral.disconnectAsync).toHaveBeenCalled();
       expect(result).toBeNull();
@@ -675,11 +761,13 @@ Requesting information ...
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
       } as unknown as Peripheral;
 
+      service.acquireQueryMutex();
       const result = await service.queryLowEnergyDevice(
         peripheral,
         SERVICE_UUID,
         CHARACTERISTIC_UUID
       );
+      service.releaseQueryMutex();
 
       expect(peripheral.disconnectAsync).toHaveBeenCalled();
       expect(result).toBeNull();
@@ -702,11 +790,13 @@ Requesting information ...
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
       } as unknown as Peripheral;
 
+      service.acquireQueryMutex();
       const result = await service.queryLowEnergyDevice(
         peripheral,
         SERVICE_UUID,
         CHARACTERISTIC_UUID
       );
+      service.releaseQueryMutex();
 
       expect(peripheral.disconnectAsync).toHaveBeenCalled();
       expect(result).toBeNull();
@@ -735,11 +825,13 @@ Requesting information ...
         disconnectAsync: jest.fn().mockResolvedValue(undefined),
       } as unknown as Peripheral;
 
+      service.acquireQueryMutex();
       const result = await service.queryLowEnergyDevice(
         peripheral,
         SERVICE_UUID,
         CHARACTERISTIC_UUID
       );
+      service.releaseQueryMutex();
 
       expect(peripheral.discoverServicesAsync).toHaveBeenCalledTimes(1);
       expect(gattService.discoverCharacteristicsAsync).not.toHaveBeenCalled();
@@ -767,11 +859,14 @@ Requesting information ...
         .spyOn(service, 'unlockAdapter')
         .mockResolvedValue();
 
+      service.acquireQueryMutex();
       await service.queryLowEnergyDevice(
         peripheral,
         SERVICE_UUID,
         CHARACTERISTIC_UUID
       );
+      service.releaseQueryMutex();
+
       expect(unlockSpy).toHaveBeenCalled();
     });
 
@@ -799,11 +894,13 @@ Requesting information ...
       } as unknown as Peripheral;
       service.disconnectLowEnergyDevice = jest.fn();
 
+      service.acquireQueryMutex();
       const result = await service.queryLowEnergyDevice(
         peripheral,
         SERVICE_UUID,
         CHARACTERISTIC_UUID
       );
+      service.releaseQueryMutex();
 
       expect(service.disconnectLowEnergyDevice).not.toHaveBeenCalled();
       expect(result).toStrictEqual(Buffer.from('app-id', 'utf-8'));
