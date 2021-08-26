@@ -17,6 +17,8 @@ const INQUIRY_LOCK_TIMEOUT = 30 * 1000;
 const SCAN_NO_PERIPHERAL_TIMEOUT = 30 * 1000;
 const IBEACON_UUID = 'D1338ACE-002D-44AF-88D1-E57C12484966';
 
+const BLE_READ_TIMEOUT = 15 * 1000;
+
 const execPromise = util.promisify(exec);
 
 type BluetoothAdapterState = 'inquiry' | 'scan' | 'inactive' | 'resetting';
@@ -198,20 +200,10 @@ export class BluetoothService implements OnApplicationShutdown {
     const peripheral = await this.connectLowEnergyDevice(target);
 
     try {
-      const disconnectPromise = util.promisify(target.once).bind(target)(
-        'disconnect'
-      );
-
-      return await promiseWithTimeout<Buffer | null>(
-        Promise.race([
-          this.readLowEnergyCharacteristic(
-            peripheral,
-            serviceUuid,
-            characteristicUuid
-          ),
-          disconnectPromise,
-        ]),
-        15 * 1000
+      return await this.readLowEnergyCharacteristic(
+        peripheral,
+        serviceUuid,
+        characteristicUuid
       );
     } catch (e) {
       this.logger.error(
@@ -243,15 +235,39 @@ export class BluetoothService implements OnApplicationShutdown {
     serviceUuid: string,
     characteristicUuid: string
   ): Promise<Buffer | null> {
-    const services = await peripheral.discoverServicesAsync([serviceUuid]);
+    if (peripheral.state !== 'connected') {
+      return null;
+    }
 
-    if (services.length > 0) {
-      const characteristics = await services[0].discoverCharacteristicsAsync([
-        characteristicUuid,
-      ]);
+    const cutoffTime = Date.now() + BLE_READ_TIMEOUT;
 
-      if (characteristics.length > 0) {
-        return await characteristics[0].readAsync();
+    let timeout = cutoffTime - Date.now();
+    const services = (await promiseWithTimeout(
+      peripheral.discoverServicesAsync([serviceUuid]),
+      timeout
+    )) as noble.Service[];
+
+    timeout = cutoffTime - Date.now();
+    if (
+      services.length > 0 &&
+      peripheral.state === 'connected' &&
+      timeout > 0
+    ) {
+      const characteristics = (await promiseWithTimeout(
+        services[0].discoverCharacteristicsAsync([characteristicUuid]),
+        timeout
+      )) as noble.Characteristic[];
+
+      timeout = cutoffTime - Date.now();
+      if (
+        characteristics.length > 0 &&
+        peripheral.state === 'connected' &&
+        timeout > 0
+      ) {
+        return await promiseWithTimeout(
+          characteristics[0].readAsync(),
+          timeout
+        );
       }
     }
     return null;

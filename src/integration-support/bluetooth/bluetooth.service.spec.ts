@@ -701,6 +701,43 @@ Requesting information ...
       expect(result).toBeNull();
     });
 
+    it('should abort and return null if the device disconnects before the query is complete', async () => {
+      const gattCharacteristic = {
+        readAsync: jest.fn().mockResolvedValue(Buffer.from('app-id', 'utf-8')),
+      };
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockResolvedValue([gattCharacteristic]),
+      };
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'disconnected';
+          return Promise.resolve([gattService]);
+        }),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+        once: jest.fn(),
+      } as unknown as Peripheral;
+
+      const result = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+
+      expect(peripheral.discoverServicesAsync).toHaveBeenCalledTimes(1);
+      expect(gattService.discoverCharacteristicsAsync).not.toHaveBeenCalled();
+      expect(gattCharacteristic.readAsync).not.toHaveBeenCalled();
+      expect(peripheral.disconnectAsync).not.toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+
     it('should not disconnect from an already disconnecting peripheral', async () => {
       const gattCharacteristic = {
         readAsync: jest.fn().mockImplementation(() => {
