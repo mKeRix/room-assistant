@@ -17,6 +17,8 @@ const INQUIRY_LOCK_TIMEOUT = 30 * 1000;
 const SCAN_NO_PERIPHERAL_TIMEOUT = 30 * 1000;
 const IBEACON_UUID = 'D1338ACE-002D-44AF-88D1-E57C12484966';
 
+const BLE_CONNECTION_RETRIES = 5;
+const BLE_CONNECTION_TIMEOUT = 10 * 1000;
 const BLE_READ_TIMEOUT = 15 * 1000;
 
 const execPromise = util.promisify(exec);
@@ -143,9 +145,9 @@ export class BluetoothService implements OnApplicationShutdown {
     this.lockAdapter(this._lowEnergyAdapterId);
 
     try {
-      await promiseWithTimeout(
-        this.connectLowEnergyDeviceWithRetry(peripheral, 5),
-        10 * 1000
+      await this.connectLowEnergyDeviceWithRetry(
+        peripheral,
+        BLE_CONNECTION_RETRIES
       );
       return peripheral;
     } catch (e) {
@@ -153,7 +155,6 @@ export class BluetoothService implements OnApplicationShutdown {
         `Failed to connect to ${peripheral.address}: ${e.message}`,
         e.trace
       );
-      peripheral.disconnect();
       peripheral.removeAllListeners();
       await this.unlockAdapter(this._lowEnergyAdapterId);
       throw e;
@@ -174,7 +175,7 @@ export class BluetoothService implements OnApplicationShutdown {
       `Disconnecting from BLE device at address ${peripheral.address}`
     );
     try {
-      await peripheral.disconnectAsync();
+      await promiseWithTimeout(peripheral.disconnectAsync(), 1000);
     } catch (e) {
       this.logger.error(
         `Failed to disconnect from ${peripheral.address}: ${e.message}`,
@@ -671,36 +672,55 @@ export class BluetoothService implements OnApplicationShutdown {
     peripheral: Peripheral,
     tries: number
   ): Promise<Peripheral> {
-    if (tries <= 0) {
-      this.unlockAdapter(this._lowEnergyAdapterId);
-      throw new Error(
-        `Maximum retries reached while connecting to ${peripheral.address}`
-      );
-    }
-
     this.logger.debug(
       `Connecting to BLE device at address ${peripheral.address}`
     );
 
-    await peripheral.connectAsync();
-    await sleep(500); // https://github.com/mKeRix/room-assistant/issues/508
+    const cutoffTime = Date.now() + BLE_CONNECTION_TIMEOUT;
 
-    if (!['connected', 'connecting'].includes(peripheral.state)) {
-      return this.connectLowEnergyDeviceWithRetry(peripheral, tries - 1);
-    } else {
-      peripheral.once('disconnect', (e) => {
-        if (e) {
-          this.logger.error(e);
-        } else {
-          this.logger.debug(
-            `Disconnected from BLE device at address ${peripheral.address}`
-          );
-        }
+    let timeout = cutoffTime - Date.now();
+    do {
+      try {
+        await promiseWithTimeout(peripheral.connectAsync(), timeout);
+      } catch (e) {
+        this.logger.debug(`ConnectAsync error ${peripheral.address}: ${e})`);
+      }
+      if (peripheral.state === 'connecting') {
+        try {
+          // Force cancellation if connection attempt timed-out
+          await promiseWithTimeout(peripheral.disconnectAsync(), 1000);
+        } catch {}
+      }
 
-        this.unlockAdapter(this._lowEnergyAdapterId);
-      });
+      // TODO: Confirm with Author on required sleep delay and latest hci commit
+      //      await sleep(500); // https://github.com/mKeRix/room-assistant/issues/508
+      await sleep(100);
 
-      return peripheral;
+      tries--;
+      timeout = cutoffTime - Date.now();
+      this.logger.debug(
+        `Connect attempt ${5 - tries}: State ${
+          peripheral.state
+        } with time remaining ${timeout} ms`
+      );
+    } while (tries > 0 && timeout > 0 && peripheral.state !== 'connected');
+
+    if (peripheral.state !== 'connected') {
+      throw new Error(timeout <= 0 ? 'timed out' : 'retries exceeded');
     }
+
+    peripheral.once('disconnect', (e) => {
+      if (e) {
+        this.logger.error(e);
+      } else {
+        this.logger.debug(
+          `Disconnected from BLE device at address ${peripheral.address}`
+        );
+      }
+
+      this.unlockAdapter(this._lowEnergyAdapterId);
+    });
+
+    return peripheral;
   }
 }

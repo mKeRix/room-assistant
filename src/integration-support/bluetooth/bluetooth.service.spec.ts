@@ -524,6 +524,32 @@ Requesting information ...
       expect(peripheral.connectAsync).toHaveBeenCalledTimes(5);
     });
 
+    it('should ensure any connection attempts that are timed out are explicitly canceled', async () => {
+      jest.spyOn(Promises, 'sleep').mockResolvedValue();
+      const peripheral = {
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connecting';
+          return new Error('retry');
+        }),
+        disconnectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'disconnected';
+          return Promise.resolve();
+        }),
+        once: jest.fn(),
+        removeAllListeners: jest.fn(),
+        state: 'disconnected',
+      };
+
+      await expect(async () => {
+        await service.connectLowEnergyDevice(
+          peripheral as unknown as Peripheral
+        );
+      }).rejects.toThrow();
+      expect(peripheral.connectAsync).toHaveBeenCalledTimes(5);
+      expect(peripheral.disconnectAsync).toHaveBeenCalledTimes(5);
+    });
+
     it('should disconnect from a peripheral', async () => {
       const peripheral = {
         state: 'connected',
