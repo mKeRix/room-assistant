@@ -46,6 +46,7 @@ describe('BluetoothService', () => {
     }).compile();
     module.useLogger(loggerService);
     service = module.get<BluetoothService>(BluetoothService);
+    service.bleno = mockBleno;
   });
 
   describe('Bluetooth Classic', () => {

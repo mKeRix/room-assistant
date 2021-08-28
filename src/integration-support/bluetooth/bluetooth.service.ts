@@ -3,6 +3,7 @@ import noble, { Peripheral } from '@mkerix/noble';
 import util from 'util';
 import { exec } from 'child_process';
 import { BluetoothClassicConfig } from '../../integrations/bluetooth-classic/bluetooth-classic.config';
+import { BluetoothLowEnergyConfig } from '../../integrations/bluetooth-low-energy/bluetooth-low-energy.config';
 import { ConfigService } from '../../config/config.service';
 import { Device } from '../../integrations/bluetooth-classic/device';
 import { promiseWithTimeout, sleep } from '../../util/promises';
@@ -10,7 +11,6 @@ import { Interval } from '@nestjs/schedule';
 import _ from 'lodash';
 import { Counter } from 'prom-client';
 import { InjectMetric } from '@willsoto/nestjs-prometheus';
-import bleno from 'bleno';
 
 const RSSI_REGEX = new RegExp(/-?[0-9]+/);
 const INQUIRY_LOCK_TIMEOUT = 30 * 1000;
@@ -45,12 +45,14 @@ class BluetoothAdapterMap extends Map<number, BluetoothAdapter> {
 export class BluetoothService implements OnApplicationShutdown {
   private readonly logger: Logger = new Logger(BluetoothService.name);
   private readonly classicConfig: BluetoothClassicConfig;
+  private readonly bleConfig: BluetoothLowEnergyConfig;
   private readonly adapters = new BluetoothAdapterMap();
   private _lowEnergyAdapterId: number;
   private _successiveErrorsOccurred = 0;
   private lastLowEnergyDiscovery: Date;
   private scanStartedAt?: Date;
   private queryMutexAvailable = true;
+  bleno = null;
 
   constructor(
     private readonly configService: ConfigService,
@@ -58,6 +60,11 @@ export class BluetoothService implements OnApplicationShutdown {
     private readonly advertisementReceivedCounter: Counter<string>
   ) {
     this.classicConfig = this.configService.get('bluetoothClassic');
+    this.bleConfig = this.configService.get('bluetoothLowEnergy');
+
+    if (this.bleConfig.instanceBeaconEnabled) {
+      this.bleno = require('bleno');
+    }
   }
 
   /**
@@ -106,7 +113,7 @@ export class BluetoothService implements OnApplicationShutdown {
       this.adapters.getState(this._lowEnergyAdapterId) != 'inquiry'
     ) {
       noble.stopScanning();
-      bleno.stopAdvertising();
+      this.bleno?.stopAdvertising();
     }
   }
 
@@ -419,7 +426,7 @@ export class BluetoothService implements OnApplicationShutdown {
 
     if (this._lowEnergyAdapterId === adapterId) {
       noble.stopScanning();
-      bleno.stopAdvertising();
+      this.bleno?.stopAdvertising();
     }
 
     try {
@@ -468,7 +475,7 @@ export class BluetoothService implements OnApplicationShutdown {
           `Stopping scanning for BLE peripherals on adapter ${adapterId}`
         );
         noble.stopScanning();
-        bleno.stopAdvertising();
+        this.bleno?.stopAdvertising();
     }
 
     this.adapters.setState(adapterId, 'inquiry');
@@ -557,12 +564,12 @@ export class BluetoothService implements OnApplicationShutdown {
       this.logger.warn(message);
     });
 
-    bleno.on(
+    this.bleno?.on(
       'stateChange',
       this.handleAdvertisingAdapterStateChange.bind(this)
     );
-    bleno.on('advertisingStart', this.handleAdvertisingStart.bind(this));
-    bleno.on('advertisingStop', this.handleAdvertisingStop.bind(this));
+    this.bleno?.on('advertisingStart', this.handleAdvertisingStart.bind(this));
+    this.bleno?.on('advertisingStop', this.handleAdvertisingStop.bind(this));
   }
 
   /**
@@ -575,7 +582,9 @@ export class BluetoothService implements OnApplicationShutdown {
     this.scanStartedAt = new Date();
     this.adapters.setState(this._lowEnergyAdapterId, 'scan');
 
-    this.startAdvertising(); // called after scan started to prevent two operations at the same time
+    if (this.bleno) {
+      this.startAdvertising(); // called after scan started to prevent two operations at the same time
+    }
   }
 
   /**
@@ -668,7 +677,7 @@ export class BluetoothService implements OnApplicationShutdown {
     );
     const adapterState = this.adapters.getState(this._lowEnergyAdapterId);
 
-    if (state === 'poweredOn' && adapterState === 'scan') {
+    if (this.bleno && state === 'poweredOn' && adapterState === 'scan') {
       this.startAdvertising();
     }
   }
@@ -677,13 +686,11 @@ export class BluetoothService implements OnApplicationShutdown {
    * Starts advertising instance as an iBeacon.
    */
   private startAdvertising(): void {
-    const config = this.configService.get('bluetoothLowEnergy');
-
-    if (config.instanceBeaconEnabled && bleno.state === 'poweredOn') {
-      bleno.startAdvertisingIBeacon(
+    if (this.bleno?.state === 'poweredOn') {
+      this.bleno.startAdvertisingIBeacon(
         IBEACON_UUID,
-        config.instanceBeaconMajor,
-        config.instanceBeaconMinor,
+        this.bleConfig.instanceBeaconMajor,
+        this.bleConfig.instanceBeaconMinor,
         -59
       );
     }
