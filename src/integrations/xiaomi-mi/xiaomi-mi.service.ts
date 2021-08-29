@@ -16,6 +16,7 @@ import { Sensor } from '../../entities/sensor';
 import { EntityCustomization } from '../../entities/entity-customization.interface';
 import { SensorConfig } from '../home-assistant/sensor-config';
 import { BluetoothService } from '../../integration-support/bluetooth/bluetooth.service';
+import { StateClass } from '../home-assistant/entity-config';
 
 const SERVICE_DATA_UUID = 'fe95';
 const SERVICE_BATTERY_UUID = '0000120400001000800000805f9b34fb';
@@ -28,6 +29,7 @@ const BATTERY_QUERY_ATTEMPTS = 3;
 class SensorMetadata {
   name: string;
   deviceClass: string;
+  stateClass?: StateClass;
   units: string;
 }
 
@@ -35,27 +37,37 @@ const SensorMetadataList: { [index: number]: SensorMetadata } = {
   [EventType.temperature]: {
     name: 'Temperature',
     deviceClass: 'temperature',
+    stateClass: StateClass.MEASUREMENT,
     units: '°C',
   },
   [EventType.humidity]: {
     name: 'Humidity',
     deviceClass: 'humidity',
+    stateClass: StateClass.MEASUREMENT,
     units: '%',
   },
-  [EventType.battery]: { name: 'Battery', deviceClass: 'battery', units: '%' },
+  [EventType.battery]: {
+    name: 'Battery',
+    deviceClass: 'battery',
+    stateClass: StateClass.MEASUREMENT,
+    units: '%',
+  },
   [EventType.illuminance]: {
     name: 'Illuminance',
     deviceClass: 'illuminance',
+    stateClass: StateClass.MEASUREMENT,
     units: 'lx',
   },
   [EventType.moisture]: {
     name: 'Moisture',
     deviceClass: undefined,
+    stateClass: StateClass.MEASUREMENT,
     units: '%',
   },
   [EventType.fertility]: {
     name: 'Conductivity',
     deviceClass: undefined,
+    stateClass: StateClass.MEASUREMENT,
     units: 'µS/cm',
   },
 };
@@ -133,6 +145,7 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
           for: SensorConfig,
           overrides: {
             deviceClass: sensor.deviceClass,
+            stateClass: sensor.stateClass,
             unitOfMeasurement: sensor.units,
             device: device,
           },

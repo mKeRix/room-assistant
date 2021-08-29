@@ -170,6 +170,7 @@ describe('XiaomiMiService', () => {
       overrides: {
         device: deviceInfo,
         deviceClass: 'temperature',
+        stateClass: 'measurement',
         unitOfMeasurement: '°C',
       },
     });
@@ -189,6 +190,7 @@ describe('XiaomiMiService', () => {
       overrides: {
         device: deviceInfo,
         deviceClass: 'humidity',
+        stateClass: 'measurement',
         unitOfMeasurement: '%',
       },
     });
@@ -212,6 +214,7 @@ describe('XiaomiMiService', () => {
       overrides: {
         device: deviceInfo,
         deviceClass: 'temperature',
+        stateClass: 'measurement',
         unitOfMeasurement: '°C',
       },
     });
@@ -223,6 +226,7 @@ describe('XiaomiMiService', () => {
       overrides: {
         device: deviceInfo,
         deviceClass: 'humidity',
+        stateClass: 'measurement',
         unitOfMeasurement: '%',
       },
     });
@@ -242,6 +246,7 @@ describe('XiaomiMiService', () => {
       overrides: {
         device: deviceInfo,
         deviceClass: 'battery',
+        stateClass: 'measurement',
         unitOfMeasurement: '%',
       },
     });
@@ -261,6 +266,7 @@ describe('XiaomiMiService', () => {
       overrides: {
         device: deviceInfo,
         deviceClass: undefined,
+        stateClass: 'measurement',
         unitOfMeasurement: '%',
       },
     });
@@ -289,6 +295,7 @@ describe('XiaomiMiService', () => {
       overrides: {
         device: deviceInfo,
         deviceClass: 'illuminance',
+        stateClass: 'measurement',
         unitOfMeasurement: 'lx',
       },
     });
@@ -308,6 +315,7 @@ describe('XiaomiMiService', () => {
       overrides: {
         device: deviceInfo,
         deviceClass: undefined,
+        stateClass: 'measurement',
         unitOfMeasurement: 'µS/cm',
       },
     });
