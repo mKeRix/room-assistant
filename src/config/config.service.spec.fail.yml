@@ -177,6 +177,7 @@ shell:
           offCommand: echo off
 xiaomiMi:
   hciDeviceId: 0
+  enableMifloraBattery: 5              # FORMAT ERROR: -> Bool Required
   sensors:
     - address: a4:c1:38:32:12:f9       # FORMAT ERROR: -> Hex Required / Length Exceeded Errors
       name: Xiaomi 1

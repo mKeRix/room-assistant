@@ -4,13 +4,47 @@
  * https://github.com/hannseman/homebridge-mi-hygrothermograph/blob/master/lib/parser.js
  */
 import * as crypto from 'crypto';
-export const SERVICE_DATA_UUID = 'fe95';
 
-const ProductNames = {
-  152: 'Mi Flora HHCCJCY01',
-  1371: 'Mijia LYWSD03MMC',
-  1115: 'Mijia LYWSD02',
-  426: 'Miija LYWSDCGQ',
+export const enum EventType {
+  temperature = 4100,
+  humidity = 4102,
+  illuminance = 4103,
+  moisture = 4104,
+  fertility = 4105,
+  battery = 4106,
+  temperatureAndHumidity = 4109,
+}
+
+export class Event {
+  type: EventType;
+  value: number;
+}
+
+export class ServiceData {
+  frameControl: FrameControl;
+  protocolVersion: number;
+  productId: number;
+  productName: string;
+  frameCounter: number;
+  macAddress: string;
+  capabilities: Capabilities;
+  eventType?: EventType;
+  eventLength?: number;
+  events: Event[];
+}
+
+export const enum ProductId {
+  HHCCJCV01 = 152,
+  LYWSD03MMC = 1371,
+  LYWSD02 = 1115,
+  LYWSDCGQ = 426,
+}
+
+const ProductNames: { [index: number]: string } = {
+  [ProductId.HHCCJCV01]: 'Mi Flora HHCCJCY01',
+  [ProductId.LYWSD03MMC]: 'Mijia LYWSD03MMC',
+  [ProductId.LYWSD02]: 'Mijia LYWSD02',
+  [ProductId.LYWSDCGQ]: 'Miija LYWSDCGQ',
 };
 
 const FrameControlFlags = {
@@ -53,45 +87,13 @@ class Capabilities {
   io: boolean;
 }
 
-export const EventTypes = {
-  temperature: 4100,
-  humidity: 4102,
-  illuminance: 4103,
-  moisture: 4104,
-  fertility: 4105,
-  battery: 4106,
-  temperatureAndHumidity: 4109,
-};
-
-export class Event {
-  temperature?: number;
-  humidity?: number;
-  illuminance?: number;
-  moisture?: number;
-  fertility?: number;
-  battery?: number;
-}
-
-export class ServiceData {
-  frameControl: FrameControl;
-  version: number;
-  productId: number;
-  productName: string;
-  frameCounter: number;
-  macAddress: string;
-  capabilities: Capabilities;
-  eventType?: number;
-  eventLength?: number;
-  event: Event;
-}
-
 export class Parser {
   private buffer: Buffer;
   private readonly bindKey?: string;
 
   private baseByteLength = 5;
   private frameControl: FrameControl;
-  private eventType: number;
+  private eventType: EventType;
 
   constructor(buffer: Buffer, bindKey: string | null = null) {
     if (buffer == null) {
@@ -108,7 +110,7 @@ export class Parser {
 
   parse(): ServiceData {
     this.frameControl = this.parseFrameControl();
-    const version = this.parseVersion();
+    const protocolVersion = this.parseProtocolVersion();
     const productId = this.parseProductId();
     const productName = this.parseProductName();
     const frameCounter = this.parseFrameCounter();
@@ -121,10 +123,10 @@ export class Parser {
 
     this.eventType = this.parseEventType();
     const eventLength = this.parseEventLength();
-    const event = this.parseEventData();
+    const events = this.parseEventData();
     return {
       frameControl: this.frameControl,
-      version,
+      protocolVersion,
       productId,
       productName,
       frameCounter,
@@ -132,7 +134,7 @@ export class Parser {
       capabilities,
       eventType: this.eventType,
       eventLength,
-      event,
+      events,
     };
   }
 
@@ -144,7 +146,7 @@ export class Parser {
     }, new FrameControl());
   }
 
-  parseVersion(): number {
+  parseProtocolVersion(): number {
     return this.buffer.readUInt8(1) >> 4;
   }
 
@@ -202,7 +204,7 @@ export class Parser {
     return offset;
   }
 
-  parseEventType(): number | null {
+  parseEventType(): EventType | null {
     if (!this.frameControl.hasEvent) {
       return null;
     }
@@ -260,30 +262,30 @@ export class Parser {
     ]);
   }
 
-  parseEventData(): Event | null {
+  parseEventData(): Event[] | null {
     if (!this.frameControl.hasEvent) {
       return null;
     }
     switch (this.eventType) {
-      case EventTypes.temperature: {
+      case EventType.temperature: {
         return this.parseTemperatureEvent();
       }
-      case EventTypes.humidity: {
+      case EventType.humidity: {
         return this.parseHumidityEvent();
       }
-      case EventTypes.battery: {
+      case EventType.battery: {
         return this.parseBatteryEvent();
       }
-      case EventTypes.temperatureAndHumidity: {
+      case EventType.temperatureAndHumidity: {
         return this.parseTemperatureAndHumidityEvent();
       }
-      case EventTypes.illuminance: {
+      case EventType.illuminance: {
         return this.parseIlluminanceEvent();
       }
-      case EventTypes.fertility: {
+      case EventType.fertility: {
         return this.parseFertilityEvent();
       }
-      case EventTypes.moisture: {
+      case EventType.moisture: {
         return this.parseMoistureEvent();
       }
       default: {
@@ -294,46 +296,71 @@ export class Parser {
     }
   }
 
-  parseTemperatureEvent(): Event {
-    return {
-      temperature: this.buffer.readInt16LE(this.eventOffset + 3) / 10,
-    };
+  parseTemperatureEvent(): Event[] {
+    return [
+      {
+        type: EventType.temperature,
+        value: this.buffer.readInt16LE(this.eventOffset + 3) / 10,
+      },
+    ];
   }
 
-  parseHumidityEvent(): Event {
-    return {
-      humidity: this.buffer.readUInt16LE(this.eventOffset + 3) / 10,
-    };
+  parseHumidityEvent(): Event[] {
+    return [
+      {
+        type: EventType.humidity,
+        value: this.buffer.readUInt16LE(this.eventOffset + 3) / 10,
+      },
+    ];
   }
 
-  parseBatteryEvent(): Event {
-    return {
-      battery: this.buffer.readUInt8(this.eventOffset + 3),
-    };
+  parseBatteryEvent(): Event[] {
+    return [
+      {
+        type: EventType.battery,
+        value: this.buffer.readUInt8(this.eventOffset + 3),
+      },
+    ];
   }
 
-  parseTemperatureAndHumidityEvent(): Event {
-    const temperature = this.buffer.readInt16LE(this.eventOffset + 3) / 10;
-    const humidity = this.buffer.readUInt16LE(this.eventOffset + 5) / 10;
-    return { temperature, humidity };
+  parseTemperatureAndHumidityEvent(): Event[] {
+    return [
+      {
+        type: EventType.temperature,
+        value: this.buffer.readInt16LE(this.eventOffset + 3) / 10,
+      },
+      {
+        type: EventType.humidity,
+        value: this.buffer.readUInt16LE(this.eventOffset + 5) / 10,
+      },
+    ];
   }
 
-  parseIlluminanceEvent(): Event {
-    return {
-      illuminance: this.buffer.readUIntLE(this.eventOffset + 3, 3),
-    };
+  parseIlluminanceEvent(): Event[] {
+    return [
+      {
+        type: EventType.illuminance,
+        value: this.buffer.readUIntLE(this.eventOffset + 3, 3),
+      },
+    ];
   }
 
-  parseFertilityEvent(): Event {
-    return {
-      fertility: this.buffer.readInt16LE(this.eventOffset + 3),
-    };
+  parseFertilityEvent(): Event[] {
+    return [
+      {
+        type: EventType.fertility,
+        value: this.buffer.readInt16LE(this.eventOffset + 3),
+      },
+    ];
   }
 
-  parseMoistureEvent(): Event {
-    return {
-      moisture: this.buffer.readInt8(this.eventOffset + 3),
-    };
+  parseMoistureEvent(): Event[] {
+    return [
+      {
+        type: EventType.moisture,
+        value: this.buffer.readInt8(this.eventOffset + 3),
+      },
+    ];
   }
 
   toString(): string {

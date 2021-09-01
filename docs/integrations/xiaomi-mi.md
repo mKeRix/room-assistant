@@ -41,18 +41,20 @@ This integration has been tested with these devices:
 
 ## Settings
 
-| Name              | Type                              | Default  | Description                     |
-| ----------------- | --------------------------------- | -------- | ------------------------------- |
-| `sensors`         | [Sensor options](#sensor-options) |          | An array of sensor definitions. |
-| `hciDeviceId`     | Number                            | `0`      | Bluetooth Device ID (e.g. `0` to use `hci0`). |
+| Name                   | Type                              | Default | Description                                                  |
+| ---------------------- | --------------------------------- | ------- | ------------------------------------------------------------ |
+| `sensors`              | [Sensor options](#sensor-options) |         | An array of sensor definitions.                              |
+| `hciDeviceId`          | Number                            | `0`     | Bluetooth Device ID (e.g. `0` to use `hci0`).                |
+| `enableMifloraBattery` | Boolean                           | `false` | Whether to poll for the battery state of all configured MiFlora devices or not. Requires room-assistant to connect to your MiFlora device. |
 
 ### Sensor Options
 
-| Name              | Type   | Default  | Description                                                            |
-| ----------------- | ------ | -------- | ---------------------------------------------------------------------- |
-| `name`            | string |          | A human readable name for the sensor. Will be used in MQTT topics.     |
-| `address`         | string |          | MAC address of the device ([Format](#address-format)).                 |
-| `bindKey`         | string |          | A decryption key for sensors which send [encrypted data](#encryption). |
+| Name                   | Type    | Default | Description                                                  |
+| ---------------------- | ------- | ------- | ------------------------------------------------------------ |
+| `name`                 | String  |         | A human readable name for the sensor. Will be used in MQTT topics. |
+| `address`              | String  |         | MAC address of the device ([Format](#address-format)).       |
+| `bindKey`              | String  |         | A decryption key for sensors which send [encrypted data](#encryption). |
+| `enableMifloraBattery` | Boolean |         | Whether to poll for the battery state of this MiFlora device or not. Requires room-assistant to connect to the device. Overrides the global option if set. |
 
 ### Address Format
 
