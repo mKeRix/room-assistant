@@ -486,8 +486,12 @@ export class BluetoothLowEnergyService
     ) {
       let appId: string;
 
-      this.logger.log(`Attempting app discovery for tag ${tag.id}`);
+      if (!this.bluetoothService.acquireQueryMutex()) {
+        this.logger.debug(`Canceled discovery for tag ${tag.id} as BLE adapter is already in use`);
+        return tag;
+      }
 
+      this.logger.log(`Attempting app discovery for tag ${tag.id}`);
       this.logger.debug(
         `Tag ${
           tag.id
@@ -495,11 +499,6 @@ export class BluetoothLowEnergyService
           'hex'
         )}`
       );
-
-      if (!this.bluetoothService.acquireQueryMutex()) {
-        this.logger.log(`Canceled discovery as BLE adapter is already in use`);
-        return tag;
-      }
 
       try {
         appId = await this.discoverCompanionAppId(tag);

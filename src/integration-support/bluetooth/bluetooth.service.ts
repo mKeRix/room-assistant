@@ -184,7 +184,7 @@ export class BluetoothService implements OnApplicationShutdown {
     try {
       await promiseWithTimeout(peripheral.disconnectAsync(), 1000);
     } catch (e) {
-      this.logger.error(
+      this.logger.debug(
         `Failed to disconnect from ${peripheral.address}: ${e.message}`,
         e.trace
       );
@@ -717,17 +717,17 @@ export class BluetoothService implements OnApplicationShutdown {
       try {
         await promiseWithTimeout(peripheral.connectAsync(), timeout);
       } catch (e) {
-        this.logger.debug(`ConnectAsync error ${peripheral.address}: ${e})`);
+        this.logger.debug(`Connection error ${peripheral.address}: ${e})`);
       }
       if (peripheral.state === 'connecting') {
         try {
           // Force cancellation if connection attempt timed-out
           await promiseWithTimeout(peripheral.disconnectAsync(), 1000);
-        } catch {}
+        } catch (e) {
+          this.logger.debug(`Disconnect error ${peripheral.address}: ${e})`);
+        }
       }
 
-      // TODO: Confirm with Author on required sleep delay and latest hci commit
-      //      await sleep(500); // https://github.com/mKeRix/room-assistant/issues/508
       await sleep(100);
 
       tries--;
