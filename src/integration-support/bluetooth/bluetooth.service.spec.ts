@@ -15,7 +15,6 @@ jest.mock('util', () => ({
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   promisify: () => mockExec,
 }));
-jest.useFakeTimers();
 
 const mockNoble = mocked(noble);
 const mockBleno = mocked(bleno);
@@ -25,6 +24,7 @@ describe('BluetoothService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule],
@@ -349,9 +349,13 @@ Requesting information ...
       let connectResolve;
       const connectPromise = new Promise((r) => (connectResolve = r));
 
+      jest.useRealTimers();
+
       const peripheral = {
         connectable: true,
         connectAsync: jest.fn().mockReturnValue(connectPromise),
+        disconnect: jest.fn(),
+        removeAllListeners: jest.fn(),
         once: jest.fn(),
         state: 'disconnected',
       };
