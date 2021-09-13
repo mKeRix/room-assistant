@@ -6,8 +6,6 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "@types/node"
-      - dependency-name: "rxjs"
-        versions: ["7.x"]
       - dependency-name: "*"
         update-types: ["version-update:semver-patch"]
   - package-ecosystem: "github-actions"

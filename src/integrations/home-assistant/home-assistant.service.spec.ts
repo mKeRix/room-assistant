@@ -54,6 +54,7 @@ describe('HomeAssistantService', () => {
     log: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
+    debug: jest.fn(),
   };
   const entitiesService = {
     getAll: jest.fn().mockReturnValue([]),
@@ -500,7 +501,6 @@ describe('HomeAssistantService', () => {
 
       expect(loggerService.warn).toHaveBeenCalledWith(
         expect.stringContaining('test-instance-fictitious'),
-        expect.anything(),
         expect.anything()
       );
     });
