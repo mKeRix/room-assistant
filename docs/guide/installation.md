@@ -14,7 +14,7 @@ Dedicated or resource-limited computers, like Raspberry Pis.  Has least overhead
 
 ### Requirements
 
-Please make sure you have either NodeJS 14.x or NodeJS 12.x installed. The version provided by Raspbian by default is outdated.
+Please make sure you have either NodeJS 16.x, 14.x or 12.x installed. The version provided by Raspbian by default is outdated.
 Installation guides for NodeJS can be found [here](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions). For Pi Zero devices you will need to use a [different installation process](./quickstart-pi-zero-w.md#installing-room-assistant).
 
 room-assistant instances use some native dependencies for discovering each other in the local network using mDNS and providing health checks for systemd. You will require two additional system packages to get this working:
