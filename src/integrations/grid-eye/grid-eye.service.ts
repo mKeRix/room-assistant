@@ -114,7 +114,7 @@ export class GridEyeService
   }
 
   /**
-   * Replace 0 based values (0 t0 1) with nearest preceding valid value.
+   * Replace 0 based values (0 to 1) with nearest preceding valid value.
    *
    * @returns 8x8 matrix of temperatures
    */
