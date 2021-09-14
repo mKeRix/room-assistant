@@ -66,6 +66,7 @@ describe('BluetoothClassicService', () => {
     log: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
+    debug: jest.fn(),
   };
   let config: Partial<BluetoothClassicConfig>;
   const configService = {

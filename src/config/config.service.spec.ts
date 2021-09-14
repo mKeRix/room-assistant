@@ -33,8 +33,7 @@ describe('ConfigService', () => {
 
     expect(loggerService.log).toHaveBeenCalledWith(
       expect.stringContaining('config/test.yml'),
-      ConfigService.name,
-      false
+      ConfigService.name
     );
   });
 
@@ -49,8 +48,7 @@ describe('ConfigService', () => {
 
     expect(loggerService.warn).toHaveBeenCalledWith(
       expect.stringContaining(`${process.cwd()}/config/`),
-      ConfigService.name,
-      false
+      ConfigService.name
     );
   });
 
@@ -114,7 +112,6 @@ describe('ConfigService', () => {
     errorPaths.forEach((path) =>
       expect(loggerService.error).toHaveBeenCalledWith(
         expect.stringContaining(path),
-        '',
         'ConfigService'
       )
     );
@@ -139,7 +136,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`must be of type object`),
-      '',
       ConfigService.name
     );
 
@@ -151,7 +147,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`is not allowed`),
-      '',
       ConfigService.name
     );
   });
@@ -182,7 +177,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`does not match any of the allowed types`),
-      '',
       ConfigService.name
     );
 
@@ -192,7 +186,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`does not match any of the allowed types`),
-      '',
       ConfigService.name
     );
   });
@@ -273,7 +266,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`does not match any of the allowed types`),
-      '',
       ConfigService.name
     );
   });
@@ -299,7 +291,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`must be of type object`),
-      '',
       ConfigService.name
     );
 
@@ -311,7 +302,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`is not allowed`),
-      '',
       ConfigService.name
     );
   });

@@ -18,6 +18,7 @@ export async function getAddrInfoDig(
   if (service.host === 'localhost' || service.host === 'localhost.') {
     service.addresses = (service.addresses || []).concat(['127.0.0.1']);
     next();
+    return;
   }
 
   try {

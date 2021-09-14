@@ -30,7 +30,6 @@ import { DeviceTrackerConfig } from '../home-assistant/device-tracker-config';
 import * as util from 'util';
 import { BluetoothService } from '../../integration-support/bluetooth/bluetooth.service';
 import { BluetoothModule } from '../../integration-support/bluetooth/bluetooth.module';
-import { Tag } from './tag';
 
 jest.useFakeTimers();
 
@@ -62,6 +61,7 @@ describe('BluetoothLowEnergyService', () => {
     log: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
+    debug: jest.fn(),
   };
 
   const iBeaconData = Buffer.from([
@@ -1041,18 +1041,15 @@ describe('BluetoothLowEnergyService', () => {
     expect(loggerService.log).toHaveBeenCalledTimes(3);
     expect(loggerService.log).toHaveBeenCalledWith(
       expect.stringContaining('2f234454cf6d4a0fadf2f4911ba9ffa6-1-2'),
-      BluetoothLowEnergyService.name,
-      expect.anything()
+      BluetoothLowEnergyService.name
     );
     expect(loggerService.log).toHaveBeenCalledWith(
       expect.stringContaining('test-peripheral-456'),
-      BluetoothLowEnergyService.name,
-      expect.anything()
+      BluetoothLowEnergyService.name
     );
     expect(loggerService.log).toHaveBeenCalledWith(
       expect.stringContaining('test-peripheral-99'),
-      BluetoothLowEnergyService.name,
-      expect.anything()
+      BluetoothLowEnergyService.name
     );
   });
 
