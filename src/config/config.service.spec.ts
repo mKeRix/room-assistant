@@ -93,6 +93,7 @@ describe('ConfigService', () => {
       `bluetoothClassic.timeoutCycles`,
       `bluetoothClassic.entityOverrides.ebef1234567890-55555-333.id`,
       `omronD6t.heatmap.enabled`,
+      `gridEye.maskZeroBasedValues`,
       `gridEye.heatmap.minTemperature`,
       `gridEye.heatmap.rotation`,
       `gpio.binarySensors[1].deviceClass`,
