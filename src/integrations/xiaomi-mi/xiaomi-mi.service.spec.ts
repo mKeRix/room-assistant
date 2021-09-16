@@ -114,7 +114,7 @@ describe('XiaomiMiService', () => {
     expect(loggerService.warn).toHaveBeenCalledTimes(1);
     expect(loggerService.warn).toHaveBeenCalledWith(
       expect.stringContaining('No sensors entries in the config'),
-      'XiaomiMiService'
+      XiaomiMiService.name
     );
   });
 
@@ -363,7 +363,7 @@ describe('XiaomiMiService', () => {
     expect(loggerService.error).toHaveBeenCalledTimes(1);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining('Please configure a bindKey'),
-      'XiaomiMiService'
+      XiaomiMiService.name
     );
   });
 
@@ -373,7 +373,7 @@ describe('XiaomiMiService', () => {
     expect(loggerService.error).toHaveBeenCalledTimes(1);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining('Service data length must be >= 5 bytes'),
-      'XiaomiMiService'
+      XiaomiMiService.name
     );
   });
 
@@ -388,7 +388,7 @@ describe('XiaomiMiService', () => {
     expect(loggerService.debug).toHaveBeenCalled();
     expect(loggerService.debug).toHaveBeenCalledWith(
       expect.stringContaining('supported data format not present'),
-      'XiaomiMiService'
+      XiaomiMiService.name
     );
   });
 
@@ -400,7 +400,7 @@ describe('XiaomiMiService', () => {
     expect(loggerService.error).toHaveBeenCalled();
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining('Unknown event type'),
-      'XiaomiMiService'
+      XiaomiMiService.name
     );
   });
 
@@ -537,7 +537,7 @@ describe('XiaomiMiService', () => {
     expect(loggerService.warn).toHaveBeenCalledTimes(1);
     expect(loggerService.warn).toHaveBeenCalledWith(
       expect.stringContaining('Error reading battery level'),
-      'XiaomiMiService'
+      XiaomiMiService.name
     );
   });
 

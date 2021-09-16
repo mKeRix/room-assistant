@@ -632,17 +632,19 @@ Requesting information ...
         CHARACTERISTIC_UUID
       );
 
+      expect(loggerService.error).toHaveBeenCalledTimes(1);
       expect(loggerService.error).toHaveBeenCalledWith(
         expect.stringContaining(
           'Permission to query abcd1234 has not been acquired'
         ),
-        '',
-        'BluetoothService'
+        BluetoothService.name
       );
       expect(response).toBeNull();
 
       service.acquireQueryMutex();
       service.releaseQueryMutex();
+
+      jest.clearAllMocks();
 
       response = await service.queryLowEnergyDevice(
         peripheral,
@@ -650,12 +652,12 @@ Requesting information ...
         CHARACTERISTIC_UUID
       );
 
+      expect(loggerService.error).toHaveBeenCalledTimes(1);
       expect(loggerService.error).toHaveBeenCalledWith(
         expect.stringContaining(
           'Permission to query abcd1234 has not been acquired'
         ),
-        '',
-        'BluetoothService'
+        BluetoothService.name
       );
       expect(response).toBeNull();
     });
