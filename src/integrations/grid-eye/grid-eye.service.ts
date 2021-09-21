@@ -24,7 +24,8 @@ const FRAMERATE_REGISTER = 0x02;
 @Injectable()
 export class GridEyeService
   extends ThermopileOccupancyService
-  implements OnApplicationBootstrap, OnApplicationShutdown {
+  implements OnApplicationBootstrap, OnApplicationShutdown
+{
   private readonly config: GridEyeConfig;
   private readonly logger: Logger;
   private i2cBus: PromisifiedBus;
@@ -105,7 +106,24 @@ export class GridEyeService
       temperatures.push(await this.getPixelTemperature(i));
     }
 
-    return math.reshape(temperatures, [8, 8]) as number[][];
+    let grid = math.reshape(temperatures, [8, 8]) as number[][];
+    if (this.config.maskZeroBasedValues) {
+      grid = await this.maskZeroBasedValues(grid);
+    }
+    return grid;
+  }
+
+  /**
+   * Replace 0 based values (0 to 1) with nearest preceding valid value.
+   *
+   * @returns 8x8 matrix of temperatures
+   */
+  async maskZeroBasedValues(temperatures: number[][]): Promise<number[][]> {
+    const correctedMean = math.mean(temperatures.flat().filter(v => v >= 1 || v < 0))
+
+    return math.matrix(temperatures)
+      .map(v => v >= 1 || v < 0 ? v : correctedMean)
+      .toArray() as number[][];
   }
 
   /**

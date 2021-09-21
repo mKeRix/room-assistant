@@ -77,6 +77,7 @@ When placing your sensor you need to consider a few factors to get reliable resu
 | `busNumber`      | Number              | `1`     | I<sup>2</sup>C bus number of your machine that the sensor is connected to. |
 | `address`        | Number              | `0x69`  | I<sup>2</sup>C address of the D6T sensor that you want to use. |
 | `deltaThreshold` | Number              | `2`     | Minimum temperature difference between average and single temperature pixel in &deg;C for it to be considered as human presence. Increase if you are seeing false positives, decrease if you are seeing false negatives. |
+| `maskZeroBasedValues` | Boolean              | `false`     | Mask values < 1 that are incorrectly reported, replacing with nearest valid value or mean of grid for first pixel.   |
 | `heatmap`        | [Heatmap](#heatmap) |         | A number of options for configuring the heatmap output.      |
 
 ### Heatmap

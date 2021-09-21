@@ -142,6 +142,7 @@ gridEye:
   busNumber: 1
   address: 0x69
   deltaThreshold: 2
+  maskZeroBasedValues: 10             # TYPE ERROR: Boolean required
   heatmap:
     enabled: true
     minTemperature: "23"              # TYPE ERROR: Number Required
