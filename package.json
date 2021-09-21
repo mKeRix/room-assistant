@@ -1,6 +1,6 @@
 {
   "name": "room-assistant",
-  "version": "2.18.4",
+  "version": "2.19.0",
   "description": "Presence tracking and more for automation on the room-level",
   "author": "Heiko Rothe <me@heikorothe.com> (https://heikorothe.com)",
   "license": "MIT",
