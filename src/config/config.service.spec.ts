@@ -112,7 +112,7 @@ describe('ConfigService', () => {
     errorPaths.forEach((path) =>
       expect(loggerService.error).toHaveBeenCalledWith(
         expect.stringContaining(path),
-        'ConfigService'
+        ConfigService.name
       )
     );
   });

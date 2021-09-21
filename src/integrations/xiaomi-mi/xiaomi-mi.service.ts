@@ -323,6 +323,11 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
     if (Date.now() > schedule.nextQueryAfter.getTime()) {
       let buffer: Buffer = null;
 
+      if (!this.bluetoothService.acquireQueryMutex()) {
+        this.logger.debug(`${device.name}: Canceled battery reading as BLE adapter is already in use`);
+        return;
+      }
+
       schedule.attempts += 1;
       try {
         buffer = await this.bluetoothService.queryLowEnergyDevice(
@@ -338,6 +343,8 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
           `${device.name}: Error reading battery level (attempt ${schedule.attempts} of ${BATTERY_QUERY_ATTEMPTS}): ${error}`
         );
       }
+
+      this.bluetoothService.releaseQueryMutex();
 
       if (buffer) {
         // buffer[0] -> battery level (0-100)

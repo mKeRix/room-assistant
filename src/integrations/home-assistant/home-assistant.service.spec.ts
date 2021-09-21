@@ -501,7 +501,7 @@ describe('HomeAssistantService', () => {
 
       expect(loggerService.warn).toHaveBeenCalledWith(
         expect.stringContaining('test-instance-fictitious'),
-        expect.anything()
+        HomeAssistantService.name
       );
     });
   });
