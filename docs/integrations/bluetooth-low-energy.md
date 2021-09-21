@@ -86,6 +86,10 @@ bluetoothLowEnergy:
 | `batteryMask`     | Number                          | `0x00000000` | If non-zero, extract the beacon's battery level from the major/minor fields. The mask operates on a 32bit value with major as the high two bytes and minor as the low two bytes. |
 | `tagOverrides`    | [Tag Overrides](#tag-overrides) |          | Allows you to override some properties of the tracked devices. |
 | `hciDeviceId`     | Number                          | `0`      | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
+| `instanceBeaconEnabled` | Boolean | `true` | Whether this instance should emit iBeacon advertisements via BLE, which can be used by the room-assistant companion app to auto-toggle advertising. |
+| `instanceBeaconMajor` | Number | `1` | The major of the advertised iBeacon. |
+| `instanceBeaconMinor` | Number | Random | The minor of the advertised iBeacon. |
+| `minDiscoveryLogRssi` | Number | -999 | Only log newly discovered beacons if raw RSSI values are greater than this (useful to reduce log spam if on a busy street). |
 
 ### Tag Overrides
 

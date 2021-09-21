@@ -8,6 +8,8 @@ export class GridEyeConfig {
   address = 0x69;
   @(jf.number().min(0).required())
   deltaThreshold = 2;
+  @(jf.boolean().required())
+  maskZeroBasedValues = false;
   @(jf.object({ objectClass: HeatmapOptions }).required())
   heatmap = new HeatmapOptions();
 }

@@ -33,8 +33,7 @@ describe('ConfigService', () => {
 
     expect(loggerService.log).toHaveBeenCalledWith(
       expect.stringContaining('config/test.yml'),
-      ConfigService.name,
-      false
+      ConfigService.name
     );
   });
 
@@ -49,8 +48,7 @@ describe('ConfigService', () => {
 
     expect(loggerService.warn).toHaveBeenCalledWith(
       expect.stringContaining(`${process.cwd()}/config/`),
-      ConfigService.name,
-      false
+      ConfigService.name
     );
   });
 
@@ -87,6 +85,7 @@ describe('ConfigService', () => {
       `bluetoothLowEnergy.tagOverrides.ebef1234567890-55555-444.timeout`,
       `bluetoothLowEnergy.updateFrequency`,
       `bluetoothLowEnergy.updateFrequence`,
+      `bluetoothLowEnergy.minDiscoveryLogRssi`,
       `bluetoothClassic.addresses[1]`,
       `bluetoothClassic.addresses[2]`,
       `bluetoothClassic.addresses[3]`,
@@ -94,11 +93,13 @@ describe('ConfigService', () => {
       `bluetoothClassic.timeoutCycles`,
       `bluetoothClassic.entityOverrides.ebef1234567890-55555-333.id`,
       `omronD6t.heatmap.enabled`,
+      `gridEye.maskZeroBasedValues`,
       `gridEye.heatmap.minTemperature`,
       `gridEye.heatmap.rotation`,
       `gpio.binarySensors[1].deviceClass`,
       `shell.sensors[1].switches`,
       `shell.switches`,
+      `xiaomiMi.enableMifloraBattery`,
       `xiaomiMi.sensors[0].address`,
       `xiaomiMi.sensors[0].address`,
       `homeAssistant.discoveryPrefix`,
@@ -112,8 +113,7 @@ describe('ConfigService', () => {
     errorPaths.forEach((path) =>
       expect(loggerService.error).toHaveBeenCalledWith(
         expect.stringContaining(path),
-        '',
-        'ConfigService'
+        ConfigService.name
       )
     );
   });
@@ -137,7 +137,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`must be of type object`),
-      '',
       ConfigService.name
     );
 
@@ -149,7 +148,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`is not allowed`),
-      '',
       ConfigService.name
     );
   });
@@ -180,7 +178,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`does not match any of the allowed types`),
-      '',
       ConfigService.name
     );
 
@@ -190,7 +187,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`does not match any of the allowed types`),
-      '',
       ConfigService.name
     );
   });
@@ -271,7 +267,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`does not match any of the allowed types`),
-      '',
       ConfigService.name
     );
   });
@@ -297,7 +292,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`must be of type object`),
-      '',
       ConfigService.name
     );
 
@@ -309,7 +303,6 @@ describe('ConfigService', () => {
     service.validateConfig(cfg);
     expect(loggerService.error).toHaveBeenCalledWith(
       expect.stringContaining(`is not allowed`),
-      '',
       ConfigService.name
     );
   });

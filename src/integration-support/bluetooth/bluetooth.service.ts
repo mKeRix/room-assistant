@@ -3,6 +3,7 @@ import noble, { Peripheral } from '@mkerix/noble';
 import util from 'util';
 import { exec } from 'child_process';
 import { BluetoothClassicConfig } from '../../integrations/bluetooth-classic/bluetooth-classic.config';
+import { BluetoothLowEnergyConfig } from '../../integrations/bluetooth-low-energy/bluetooth-low-energy.config';
 import { ConfigService } from '../../config/config.service';
 import { Device } from '../../integrations/bluetooth-classic/device';
 import { promiseWithTimeout, sleep } from '../../util/promises';
@@ -14,6 +15,10 @@ import { InjectMetric } from '@willsoto/nestjs-prometheus';
 const RSSI_REGEX = new RegExp(/-?[0-9]+/);
 const INQUIRY_LOCK_TIMEOUT = 30 * 1000;
 const SCAN_NO_PERIPHERAL_TIMEOUT = 30 * 1000;
+
+const BLE_CONNECTION_RETRIES = 5;
+const BLE_CONNECTION_TIMEOUT = 10 * 1000;
+const BLE_READ_TIMEOUT = 15 * 1000;
 
 const execPromise = util.promisify(exec);
 
@@ -39,11 +44,13 @@ class BluetoothAdapterMap extends Map<number, BluetoothAdapter> {
 export class BluetoothService implements OnApplicationShutdown {
   private readonly logger: Logger = new Logger(BluetoothService.name);
   private readonly classicConfig: BluetoothClassicConfig;
+  private readonly bleConfig: BluetoothLowEnergyConfig;
   private readonly adapters = new BluetoothAdapterMap();
   private _lowEnergyAdapterId: number;
   private _successiveErrorsOccurred = 0;
   private lastLowEnergyDiscovery: Date;
   private scanStartedAt?: Date;
+  private queryMutexAvailable = true;
 
   constructor(
     private readonly configService: ConfigService,
@@ -51,6 +58,7 @@ export class BluetoothService implements OnApplicationShutdown {
     private readonly advertisementReceivedCounter: Counter<string>
   ) {
     this.classicConfig = this.configService.get('bluetoothClassic');
+    this.bleConfig = this.configService.get('bluetoothLowEnergy');
   }
 
   /**
@@ -138,9 +146,9 @@ export class BluetoothService implements OnApplicationShutdown {
     this.lockAdapter(this._lowEnergyAdapterId);
 
     try {
-      await promiseWithTimeout(
-        this.connectLowEnergyDeviceWithRetry(peripheral, 5),
-        10 * 1000
+      await this.connectLowEnergyDeviceWithRetry(
+        peripheral,
+        BLE_CONNECTION_RETRIES
       );
       return peripheral;
     } catch (e) {
@@ -148,8 +156,7 @@ export class BluetoothService implements OnApplicationShutdown {
         `Failed to connect to ${peripheral.address}: ${e.message}`,
         e.trace
       );
-      peripheral.disconnect();
-      peripheral.removeAllListeners();
+      await this.unlockAdapter(this._lowEnergyAdapterId);
       throw e;
     }
   }
@@ -168,14 +175,130 @@ export class BluetoothService implements OnApplicationShutdown {
       `Disconnecting from BLE device at address ${peripheral.address}`
     );
     try {
-      await peripheral.disconnectAsync();
+      await promiseWithTimeout(peripheral.disconnectAsync(), 1000);
     } catch (e) {
-      this.logger.error(
+      this.logger.debug(
         `Failed to disconnect from ${peripheral.address}: ${e.message}`,
         e.trace
       );
-      this.resetHciDevice(this._lowEnergyAdapterId);
+      await this.resetHciDevice(this._lowEnergyAdapterId);
     }
+  }
+
+  /**
+   * Acquires exclusive access to executing a BLE query.
+   * Will return true if mutex granted otherwise returns false.
+   */
+  acquireQueryMutex(): boolean {
+    if (this.queryMutexAvailable) {
+      this.queryMutexAvailable = false;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Releases the exclusive access on executing a BLE query.
+   */
+  releaseQueryMutex(): void {
+    this.queryMutexAvailable = true;
+  }
+
+  /**
+   * Connects to the given peripheral and queries the service/characteristic value.
+   * If the service and characteristic are not found it will return null.
+   *
+   * @param peripheral - Peripheral to connect to
+   * @param serviceUuid - Service UUID to query
+   * @param characteristicUuid - Characteristic UUID to query
+   */
+  async queryLowEnergyDevice(
+    target: Peripheral,
+    serviceUuid: string,
+    characteristicUuid: string
+  ): Promise<Buffer | null> {
+    if (this.queryMutexAvailable) {
+      this.logger.error(
+        `Permission to query ${target.id} has not been acquired`
+      );
+      return null;
+    }
+
+    const peripheral = await this.connectLowEnergyDevice(target);
+
+    try {
+      return await this.readLowEnergyCharacteristic(
+        peripheral,
+        serviceUuid,
+        characteristicUuid
+      );
+    } catch (e) {
+      this.logger.error(
+        `Failed to query value from ${target.id}: ${e.message}`,
+        e.trace
+      );
+
+      if (e.message === 'timed out') {
+        await this.resetHciDevice(this.lowEnergyAdapterId);
+      }
+
+      return null;
+    } finally {
+      if (!['disconnecting', 'disconnected'].includes(target.state)) {
+        await this.disconnectLowEnergyDevice(target);
+      }
+      await this.unlockAdapter(this._lowEnergyAdapterId);
+    }
+  }
+
+  /**
+   * Reads a characteristic value of a BLE peripheral as Buffer.
+   *
+   * @param peripheral - peripheral to read from
+   * @param serviceUuid - UUID of the service that contains the characteristic
+   * @param characteristicUuid - UUID of the characteristic to read
+   */
+  private async readLowEnergyCharacteristic(
+    peripheral: Peripheral,
+    serviceUuid: string,
+    characteristicUuid: string
+  ): Promise<Buffer | null> {
+    if (peripheral.state !== 'connected') {
+      return null;
+    }
+
+    const cutoffTime = Date.now() + BLE_READ_TIMEOUT;
+
+    let timeout = cutoffTime - Date.now();
+    const services = (await promiseWithTimeout(
+      peripheral.discoverServicesAsync([serviceUuid]),
+      timeout
+    )) as noble.Service[];
+
+    timeout = cutoffTime - Date.now();
+    if (
+      services.length > 0 &&
+      peripheral.state === 'connected' &&
+      timeout > 0
+    ) {
+      const characteristics = (await promiseWithTimeout(
+        services[0].discoverCharacteristicsAsync([characteristicUuid]),
+        timeout
+      )) as noble.Characteristic[];
+
+      timeout = cutoffTime - Date.now();
+      if (
+        characteristics.length > 0 &&
+        peripheral.state === 'connected' &&
+        timeout > 0
+      ) {
+        return await promiseWithTimeout(
+          characteristics[0].readAsync(),
+          timeout
+        );
+      }
+    }
+    return null;
   }
 
   /**
@@ -510,36 +633,43 @@ export class BluetoothService implements OnApplicationShutdown {
     peripheral: Peripheral,
     tries: number
   ): Promise<Peripheral> {
-    if (tries <= 0) {
-      this.unlockAdapter(this._lowEnergyAdapterId);
-      throw new Error(
-        `Maximum retries reached while connecting to ${peripheral.address}`
-      );
-    }
-
     this.logger.debug(
       `Connecting to BLE device at address ${peripheral.address}`
     );
 
-    await peripheral.connectAsync();
-    await sleep(500); // https://github.com/mKeRix/room-assistant/issues/508
+    const cutoffTime = Date.now() + BLE_CONNECTION_TIMEOUT;
 
-    if (!['connected', 'connecting'].includes(peripheral.state)) {
-      return this.connectLowEnergyDeviceWithRetry(peripheral, tries - 1);
-    } else {
-      peripheral.once('disconnect', (e) => {
-        if (e) {
-          this.logger.error(e);
-        } else {
-          this.logger.debug(
-            `Disconnected from BLE device at address ${peripheral.address}`
-          );
+    let timeout = cutoffTime - Date.now();
+    do {
+      try {
+        await promiseWithTimeout(peripheral.connectAsync(), timeout);
+      } catch (e) {
+        this.logger.debug(`Connection error ${peripheral.address}: ${e})`);
+      }
+      if (peripheral.state === 'connecting') {
+        try {
+          // Force cancellation if connection attempt timed-out
+          await promiseWithTimeout(peripheral.disconnectAsync(), 1000);
+        } catch (e) {
+          this.logger.debug(`Disconnect error ${peripheral.address}: ${e})`);
         }
+      }
 
-        this.unlockAdapter(this._lowEnergyAdapterId);
-      });
+      await sleep(100);
 
-      return peripheral;
+      tries--;
+      timeout = cutoffTime - Date.now();
+      this.logger.debug(
+        `Connect attempt ${5 - tries}: State ${
+          peripheral.state
+        } with time remaining ${timeout} ms`
+      );
+    } while (tries > 0 && timeout > 0 && peripheral.state !== 'connected');
+
+    if (peripheral.state !== 'connected') {
+      throw new Error(timeout <= 0 ? 'timed out' : 'retries exceeded');
     }
+
+    return peripheral;
   }
 }

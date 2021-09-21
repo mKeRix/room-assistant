@@ -14,15 +14,22 @@ jest.mock('util', () => ({
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   promisify: () => mockExec,
 }));
-jest.useFakeTimers();
 
 const mockNoble = mocked(noble);
+
+const loggerService = {
+  log: jest.fn(),
+  debug: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+};
 
 describe('BluetoothService', () => {
   let service: BluetoothService;
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule],
@@ -35,6 +42,7 @@ describe('BluetoothService', () => {
         }),
       ],
     }).compile();
+    module.useLogger(loggerService);
     service = module.get<BluetoothService>(BluetoothService);
   });
 
@@ -91,7 +99,7 @@ describe('BluetoothService', () => {
       );
     });
 
-    it('should stop scanning and advertising on an adapter while performing an inquiry', async () => {
+    it('should stop scanning on an adapter while performing an inquiry', async () => {
       service.onLowEnergyDiscovery(() => undefined);
       const stateChangeHandler = mockNoble.on.mock.calls[0][1];
       await stateChangeHandler('poweredOn');
@@ -242,6 +250,9 @@ Requesting information ...
   });
 
   describe('Bluetooth Low Energy', () => {
+    const SERVICE_UUID = '5403c8a75c9647e99ab859e373d875a7';
+    const CHARACTERISTIC_UUID = '21c46f33e813440786012ad281030052';
+
     it('should setup noble listeners on the first subscriber', () => {
       const callback = () => undefined;
       service.onLowEnergyDiscovery(callback);
@@ -336,10 +347,11 @@ Requesting information ...
       let connectResolve;
       const connectPromise = new Promise((r) => (connectResolve = r));
 
+      jest.useRealTimers();
+
       const peripheral = {
         connectable: true,
         connectAsync: jest.fn().mockReturnValue(connectPromise),
-        once: jest.fn(),
         state: 'disconnected',
       };
 
@@ -353,37 +365,39 @@ Requesting information ...
       connectResolve();
     });
 
-    it('should unlock the adapter on disconnect', async () => {
+    it('should lock the adapter before attempting to connect', async () => {
       jest.spyOn(Promises, 'sleep').mockResolvedValue();
+      const lockSpy = jest.spyOn(service, 'lockAdapter');
       const peripheral = {
         connectable: true,
         connectAsync: jest.fn().mockImplementation(() => {
           peripheral.state = 'connected';
           return Promise.resolve();
         }),
-        once: jest.fn(),
         state: 'disconnected',
       };
-
-      await service.connectLowEnergyDevice(peripheral as unknown as Peripheral);
-
-      const disconnectListener = peripheral.once.mock.calls[0][1];
-      disconnectListener();
 
       await expect(async () => {
         await service.connectLowEnergyDevice(
           peripheral as unknown as Peripheral
         );
       }).not.toThrow();
+
+      expect(lockSpy).toHaveBeenCalled();
     });
 
-    it('should clean up if an exception occurs while connecting', async () => {
+    it('should unlock adapter if an exception occurs while connecting', async () => {
+      jest.spyOn(Promises, 'sleep').mockResolvedValue();
+      const unlockSpy = jest
+        .spyOn(service, 'unlockAdapter')
+        .mockResolvedValue();
       const peripheral = {
         connectable: true,
-        connectAsync: jest.fn().mockRejectedValue(new Error('expected')),
-        disconnect: jest.fn(),
-        removeAllListeners: jest.fn(),
-        once: jest.fn(),
+        connectAsync: jest.fn().mockImplementation(() => {
+          return new Error('timed out');
+        }),
+        disconnectAsync: jest.fn(),
+        state: 'disconnected',
       };
 
       await expect(async () => {
@@ -392,7 +406,7 @@ Requesting information ...
         );
       }).rejects.toThrow();
 
-      expect(peripheral.removeAllListeners).toHaveBeenCalled();
+      expect(unlockSpy).toHaveBeenCalled();
     });
 
     it('should limit the connection attempt time', () => {
@@ -406,15 +420,36 @@ Requesting information ...
           .mockReturnValue(
             new Promise((resolve) => setTimeout(resolve, 11 * 1000))
           ),
-        disconnect: jest.fn(),
-        removeAllListeners: jest.fn(),
-        once: jest.fn(),
       };
 
       const promise = service
         .connectLowEnergyDevice(peripheral as unknown as Peripheral)
         .catch((e) => {
           expect(e).toStrictEqual(new Error('timed out'));
+        });
+      jest.advanceTimersByTime(10.5 * 1000);
+
+      return promise;
+    });
+
+    it('should unlock the adapter following connection time-out', () => {
+      expect.assertions(1);
+      jest.useFakeTimers('modern');
+      const unlockSpy = jest.spyOn(service, 'unlockAdapter');
+
+      const peripheral = {
+        connectable: true,
+        connectAsync: jest
+          .fn()
+          .mockReturnValue(
+            new Promise((resolve) => setTimeout(resolve, 11 * 1000))
+          ),
+      };
+
+      const promise = service
+        .connectLowEnergyDevice(peripheral as unknown as Peripheral)
+        .catch(() => {
+          expect(unlockSpy).toHaveBeenCalledTimes(1);
         });
       jest.advanceTimersByTime(10.5 * 1000);
 
@@ -429,7 +464,6 @@ Requesting information ...
           peripheral.state = 'connected';
           return Promise.resolve();
         }),
-        once: jest.fn(),
         state: 'disconnected',
       };
 
@@ -450,7 +484,6 @@ Requesting information ...
             peripheral.state = 'connected';
             return Promise.resolve();
           }),
-        once: jest.fn(),
         state: 'disconnected',
       };
 
@@ -466,9 +499,6 @@ Requesting information ...
       const peripheral = {
         connectable: true,
         connectAsync: jest.fn().mockResolvedValue(undefined),
-        disconnect: jest.fn(),
-        once: jest.fn(),
-        removeAllListeners: jest.fn(),
         state: 'disconnected',
       };
 
@@ -478,6 +508,30 @@ Requesting information ...
         );
       }).rejects.toThrow();
       expect(peripheral.connectAsync).toHaveBeenCalledTimes(5);
+    });
+
+    it('should ensure any connection attempts that are timed out are explicitly canceled', async () => {
+      jest.spyOn(Promises, 'sleep').mockResolvedValue();
+      const peripheral = {
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connecting';
+          return new Error('retry');
+        }),
+        disconnectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'disconnected';
+          return Promise.resolve();
+        }),
+        state: 'disconnected',
+      };
+
+      await expect(async () => {
+        await service.connectLowEnergyDevice(
+          peripheral as unknown as Peripheral
+        );
+      }).rejects.toThrow();
+      expect(peripheral.connectAsync).toHaveBeenCalledTimes(5);
+      expect(peripheral.disconnectAsync).toHaveBeenCalledTimes(5);
     });
 
     it('should disconnect from a peripheral', async () => {
@@ -524,9 +578,331 @@ Requesting information ...
       expect(peripheral.disconnectAsync).not.toHaveBeenCalled();
     });
 
+    it('should allow a query if the mutex has been acquired', async () => {
+      const gattCharacteristic = {
+        readAsync: jest.fn().mockResolvedValue(Buffer.from('app-id', 'utf-8')),
+      };
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockResolvedValue([gattCharacteristic]),
+      };
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      } as unknown as Peripheral;
+
+      service.acquireQueryMutex();
+      const result = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+      service.releaseQueryMutex();
+
+      expect(peripheral.disconnectAsync).toHaveBeenCalled();
+      expect(result).toStrictEqual(Buffer.from('app-id', 'utf-8'));
+    });
+
+    it('should return null from query if mutex has not been acquired', async () => {
+      const peripheral = {
+        id: 'abcd1234',
+      } as unknown as Peripheral;
+
+      let response = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+
+      expect(loggerService.error).toHaveBeenCalledTimes(1);
+      expect(loggerService.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Permission to query abcd1234 has not been acquired'
+        ),
+        BluetoothService.name
+      );
+      expect(response).toBeNull();
+
+      service.acquireQueryMutex();
+      service.releaseQueryMutex();
+
+      jest.clearAllMocks();
+
+      response = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+
+      expect(loggerService.error).toHaveBeenCalledTimes(1);
+      expect(loggerService.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Permission to query abcd1234 has not been acquired'
+        ),
+        BluetoothService.name
+      );
+      expect(response).toBeNull();
+    });
+
+    it('should reset the adapter when query attempts time out', async () => {
+      service.onLowEnergyDiscovery(() => undefined);
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest
+          .fn()
+          .mockRejectedValue(new Error('timed out')),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      } as unknown as Peripheral;
+      const execPromise = Promise.resolve({ stdout: '-1' });
+      mockExec.mockReturnValue(execPromise);
+
+      service.acquireQueryMutex();
+      await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+      service.releaseQueryMutex();
+
+      expect(mockExec).toHaveBeenCalledWith(
+        'hciconfig hci0 reset',
+        expect.anything()
+      );
+    });
+
+    it('should return the value of a query from the device', async () => {
+      const gattCharacteristic = {
+        readAsync: jest.fn().mockResolvedValue(Buffer.from('app-id', 'utf-8')),
+      };
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockResolvedValue([gattCharacteristic]),
+      };
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      } as unknown as Peripheral;
+
+      service.acquireQueryMutex();
+      const result = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+      service.releaseQueryMutex();
+
+      expect(peripheral.disconnectAsync).toHaveBeenCalled();
+      expect(result).toStrictEqual(Buffer.from('app-id', 'utf-8'));
+    });
+
+    it('should return null if device does not have the requested characteristic', async () => {
+      const gattService = {
+        discoverCharacteristicsAsync: jest.fn().mockResolvedValue([]),
+      };
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      } as unknown as Peripheral;
+
+      service.acquireQueryMutex();
+      const result = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+      service.releaseQueryMutex();
+
+      expect(peripheral.disconnectAsync).toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+
+    it('should return null if device does not have the requested service', async () => {
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest.fn().mockResolvedValue([]),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      } as unknown as Peripheral;
+
+      service.acquireQueryMutex();
+      const result = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+      service.releaseQueryMutex();
+
+      expect(peripheral.disconnectAsync).toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+
+    it('should return null if there is an error while discovering GATT information', async () => {
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockRejectedValue(new Error('expected for this test')),
+      };
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      } as unknown as Peripheral;
+
+      service.acquireQueryMutex();
+      const result = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+      service.releaseQueryMutex();
+
+      expect(peripheral.disconnectAsync).toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+
+    it('should abort and return null if the device disconnects before the query is complete', async () => {
+      const gattCharacteristic = {
+        readAsync: jest.fn().mockResolvedValue(Buffer.from('app-id', 'utf-8')),
+      };
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockResolvedValue([gattCharacteristic]),
+      };
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'disconnected';
+          return Promise.resolve([gattService]);
+        }),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      } as unknown as Peripheral;
+
+      service.acquireQueryMutex();
+      const result = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+      service.releaseQueryMutex();
+
+      expect(peripheral.discoverServicesAsync).toHaveBeenCalledTimes(1);
+      expect(gattService.discoverCharacteristicsAsync).not.toHaveBeenCalled();
+      expect(gattCharacteristic.readAsync).not.toHaveBeenCalled();
+      expect(peripheral.disconnectAsync).not.toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+
+    it('should abort and unlock the adapter when query attempts time out', async () => {
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest
+          .fn()
+          .mockRejectedValue(new Error('timed out')),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      } as unknown as Peripheral;
+      const execPromise = Promise.resolve({ stdout: '-1' });
+      mockExec.mockReturnValue(execPromise);
+      const unlockSpy = jest
+        .spyOn(service, 'unlockAdapter')
+        .mockResolvedValue();
+
+      service.acquireQueryMutex();
+      await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+      service.releaseQueryMutex();
+
+      expect(unlockSpy).toHaveBeenCalled();
+    });
+
+    it('should not disconnect from an already disconnecting peripheral', async () => {
+      const gattCharacteristic = {
+        readAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'disconnecting';
+          return Promise.resolve(Buffer.from('app-id', 'utf-8'));
+        }),
+      };
+      const gattService = {
+        discoverCharacteristicsAsync: jest
+          .fn()
+          .mockResolvedValue([gattCharacteristic]),
+      };
+      const peripheral = {
+        id: 'abcd1234',
+        connectable: true,
+        connectAsync: jest.fn().mockImplementation(() => {
+          peripheral.state = 'connected';
+          return Promise.resolve();
+        }),
+        discoverServicesAsync: jest.fn().mockResolvedValue([gattService]),
+        disconnectAsync: jest.fn().mockResolvedValue(undefined),
+      } as unknown as Peripheral;
+      service.disconnectLowEnergyDevice = jest.fn();
+
+      service.acquireQueryMutex();
+      const result = await service.queryLowEnergyDevice(
+        peripheral,
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID
+      );
+      service.releaseQueryMutex();
+
+      expect(service.disconnectLowEnergyDevice).not.toHaveBeenCalled();
+      expect(result).toStrictEqual(Buffer.from('app-id', 'utf-8'));
+    });
+
     it('should reset adapter if nothing has been detected for a while', async () => {
       jest.spyOn(Promises, 'sleep').mockResolvedValue();
       jest.useFakeTimers('modern');
+      const execPromise = Promise.resolve({ stdout: '-1' });
+      mockExec.mockReturnValue(execPromise);
 
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       service.onLowEnergyDiscovery(() => {});

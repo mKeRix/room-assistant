@@ -7,6 +7,8 @@ export class XiaomiMiSensorOptions {
   address: string;
   @(jf.string().hex().optional())
   bindKey?: string;
+  @(jf.boolean().optional())
+  enableMifloraBattery?: boolean;
 }
 
 export class XiaomiMiConfig {
@@ -14,4 +16,6 @@ export class XiaomiMiConfig {
   hciDeviceId = 0;
   @(jf.array({ elementClass: XiaomiMiSensorOptions }).required())
   sensors: XiaomiMiSensorOptions[] = [];
+  @(jf.boolean().required())
+  enableMifloraBattery = false;
 }

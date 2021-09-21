@@ -88,6 +88,7 @@ bluetoothLowEnergy:
   batteryMask: 0x0000FF00
   timeout: 30
   updateFrequency: 55
+  minDiscoveryLogRssi: -60
   maxDistance: 44.4
   rssiFactor: 1.1
   tagOverrides:
@@ -129,6 +130,7 @@ gridEye:
   busNumber: 1
   address: 0x69
   deltaThreshold: 2
+  maskZeroBasedValues: true
   heatmap:
     enabled: true
     minTemperature: 23
@@ -164,9 +166,11 @@ shell:
       offCommand: echo off
 xiaomiMi:
   hciDeviceId: 0
+  enableMifloraBattery: false
   sensors:
     - address: a4c1383212f9
       name: Xiaomi 1
+      enableMifloraBattery: true
     - address: a4c138131f9e
       name: Xiaomi 2
       bindKey: 2456789ABCDEF

@@ -4,6 +4,8 @@ const mockI2cBus = {
   close: jest.fn(),
 };
 
+import { ConfigService } from '../../config/config.service';
+import c from 'config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { GridEyeService } from './grid-eye.service';
 import { EntitiesModule } from '../../entities/entities.module';
@@ -12,6 +14,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { EntitiesService } from '../../entities/entities.service';
 import { ClusterService } from '../../cluster/cluster.service';
 import { Sensor } from '../../entities/sensor';
+import { GridEyeConfig } from './grid-eye.config';
 import i2cBus from 'i2c-bus';
 import * as math from 'mathjs';
 
@@ -31,10 +34,28 @@ describe('GridEyeService', () => {
     add: jest.fn(),
   };
   const clusterService = jest.fn();
+  let mockConfig: Partial<GridEyeConfig>;
+  const configService = {
+    get: jest.fn().mockImplementation((key: string) => {
+      return key === 'gridEye' ? mockConfig : c.get(key);
+    }),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
-
+    mockConfig = {
+      busNumber: 1,
+      address: 0x69,
+      deltaThreshold: 2,
+      maskZeroBasedValues: false,
+      heatmap: {
+        enabled: true,
+        minTemperature: 16,
+        maxTemperature: 40,
+        rotation: 0,
+        drawTemperatures: true,
+      },
+    };
     const module: TestingModule = await Test.createTestingModule({
       imports: [EntitiesModule, ConfigModule, ScheduleModule.forRoot()],
       providers: [GridEyeService],
@@ -43,6 +64,8 @@ describe('GridEyeService', () => {
       .useValue(entitiesService)
       .overrideProvider(ClusterService)
       .useValue(clusterService)
+      .overrideProvider(ConfigService)
+      .useValue(configService)
       .compile();
 
     service = module.get<GridEyeService>(GridEyeService);
@@ -182,6 +205,34 @@ describe('GridEyeService', () => {
     const temperatures = await service.getPixelTemperatures();
     expect(temperatureSpy).toHaveBeenCalledTimes(64);
     expect(temperatures).toStrictEqual(math.ones([8, 8]));
+  });
+
+  it('should override zero based temperatures when configured', async () => {
+    mockConfig.maskZeroBasedValues = true;
+    const temperatureSpy = jest
+      .spyOn(service, 'getPixelTemperature')
+      .mockResolvedValue(16)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0.3)
+      .mockResolvedValueOnce(0.5);
+
+    const temperatures = await service.getPixelTemperatures();
+    expect(temperatureSpy).toHaveBeenCalledTimes(64);
+    expect(temperatures.flat().every((x) => x >= 1)).toBe(true);
+  });
+
+  it('should not override zero based temperatures when not configured', async () => {
+    mockConfig.maskZeroBasedValues = false;
+    const temperatureSpy = jest
+      .spyOn(service, 'getPixelTemperature')
+      .mockResolvedValue(16)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0.3)
+      .mockResolvedValueOnce(0.5);
+
+    const temperatures = await service.getPixelTemperatures();
+    expect(temperatureSpy).toHaveBeenCalledTimes(64);
+    expect(temperatures.flat().every((x) => x >= 1)).toBe(false);
   });
 
   it('should get the temperature of a single pixel', async () => {

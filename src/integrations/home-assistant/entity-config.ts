@@ -20,6 +20,11 @@ export class Availability {
   constructor(public topic: string) {}
 }
 
+export enum StateClass {
+  MEASUREMENT = 'measurement',
+  TOTAL_INCREASING = 'total_increasing',
+}
+
 export abstract class EntityConfig {
   uniqueId: string;
   component: string;
@@ -31,6 +36,8 @@ export abstract class EntityConfig {
   stateTopic: string;
   jsonAttributesTopic: string;
   availabilityMode: AvailabilityMode = 'all';
+
+  stateClass?: StateClass;
 
   distributed = false;
   stateLocked = true;

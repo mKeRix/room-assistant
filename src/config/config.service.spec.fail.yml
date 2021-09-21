@@ -93,6 +93,7 @@ bluetoothLowEnergy:
   timeout: 30
   updateFrequence: 55                 # FORMAT ERROR: Key Misspelt
 #  updateFrequency: 55                # FORMAT ERROR: Missing Key
+  minDiscoveryLogRssi: 50             # FORMAT ERROR: Negative Required
   maxDistance: 44.4
   rssiFactor: 1.1
   tagOverrides:
@@ -138,6 +139,7 @@ gridEye:
   busNumber: 1
   address: 0x69
   deltaThreshold: 2
+  maskZeroBasedValues: 10             # TYPE ERROR: Boolean required
   heatmap:
     enabled: true
     minTemperature: "23"              # TYPE ERROR: Number Required
@@ -173,6 +175,7 @@ shell:
           offCommand: echo off
 xiaomiMi:
   hciDeviceId: 0
+  enableMifloraBattery: 5              # FORMAT ERROR: -> Bool Required
   sensors:
     - address: a4:c1:38:32:12:f9       # FORMAT ERROR: -> Hex Required / Length Exceeded Errors
       name: Xiaomi 1
