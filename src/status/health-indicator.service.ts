@@ -8,6 +8,7 @@ import {
   Logger,
   OnApplicationBootstrap,
   OnModuleDestroy,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 
@@ -92,10 +93,15 @@ export class HealthIndicatorService
    * Sends a heartbeat to the systemd watchdog if the application is healthy.
    */
   private async updateWatchdog(): Promise<void> {
-    const healthResult = await this.check();
-
-    if (healthResult.status != 'error') {
-      notify.watchdog();
+    try {
+      const healthResult = await this.check();
+      if (healthResult.status != 'error') {
+        notify.watchdog();
+      }
+    } catch (e) {
+      if (!(e instanceof ServiceUnavailableException)) {
+        throw e;
+      }
     }
   }
 }
