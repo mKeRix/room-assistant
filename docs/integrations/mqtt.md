@@ -115,6 +115,8 @@ To get started with your automations based on these topics it is recommended to 
 | `password`           | String  |         | Password for authentication                                  |
 | `rejectUnauthorized` | Boolean | `true`  | Whether MQTTS connections should fail for invalid certificates or not. Set this to `false` if you are using a self-signed certificate and connect via TLS. |
 
+Some of these settings may also be configured as environment variables, using `RA_MQTT_MQTT_URL`, `RA_MQTT_MQTT_USERNAME` and `RA_MQTT_MQTT_PASSWORD`.
+
 ::: details Example Config
 
 ```yaml
