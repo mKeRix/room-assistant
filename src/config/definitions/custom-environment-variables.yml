@@ -1,0 +1,8 @@
+global:
+  instanceName: RA_GLOBAL_INSTANCE_NAME
+  integrations:
+    __name: RA_GLOBAL_INTEGRATIONS
+    __format: json
+  apiPort:
+    __name: RA_GLOBAL_API_PORT
+    __format: number

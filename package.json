@@ -21,6 +21,7 @@
   "types": "dist/src/main.d.ts",
   "files": [
     "dist/**/*.{js,ts}",
+    "dist/config/definitions/*.yml",
     "bin/*.js",
     ".github/FUNDING.yml"
   ],
