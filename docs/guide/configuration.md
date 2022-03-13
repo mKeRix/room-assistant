@@ -14,7 +14,7 @@ Having trouble with your configuration? You can launch room-assistant with the `
 
 ## Configuring with Docker
 
-The official [Docker image](https://hub.docker.com/r/mkerix/room-assistant/) can be configured in two different ways. You can either mount your local config folder into the container as `/room-assistant/config` or you can provide the configuration as JSON through an environment variable.
+The official [Docker image](https://hub.docker.com/r/mkerix/room-assistant/) can be configured in two different ways. You can either mount your local config folder into the container as `/room-assistant/config` or you can provide the configuration as JSON through an environment variable. Some settings may also be configured via special environment variables, in those cases the variable names are documented next to the options.
 
 ::: details Example docker-compose.yml
 
@@ -27,10 +27,10 @@ services:
     volumes:
       - /var/run/dbus:/var/run/dbus
     environment:
+      RA_GLOBAL_INSTANCE_NAME: living-room
       NODE_CONFIG: >
         {
           "global": {
-            "instanceName": "living-room",
             "integrations": ["homeAssistant", "bluetoothClassic"]
           }
         }
@@ -50,7 +50,10 @@ room-assistant exposes a few settings that affect the overall behavior of the ap
 | `integrations` | Array  |          | The integrations that should be loaded on this instance, denoted as camelCase. |
 | `apiPort`      | Number | `6415`   | The port that the REST API should be available on.           |
 
+These settings may also be configured as environment variables, using `RA_GLOBAL_INSTANCE_NAME`, `RA_GLOBAL_INTEGRATIONS` and `RA_GLOBAL_API_PORT`.
+
 ::: details Example Config
+
 ```yaml
 global:
   instanceName: bedroom
