@@ -37,8 +37,9 @@ const execPromise = util.promisify(exec);
 
 @Injectable()
 export class BluetoothClassicService
-  extends KalmanFilterable(Object, 0.01, 0.7)
-  implements OnModuleInit, OnApplicationBootstrap {
+  extends KalmanFilterable(Object, 1.4, 1)
+  implements OnModuleInit, OnApplicationBootstrap
+{
   private readonly config: BluetoothClassicConfig;
   private rotationOffset = 0;
   private inquiriesSwitch: Switch;
