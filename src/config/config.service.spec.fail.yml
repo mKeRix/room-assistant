@@ -107,6 +107,8 @@ bluetoothLowEnergy:
     ebef1234567890-55555-444:
       name: iBeacon 2
       timeout: 120                    # FORMAT ERROR: Missplaced Property
+  kalmanProcessNoise: 1.1
+  kalmanMeasurementNoise: 2.2
 bluetoothClassic:
   hciDeviceId: 1
   interval: 20
@@ -128,6 +130,8 @@ bluetoothClassic:
   entityOverrides:
     ebef1234567890-55555-333:
       id: 333                          # TYPE ERROR: String Required
+  kalmanProcessNoise: 1
+  kalmanMeasurementNoise: 2
 omronD6t:
   busNumber: 3
   address: 0x1d

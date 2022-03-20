@@ -92,6 +92,8 @@ bluetoothLowEnergy:
 | `instanceBeaconMajor` | Number | `1` | The major of the advertised iBeacon. |
 | `instanceBeaconMinor` | Number | Random | The minor of the advertised iBeacon. |
 | `minDiscoveryLogRssi` | Number | -999 | Only log newly discovered beacons if raw RSSI values are greater than this (useful to reduce log spam if on a busy street). |
+| `kalmanProcessNoise` | Number | `0.0008` | Covariance of the process noise, used for measurement noise reduction via a [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter). |
+| `kalmanMeasurementNoise` | Number | `4` | Covariance of the measurement noise, used for measurement noise reduction via a [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter). |
 
 ### Tag Overrides
 
