@@ -14,13 +14,13 @@ jobs:
       HUSKY: '0'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js 16.x
-        uses: actions/setup-node@v2.4.0
+        uses: actions/setup-node@v3
         with:
           node-version: 16.x
       - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
           key: ${{ runner.OS }}-node-16.x-${{ hashFiles('**/package-lock.json') }}
@@ -45,7 +45,7 @@ jobs:
     if: needs.release-npm.outputs.new_release_published == 'true'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -60,7 +60,7 @@ jobs:
         with:
           version: latest
       - name: Cache Docker layers
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.OS }}-buildx-${{ github.sha }}

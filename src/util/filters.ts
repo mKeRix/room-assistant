@@ -1,4 +1,5 @@
 import KalmanFilter from 'kalmanjs';
+import c from 'config';
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 type Constructable = new (...args: any[]) => object;
@@ -6,8 +7,8 @@ type Constructable = new (...args: any[]) => object;
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type,@typescript-eslint/explicit-module-boundary-types
 export function KalmanFilterable<BC extends Constructable>(
   Base: BC,
-  R = 1,
-  Q = 1
+  ProcessNoiseProperty: string,
+  MeasurementNoiseProperty: string
 ) {
   return class extends Base {
     kalmanFilterMap: Map<string, KalmanFilter> = new Map<
@@ -27,7 +28,9 @@ export function KalmanFilterable<BC extends Constructable>(
       if (this.kalmanFilterMap.has(id)) {
         return this.kalmanFilterMap.get(id).filter(value);
       } else {
-        const kalman = new KalmanFilter({ R, Q });
+        const r = c.get<number>(ProcessNoiseProperty);
+        const q = c.get<number>(MeasurementNoiseProperty);
+        const kalman = new KalmanFilter({ R: r, Q: q });
         this.kalmanFilterMap.set(id, kalman);
         return kalman.filter(value);
       }

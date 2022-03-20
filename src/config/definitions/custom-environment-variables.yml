@@ -1,0 +1,18 @@
+global:
+  instanceName: RA_GLOBAL_INSTANCE_NAME
+  integrations:
+    __name: RA_GLOBAL_INTEGRATIONS
+    __format: json
+  apiPort:
+    __name: RA_GLOBAL_API_PORT
+    __format: number
+homeAssistant:
+  mqttUrl: RA_HOME_ASSISTANT_MQTT_URL
+  mqttOptions:
+    username: RA_HOME_ASSISTANT_MQTT_USERNAME
+    password: RA_HOME_ASSISTANT_MQTT_PASSWORD
+mqtt:
+  mqttUrl: RA_MQTT_MQTT_URL
+  mqttOptions:
+    username: RA_MQTT_MQTT_USERNAME
+    password: RA_MQTT_MQTT_PASSWORD

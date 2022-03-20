@@ -37,8 +37,13 @@ const execPromise = util.promisify(exec);
 
 @Injectable()
 export class BluetoothClassicService
-  extends KalmanFilterable(Object, 0.01, 0.7)
-  implements OnModuleInit, OnApplicationBootstrap {
+  extends KalmanFilterable(
+    Object,
+    'bluetoothClassic.kalmanProcessNoise',
+    'bluetoothClassic.kalmanMeasurementNoise'
+  )
+  implements OnModuleInit, OnApplicationBootstrap
+{
   private readonly config: BluetoothClassicConfig;
   private rotationOffset = 0;
   private inquiriesSwitch: Switch;

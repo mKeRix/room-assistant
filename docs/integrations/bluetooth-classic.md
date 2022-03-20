@@ -77,18 +77,20 @@ Try to pair your Apple Watch to a Bluetooth device such as headphones/speakers f
 
 ## Settings
 
-| Name               | Type                                         | Default | Description                                                  |
-| ------------------ | -------------------------------------------- | ------- | ------------------------------------------------------------ |
-| `addresses`        | Array                                        |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
-| `minRssi`          | Number _or_ [detailed config](#minimum-rssi) |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
-| `rssiFactor`       | Number                                       | `1`     | Multiplier for the measured RSSI values. Allows you to fine-tune measurements if you use different Bluetooth adapters across your cluster. |
-| `hciDeviceId`      | Number                                       | `0`     | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
-| `interval`         | Number                                       | `10`    | The interval at which the Bluetooth devices are queried in seconds. |
-| `scanTimeLimit`    | Number                                       | `6`     | The maximum time allowed for completing a device query in seconds. This should be set lower than the interval. |
-| `timeoutCycles`    | Number                                       | `2`     | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
-| `preserveState`    | Boolean                                      | `false` | Whether the last recorded distance should be preserved when the inquiries switch is turned off or not. |
-| `inquireFromStart` | Boolean                                      | `true`  | Whether the [Inquiries Switch](#inquiries-switch) is turned on when room-assistant is started or not. |
-| `entityOverrides`  | [Entity Overrides](#entity-overrides)        |         | Allows you to override some properties of the created entities. |
+| Name                     | Type                                         | Default | Description                                                  |
+| ------------------------ | -------------------------------------------- | ------- | ------------------------------------------------------------ |
+| `addresses`              | Array                                        |         | List of Bluetooth MAC addresses that should be tracked. You can usually find them in the device settings. |
+| `minRssi`                | Number _or_ [detailed config](#minimum-rssi) |         | Limits the RSSI at which a device is still reported if configured. Remember, the RSSI is the inverse of the sensor attribute distance, so for a cutoff at 10 you would configure -10. |
+| `rssiFactor`             | Number                                       | `1`     | Multiplier for the measured RSSI values. Allows you to fine-tune measurements if you use different Bluetooth adapters across your cluster. |
+| `hciDeviceId`            | Number                                       | `0`     | ID of the Bluetooth device to use for the inquiries, e.g. `0` to use `hci0`. |
+| `interval`               | Number                                       | `10`    | The interval at which the Bluetooth devices are queried in seconds. |
+| `scanTimeLimit`          | Number                                       | `6`     | The maximum time allowed for completing a device query in seconds. This should be set lower than the interval. |
+| `timeoutCycles`          | Number                                       | `2`     | The number of completed query cycles after which collected measurements are considered obsolete. The timeout in seconds is calculated as `max(addresses, clusterDevices) * interval * timeoutCycles`. |
+| `preserveState`          | Boolean                                      | `false` | Whether the last recorded distance should be preserved when the inquiries switch is turned off or not. |
+| `inquireFromStart`       | Boolean                                      | `true`  | Whether the [Inquiries Switch](#inquiries-switch) is turned on when room-assistant is started or not. |
+| `entityOverrides`        | [Entity Overrides](#entity-overrides)        |         | Allows you to override some properties of the created entities. |
+| `kalmanProcessNoise`     | Number                                       | `1.4`   | Covariance of the process noise, used for measurement noise reduction via a [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter). |
+| `kalmanMeasurementNoise` | Number                                       | `1`     | Covariance of the measurement noise, used for measurement noise reduction via a [Kalman filter](https://en.wikipedia.org/wiki/Kalman_filter). |
 
 ### Minimum RSSI
 

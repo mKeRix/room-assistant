@@ -36,7 +36,11 @@ const COMPANION_APP_CHARACTERISTIC_UUID = '21c46f33e813440786012ad281030052';
 
 @Injectable()
 export class BluetoothLowEnergyService
-  extends KalmanFilterable(Object, 0.008, 4)
+  extends KalmanFilterable(
+    Object,
+    'bluetoothLowEnergy.kalmanProcessNoise',
+    'bluetoothLowEnergy.kalmanMeasurementNoise'
+  )
   implements OnModuleInit, OnApplicationBootstrap
 {
   private readonly config: BluetoothLowEnergyConfig;

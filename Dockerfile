@@ -8,7 +8,7 @@ FROM node:16-alpine3.12
 
 WORKDIR /room-assistant
 
-RUN apk add --no-cache bluez bluez-deprecated libusb avahi-dev bind-tools dmidecode tini curl tzdata \
+RUN apk add --no-cache bluez bluez-deprecated libusb avahi-dev bind-tools dmidecode tini curl tzdata cairo-dev jpeg-dev pango-dev giflib-dev \
     && setcap cap_net_raw+eip $(eval readlink -f `which node`) \
     && setcap cap_net_raw+eip $(eval readlink -f `which hcitool`) \
     && setcap cap_net_admin+eip $(eval readlink -f `which hciconfig`) \

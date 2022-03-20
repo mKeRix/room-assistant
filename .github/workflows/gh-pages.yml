@@ -18,13 +18,13 @@ jobs:
     runs-on: ubuntu-18.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Node.js
-        uses: actions/setup-node@v2.4.0
+        uses: actions/setup-node@v3
         with:
           node-version: '16.x'
       - name: Cache Node.js modules
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
           key: ${{ runner.OS }}-node-16.x-${{ hashFiles('**/package-lock.json') }}
