@@ -1,0 +1,1 @@
+const e={key:"v-3c5293eb",path:"/guide/api.html",title:"API",lang:"en-US",frontmatter:{},excerpt:"",headers:[{level:2,title:"WebSocket API",slug:"websocket-api",children:[]}],git:{updatedTime:164776984e4,contributors:[{name:"Heiko Rothe",email:"me@heikorothe.com",commits:1}]},filePathRelative:"guide/api.md"};export{e as data};

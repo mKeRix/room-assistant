@@ -1,0 +1,1 @@
+const e={key:"v-387c00a5",path:"/guide/cli.html",title:"CLI",lang:"en-US",frontmatter:{},excerpt:"",headers:[],git:{updatedTime:164776984e4,contributors:[{name:"Heiko Rothe",email:"me@heikorothe.com",commits:1}]},filePathRelative:"guide/cli.md"};export{e as data};
