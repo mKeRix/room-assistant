@@ -69,7 +69,7 @@ jobs:
       - name: Run Buildx
         run: docker buildx build --cache-from "type=local,src=/tmp/.buildx-cache" --cache-to "type=local,dest=/tmp/.buildx-cache" --build-arg ROOM_ASSISTANT_VERSION=${{needs.release-npm.outputs.new_release_version}} --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64 -t mkerix/room-assistant:${{needs.release-npm.outputs.new_release_version}} -t mkerix/room-assistant:$([[ "${{needs.release-npm.outputs.new_release_version}}" == *"beta"* ]] && echo "beta" || echo "latest") --push .
       - name: Update description on DockerHub
-        uses: peter-evans/dockerhub-description@v2.4.3
+        uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
