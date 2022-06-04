@@ -37,7 +37,7 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 
 3. We need to install some other dependencies as well, do so by running `sudo apt-get update && sudo apt-get install build-essential libavahi-compat-libdnssd-dev libsystemd-dev bluetooth libbluetooth-dev libudev-dev libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev`.
 
-4. Now let's get install room-assistant! Run `sudo npm i --global --unsafe-perm room-assistant`. You will see messages like the one shown below during the installation process. Don't worry about them - they're not errors!
+4. Now let's get install room-assistant! Run `sudo npm i --location=global --unsafe-perm room-assistant`. You will see messages like the one shown below during the installation process. Don't worry about them - they're not errors!
 
    ![compilation messages](./compilation-msgs.png)
 
