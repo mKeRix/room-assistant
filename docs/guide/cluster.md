@@ -2,7 +2,7 @@
 
 **Config Key:** `cluster`
 
-If you are running multiple room-assistant instances they come together in a cluster. By default, the instances discover each other using mDNS. This requires all of them live in the same subnet. You can also specify the adresses of other instances and tweak some other things manually.
+If you are running multiple room-assistant instances they come together in a cluster. By default, the instances discover each other using mDNS. This requires all of them live in the same subnet. You can also specify the addresses of other instances and tweak some other things manually.
 
 ## Usage tips
 
