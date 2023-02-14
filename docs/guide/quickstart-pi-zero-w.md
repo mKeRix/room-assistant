@@ -95,17 +95,18 @@ When starting room-assistant you will see warnings about the Apple Bonjour compa
    [Service]
    Type=notify
    ExecStart=/opt/nodejs/bin/room-assistant
-   WorkingDirectory=/home/pi/room-assistant
+   WorkingDirectory=/home/<user>/room-assistant
    TimeoutStartSec=120
    TimeoutStopSec=30
    Restart=always
    RestartSec=10
    WatchdogSec=60
-   User=pi
+   User=<user>
    
    [Install]
    WantedBy=multi-user.target
    ```
+   Note: The new Raspbian installer prompts you to name the user so the default users is no longer 'pi'. Replace <user> by whatever you used during the installation of Raspbian.
 
 3. Enable and start your service by executing the commands below.
 
