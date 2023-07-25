@@ -18,7 +18,7 @@ This page will guide you through setting up a Pi Zero W to run room-assistant.
 
 1. Put your microSD card into your card reader.
 2. Open the [Raspberry Pi Imager](https://www.raspberrypi.org/software/) and select the following options:
-   1. OS -> Raspberry Pi OS (other) -> Raspberry Pi OS (Lite)
+   1. OS -> Raspberry Pi OS (other) -> Raspberry Pi OS Lite (32-bit for Raspberry Pi Zero W, 64-bit for Raspberry Pi Zero 2 W)
    2. SD Card -> the SD card you put into your card reader
    3. Open the advanced options (Windows: *Ctrl + Shift + X*, macOS: *Cmd + Shift + X*) and enable SSH. Optionally, you can configure WiFi credentials, the hostname to be something recognizable like `bedroom` and more in this same menu. Hit "Save" on the bottom after you're done.
 3. Write the image to the card from the main menu. Wait for it to be finished before removing the card from the reader.
