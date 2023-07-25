@@ -86,7 +86,7 @@ When starting room-assistant you will see warnings about the Apple Bonjour compa
 
 1. If room-assistant is still running from the previous step, stop it by hitting Ctrl + C on your keyboard.
 
-2. Create a file using `sudo nano /etc/systemd/system/room-assistant.service` with the following contents:
+2. Create a file using `sudo nano /etc/systemd/system/room-assistant.service` with the following contents (replacing "pi" with your username in the `WorkingDirectory` and `User` lines:
 
    ```
    [Unit]
@@ -113,5 +113,8 @@ When starting room-assistant you will see warnings about the Apple Bonjour compa
    sudo systemctl enable room-assistant.service
    sudo systemctl start room-assistant.service
    ```
+   
+If you see the error `Job for room-assistant.service failed because the control process exited with error code.` then double-check and correct the service file and then type `systemctl daemon-reload`  then `sudo systemctl start room-assistant.service`
+
 
 4. Congratulations, you are done! :confetti_ball: You may check the status of the service at any time with `sudo systemctl status room-assistant`. room-assistant will now be started when the Pi Zero W boots.
