@@ -152,7 +152,7 @@ export class XiaomiMiService implements OnModuleInit, OnApplicationBootstrap {
         },
       ];
       entity = this.entitiesService.add(
-        new Sensor(id, `${device.name} ${sensor.name}`, true, false),
+        new Sensor(id, `${sensor.name}`, true, false),
         customizations
       ) as Sensor;
     }
