@@ -71,7 +71,7 @@ export class StatusService implements OnApplicationBootstrap {
       },
     ];
     const clusterSizeSensor = this.entitiesService.add(
-      new Sensor('status-cluster-size', `${instanceName} Cluster Size`),
+      new Sensor('status-cluster-size', `Cluster Size`),
       customizations
     );
 
@@ -94,7 +94,7 @@ export class StatusService implements OnApplicationBootstrap {
       },
     ];
     const clusterLeaderSensor = this.entitiesService.add(
-      new Sensor('status-cluster-leader', `${instanceName} Cluster Leader`),
+      new Sensor('status-cluster-leader', `Cluster Leader`),
       customizations
     );
 
