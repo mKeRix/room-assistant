@@ -314,7 +314,7 @@ export class BluetoothClassicService
     const inquiriesSwitch = this.entitiesService.add(
       new Switch(
         'bluetooth-classic-inquiries-switch',
-        `${instanceName} Bluetooth Inquiries`
+        `Bluetooth Inquiries`
       ),
       customizations
     ) as Switch;
@@ -351,7 +351,7 @@ export class BluetoothClassicService
 
     const deviceTracker = this.createDeviceTracker(
       makeId(`${sensorId}-tracker`),
-      `${baseName} Tracker`,
+      `Tracker`,
       deviceInfo
     );
 
@@ -366,7 +366,7 @@ export class BluetoothClassicService
     ];
     const rawSensor = new RoomPresenceDistanceSensor(
       sensorId,
-      `${baseName} Room Presence`,
+      `Room Presence`,
       0
     );
     const sensorProxy = new Proxy<RoomPresenceDistanceSensor>(
