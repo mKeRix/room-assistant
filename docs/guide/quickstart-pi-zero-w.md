@@ -86,7 +86,7 @@ When starting room-assistant you will see warnings about the Apple Bonjour compa
 
 1. If room-assistant is still running from the previous step, stop it by hitting Ctrl + C on your keyboard.
 
-2. Create a file using `sudo nano /etc/systemd/system/room-assistant.service` with the following contents:
+2. Create a file using `sudo nano /etc/systemd/system/room-assistant.service` with the following contents (make sure to update `WorkingDirectory` and `User` to reflect your username):
 
    ```
    [Unit]
