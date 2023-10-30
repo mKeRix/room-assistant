@@ -72,7 +72,7 @@ This page will guide you through setting up a Raspberry Pi 3 or 4 to run room-as
 
 3. Go to your room-assistant directory by executing `cd ~/room-assistant`.
 
-4. Run room-assistant by executing `room-assistant`. Watch the logs - are all integrations are loaded correctly and is the MQTT connection succesful? The congratulations, you configured room-assistant correctly! :tada: New entities should now be appearing under the MQTT integration in Home Assistant Core, which can be viewed in Settings > Integrations.
+4. Run room-assistant by executing `room-assistant`. Watch the logs - are all integrations are loaded correctly and is the MQTT connection succesful? Then congratulations, you configured room-assistant correctly! :tada: New entities should now be appearing under the MQTT integration in Home Assistant Core, which can be viewed in Settings > Integrations.
 
 ::: tip
 
