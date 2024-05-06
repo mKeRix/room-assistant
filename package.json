@@ -99,7 +99,7 @@
     "@typescript-eslint/parser": "^5.14.0",
     "@vuepress/plugin-docsearch": "^2.0.0-beta.27",
     "@vuepress/plugin-pwa": "^2.0.0-beta.27",
-    "eslint": "^8.10.0",
+    "eslint": "^9.2.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-import": "^2.22.1",
     "esm": "^3.2.25",
